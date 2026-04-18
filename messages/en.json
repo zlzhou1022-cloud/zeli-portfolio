@@ -1,0 +1,128 @@
+{
+  "Home": {
+    "greeting": "Hi, I'm Zeli 👋",
+    "title": "IT Engineer & Consultant",
+    "bio": "With a Master's degree from the University of Tokyo and a background in end-to-end IT solution consulting at Deloitte, I am dedicated to solving complex business challenges through technology. Outside of work, I build quirky side projects and travel across all 47 prefectures of Japan and beyond, documenting my journey through the lens of my camera.",
+    "modules": {
+      "profile": {
+        "title": "Profile",
+        "desc": "My educational background and professional journey.",
+        "link": "View Resume"
+      },
+      "lab": {
+        "title": "Labs",
+        "desc": "A collection of interesting engineering experiments. Perhaps not always practical, but definitely fun.",
+        "link": "Enter Labs"
+      },
+      "travel": {
+        "title": "Photography",
+        "desc": "Travel memories across Japan and the world, captured through the lens of a Fujifilm X-S20.",
+        "link": "View Gallery"
+      },
+      "guestbook": {
+        "title": "Guestbook",
+        "desc": "Leave your mark here~",
+        "link": "Sign Guestbook"
+      }
+    }
+  },
+  "ProfilePage": {
+    "backHome": "Back to Home",
+    "role": "IT Engineer & Consultant",
+    "location": "Japan",
+    "experience": "Experience",
+    "deloitte": {
+      "name": "Deloitte Tohmatsu Akt",
+      "title": "Delivery Analyst",
+      "date": "Apr 2024 - Present",
+      "desc": "Led digital transformation consulting and development implementation based on the Salesforce platform, delivering end-to-end solutions from upstream strategy to downstream execution."
+    },
+    "education": "Education",
+    "whuthesis": "Thesis",
+    "utokyothesis": "Thesis",
+    "utokyo": {
+      "name": "The University of Tokyo, Graduate School of Engineering",
+      "degree": "M.S. in Systems Innovation",
+      "date": "Oct 2021 - Sep 2023",
+      "thesis_title": "A Scoring Model for Welding Training Utilizing Machine Learning to Model Embodied Knowledge"
+    },
+    "whu": {
+      "name": "Wuhan University, School of Electronic Information",
+      "degree": "B.E. in Communication Engineering",
+      "date": "Sep 2017 - Jun 2021",
+      "thesis_title": "Monocular Camera Depth Prediction Model Based on Deep Learning"
+    }
+  },
+  "LabPage": {
+    "backHome": "Back to Home",
+    "title": "Labs",
+    "description": "A collection of my development experiments, automation plugins, and personal utility tools. Most were built to solve real-life needs and serve as a playground for exploring new tech stacks."
+  },
+  "Projects": {
+    "kyushu-travel-planner": {
+      "title": "Personal Travel Planner Web App (Kyushu Edition)",
+      "description": "A utility tool designed specifically for personal travel. It supports dynamic itinerary adjustments and real-time expense tracking, solving the hassle of budget management and bill splitting during trips."
+    }
+  },
+  "GuestbookPage": {
+    "backHome": "Back to Home",
+    "title": "Guestbook",
+    "subtitle": "Leave your mark here~",
+    "form": {
+      "title": "Post a Message",
+      "replyingTo": "Replying to",
+      "cancelReply": "Cancel",
+      "authorPlaceholder": "Nickname",
+      "titlePlaceholder": "Title (Optional)",
+      "contentPlaceholder": "Say something...",
+      "submit": "Submit",
+      "replySubmit": "Reply"
+    },
+    "list": {
+      "title": "Latest Messages",
+      "error": "Failed to load messages: ",
+      "empty": "No messages yet. Be the first to leave a mark!",
+      "replyBtn": "Reply",
+      "quotePrefix": "Quoting",
+      "notFound": "The original message has been deleted or does not exist"
+    },
+    "pagination": {
+      "prev": "Prev",
+      "next": "Next"
+    }
+  },
+  "TravelsPage": {
+    "backHome": "Back to Home",
+    "title": "Photography",
+    "subtitle": "Fleeting moments and eternity, captured by Fujifilm X-S20.",
+    "viewDetails": "View Gallery"
+  },
+  "TripDetail": {
+    "back": "Back to Stories",
+    "page": "PAGE",
+    "photos": "Frames",
+    "prev": "Prev",
+    "next": "Next",
+    "jump": "Jump",
+    "error": "Please enter a page number between 1 and {max}"
+  },
+  "Trips": {
+    "tohoku-feb-2026": {
+      "title": "Tohoku Journey: Snow & Festivals",
+      "photos": {
+        "1": "Chozuya at Hirota Shrine, Aomori City",
+        "2": "Plaza in front of A-FACTORY, Aomori City",
+        "3": "A Nebuta mask at the Nebuta Warasse Museum, Aomori",
+        "4": "Konan Railway staff on the platform, Hirosaki",
+        "5": "Statue of Tatsuko by Lake Tazawa, Semboku",
+        "6": "Namahage Sedo Festival: Young men descending the mountain with torches",
+        "7": "Namahage Sedo Festival: Performers on stage",
+        "8": "Yokote Kamakura Festival: Miniature snow huts viewed from the bridge",
+        "9": "Yokote Kamakura Festival: Miniature snow huts illuminated at night",
+        "10": "Morioka Hachiman Shrine, Morioka City",
+        "11": "Morioka Reimen at Seiroukaku, Morioka",
+        "12": "A commemorative plaque for eating over 100 bowls of Wanko Soba"
+      }
+    }
+  }
+}

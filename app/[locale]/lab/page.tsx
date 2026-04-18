@@ -1,8 +1,13 @@
 import Link from "next/link";
 import { getAllProjects } from "@/lib/lab-data";
+import { useTranslations } from "next-intl";
 
 export default function LabPage() {
   const projects = getAllProjects();
+  
+  // 引入两个不同的翻译命名空间
+  const t = useTranslations("LabPage");
+  const tProjects = useTranslations("Projects");
 
   return (
     <div className="max-w-3xl mx-auto space-y-12 animate-in fade-in duration-700 mt-8 mb-20">
@@ -14,13 +19,12 @@ export default function LabPage() {
             <svg className="w-4 h-4 group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
-            返回主页
+            {t("backHome")}
           </Link>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 transition-colors">实验室与插件</h1>
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 transition-colors">{t("title")}</h1>
         </div>
         <p className="text-slate-600 dark:text-slate-400 leading-relaxed transition-colors">
-          这里记录了我的一些开发实验、自动化插件以及个人实用工具。
-          大多源于解决生活中的实际需求，也是我探索新技术栈的试验场。
+          {t("description")}
         </p>
       </header>
 
@@ -36,7 +40,8 @@ export default function LabPage() {
           >
             <div className="flex justify-between items-start mb-4">
               <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                {project.title}
+                {/* 核心魔法：根据项目 id 动态获取多语言标题 */}
+                {tProjects(`${project.id}.title`)}
               </h2>
               {/* 外链图标 */}
               <svg className="w-5 h-5 text-slate-300 group-hover:text-slate-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -45,9 +50,11 @@ export default function LabPage() {
             </div>
             
             <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-6">
-              {project.description}
+              {/* 核心魔法：根据项目 id 动态获取多语言描述 */}
+              {tProjects(`${project.id}.description`)}
             </p>
 
+            {/* 标签 (技术栈如 React, Python 通常不需要翻译，直接读取即可) */}
             <div className="flex flex-wrap gap-2">
               {project.tags.map(tag => (
                 <span 
@@ -68,7 +75,7 @@ export default function LabPage() {
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
-          返回主页
+          {t("backHome")}
         </Link>
       </div>
 

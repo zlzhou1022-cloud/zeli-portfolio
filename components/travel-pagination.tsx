@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
+// 🛠️ 注意：改用我们配置的国际化导航钩子
+import { useRouter, Link } from "@/i18n/routing";
+import { useTranslations } from "next-intl";
 
 interface Props {
   tripId: string;
@@ -12,21 +13,23 @@ interface Props {
 
 export function TravelPagination({ tripId, currentPage, totalPage }: Props) {
   const router = useRouter();
+  const t = useTranslations("TripDetail");
   const [jumpValue, setJumpValue] = useState("");
   const [error, setError] = useState("");
 
   const handleJump = () => {
     const pageNum = parseInt(jumpValue);
     if (isNaN(pageNum) || pageNum < 1 || pageNum > totalPage) {
-      setError(`请输入 1 到 ${totalPage} 之间的页数`);
-      setTimeout(() => setError(""), 3000); // 3秒后自动清除报错
+      // 🛠️ 动态传入参数给翻译字符串
+      setError(t("error", { max: totalPage }));
+      setTimeout(() => setError(""), 3000);
       return;
     }
+    // 这里的 href 不需要写语言前缀，i18n router 会自动处理
     router.push(`/travels/${tripId}?p=${pageNum}`);
     setJumpValue("");
   };
 
-  // 核心分页窗口算法：显示当前页前后的 2 个数字
   const getPageNumbers = () => {
     const pages = [];
     const start = Math.max(1, currentPage - 2);
@@ -50,12 +53,11 @@ export function TravelPagination({ tripId, currentPage, totalPage }: Props) {
 
       {/* 数字分页条 */}
       <div className="flex flex-wrap items-center justify-center gap-2">
-        {/* 上一张 */}
         <Link 
           href={`/travels/${tripId}?p=${Math.max(1, currentPage - 1)}`}
           className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${currentPage === 1 ? 'pointer-events-none opacity-30' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}
         >
-          ← 上一张
+          ← {t("prev")}
         </Link>
 
         {getPageNumbers().map(num => (
@@ -72,12 +74,11 @@ export function TravelPagination({ tripId, currentPage, totalPage }: Props) {
           </Link>
         ))}
 
-        {/* 下一张 */}
         <Link 
           href={`/travels/${tripId}?p=${Math.min(totalPage, currentPage + 1)}`}
           className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${currentPage === totalPage ? 'pointer-events-none opacity-30' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}
         >
-          下一张 →
+          {t("next")} →
         </Link>
       </div>
 
@@ -88,13 +89,13 @@ export function TravelPagination({ tripId, currentPage, totalPage }: Props) {
           value={jumpValue}
           onChange={(e) => setJumpValue(e.target.value)}
           placeholder={`1 ~ ${totalPage}`}
-          className="w-20 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-400"
+          className="w-20 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-400 transition-colors"
         />
         <button 
           onClick={handleJump}
           className="px-4 py-1.5 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 rounded-lg text-sm font-bold hover:opacity-80 transition-opacity cursor-pointer"
         >
-          跳转
+          {t("jump")}
         </button>
       </div>
     </div>
