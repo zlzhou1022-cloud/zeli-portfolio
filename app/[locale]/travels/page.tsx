@@ -11,31 +11,32 @@ export default function TravelsPage() {
   const tTrips = useTranslations("Trips");
 
   return (
-    <div className="space-y-12 animate-in fade-in duration-700">
-      <header>
-        <Link href="/" className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 transition-colors group mb-4">
-          <svg className="w-4 h-4 group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+    <div className="space-y-16 animate-in fade-in duration-1000 mb-32">
+      <header className="border-b border-stone-200 dark:border-stone-800 pb-12">
+        <Link href="/" className="inline-flex items-center gap-2 text-xs tracking-wider uppercase font-medium text-stone-500 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-100 transition-colors group mb-8">
+          <svg className="w-3 h-3 group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
           {t("backHome")}
         </Link>
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">{t("title")}</h1>
-        <p className="text-slate-500 mt-2">{t("subtitle")}</p>
+        <h1 className="text-5xl md:text-6xl font-serif text-stone-900 dark:text-stone-100 mb-4 leading-[1.1]">{t("title")}</h1>
+        <p className="text-stone-500 font-light">{t("subtitle")}</p>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {trips.map((trip) => (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-16">
+        {trips.map((trip, index) => (
           <Link key={trip.id} href={`/travels/${trip.id}?p=1`} className="group block space-y-4">
-            <div className="relative aspect-[16/10] rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm group-hover:shadow-xl transition-all">
-              <Image src={trip.cover} alt={trip.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-6">
-                <span className="text-white font-medium">{t("viewDetails")} →</span>
-              </div>
+            <div className="relative aspect-[4/3] overflow-hidden border border-stone-200 dark:border-stone-800 group-hover:border-stone-400 dark:group-hover:border-stone-600 transition-all">
+              <Image src={trip.cover} alt={trip.title} fill className="object-cover transition-all duration-700" />
             </div>
-            <div>
-              {/* 核心魔法：使用 id 动态获取该游记在对应语言下的标题 */}
-              <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">{tTrips(`${trip.id}.title`)}</h2>
-              <p className="text-sm text-slate-500 mt-1">{trip.date}</p>
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1">
+                <h2 className="text-2xl font-serif text-stone-900 dark:text-stone-100 mb-1">{tTrips(`${trip.id}.title`)}</h2>
+                <p className="text-xs tracking-wider text-stone-500 uppercase">{trip.date}</p>
+              </div>
+              <div className="text-xs tracking-[0.2em] uppercase text-stone-400 dark:text-stone-500 font-medium pt-1">
+                {String(index + 1).padStart(2, '0')}
+              </div>
             </div>
           </Link>
         ))}

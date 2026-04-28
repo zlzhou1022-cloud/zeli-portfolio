@@ -91,23 +91,22 @@ export default async function GuestbookPage({ searchParams }: { searchParams: Pr
   }
 
   return (
-    <div className="max-w-2xl mx-auto mt-8 animate-in slide-in-from-bottom-4 duration-700 mb-20">
+    <div className="max-w-4xl mx-auto mt-8 animate-in fade-in duration-1000 mb-32">
       
       <RateLimitToast />
 
-      <div className="mb-8">
-        <Link href="/" className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 transition-colors group">
-          <svg className="w-4 h-4 group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+      <div className="mb-12 border-b border-stone-200 dark:border-stone-800 pb-12">
+        <Link href="/" className="inline-flex items-center gap-2 text-xs tracking-wider uppercase font-medium text-stone-500 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-100 transition-colors group mb-8">
+          <svg className="w-3 h-3 group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
           {t("backHome")}
         </Link>
+        <h1 className="text-5xl md:text-6xl font-serif text-stone-900 dark:text-stone-100 mb-4 transition-colors leading-[1.1]">{t("title")}</h1>
+        <p className="text-stone-600 dark:text-stone-400 transition-colors font-light">{t("subtitle")}</p>
       </div>
 
-      <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 mb-2 transition-colors">{t("title")}</h1>
-      <p className="text-slate-600 dark:text-slate-400 mb-8 transition-colors">{t("subtitle")}</p>
-
-      {error && <p className="text-red-500 dark:text-red-400 mb-4">{t("list.error")} {error.message}</p>}
+      {error && <p className="text-red-600 dark:text-red-400 mb-8 text-sm">{t("list.error")} {error.message}</p>}
 
       <GuestbookClient 
         posts={posts} 
@@ -119,10 +118,10 @@ export default async function GuestbookPage({ searchParams }: { searchParams: Pr
         pageSize={pageSize}
       />
 
-      <div className="pt-8 mt-12 border-t border-slate-200 dark:border-slate-800 flex justify-center">
-        <Link href="/" className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-slate-100 dark:bg-slate-800 text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all hover:scale-105 active:scale-95 cursor-pointer">
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+      <div className="pt-16 mt-16 border-t border-stone-200 dark:border-stone-800 flex justify-start">
+        <Link href="/" className="inline-flex items-center gap-2 text-xs tracking-wider uppercase font-medium text-stone-500 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-100 transition-colors group">
+          <svg className="w-3 h-3 group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
           {t("backHome")}
         </Link>

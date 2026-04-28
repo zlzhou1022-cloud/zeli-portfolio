@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>动态背景诊断工具</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #fafaf9;
+      color: #1c1917;
+      padding: 2rem;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 2rem;
+    }
+    
+    .test-area {
+      position: relative;
+      height: 600px;
+      border: 2px solid #d6d3d1;
+      border-radius: 8px;
+      overflow: hidden;
+      background: transparent;
+    }
+    
+    .background-layer {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 0;
+    }
+    
+    .blob {
+      position: absolute;
+      border-radius: 50%;
+    }
+    
+    .blob-1 {
+      top: -25%;
+      left: -25%;
+      width: 75%;
+      height: 75%;
+      background: radial-gradient(circle, rgba(120, 113, 108, 0.4) 0%, transparent 70%);
+      filter: blur(120px);
+      animation: float-slow 25s ease-in-out infinite;
+    }
+    
+    .blob-2 {
+      bottom: -25%;
+      right: -25%;
+      width: 75%;
+      height: 75%;
+      background: radial-gradient(circle, rgba(168, 162, 158, 0.35) 0%, transparent 70%);
+      filter: blur(120px);
+      animation: float-slower 30s ease-in-out infinite;
+    }
+    
+    .blob-3 {
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 50%;
+      height: 50%;
+      background: radial-gradient(circle, rgba(214, 211, 209, 0.3) 0%, transparent 70%);
+      filter: blur(100px);
+      animation: float-slowest 35s ease-in-out infinite;
+    }
+    
+    @keyframes float-slow {
+      0%, 100% { transform: translate(0, 0); }
+      33% { transform: translate(50px, -50px); }
+      66% { transform: translate(-30px, 30px); }
+    }
+    
+    @keyframes float-slower {
+      0%, 100% { transform: translate(0, 0); }
+      50% { transform: translate(-60px, 60px); }
+    }
+    
+    @keyframes float-slowest {
+      0%, 100% { transform: translate(-50%, -50%); }
+      33% { transform: translate(calc(-50% + 40px), calc(-50% - 40px)); }
+      66% { transform: translate(calc(-50% - 40px), calc(-50% + 40px)); }
+    }
+    
+    .content {
+      position: relative;
+      z-index: 1;
+      padding: 2rem;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    
+    .card {
+      background: rgba(255, 255, 255, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 1.5rem;
+      border-radius: 8px;
+      border: 1px solid rgba(214, 211, 209, 0.3);
+    }
+    
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+    
+    .indicator {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #22c55e;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    .controls {
+      margin-top: 2rem;
+      display: flex;
+      gap: 1rem;
+    }
+    
+    button {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 6px;
+      background: #1c1917;
+      color: white;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: opacity 0.2s;
+    }
+    
+    button:hover {
+      opacity: 0.8;
+    }
+    
+    .info {
+      margin-top: 2rem;
+      padding: 1.5rem;
+      background: #f5f5f4;
+      border-radius: 8px;
+      border-left: 4px solid #78716c;
+    }
+    
+    .info h3 {
+      margin-bottom: 0.5rem;
+    }
+    
+    .info ul {
+      margin-left: 1.5rem;
+      margin-top: 0.5rem;
+    }
+    
+    .info li {
+      margin: 0.25rem 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎨 动态背景诊断工具</h1>
+    
+    <div class="test-area">
+      <div class="background-layer">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+      </div>
+      
+      <div class="content">
+        <div class="card">
+          <h2>✅ 动画状态</h2>
+          <div class="status">
+            <div class="indicator"></div>
+            <span>动画正在运行</span>
+          </div>
+        </div>
+        
+        <div class="card">
+          <h3>预期效果：</h3>
+          <ul>
+            <li>左上角：灰褐色光斑缓慢移动</li>
+            <li>右下角：浅灰色光斑缓慢移动</li>
+            <li>中心：更浅的灰色光斑缓慢移动</li>
+          </ul>
+        </div>
+        
+        <div class="card">
+          <h3>如果你能看到这个页面的效果：</h3>
+          <p>说明你的浏览器支持 CSS blur 滤镜和动画。问题可能出在 Next.js 应用的配置上。</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="controls">
+      <button onclick="toggleAnimation()">暂停/继续动画</button>
+      <button onclick="increaseOpacity()">增加透明度</button>
+      <button onclick="decreaseBlur()">减少模糊</button>
+    </div>
+    
+    <div class="info">
+      <h3>📋 检查清单：</h3>
+      <ul>
+        <li>打开浏览器开发者工具（F12）</li>
+        <li>在 Elements 面板中检查 .blob 元素</li>
+        <li>在 Computed 面板中查看 animation 和 filter 属性</li>
+        <li>确认动画是否在运行（animation-play-state: running）</li>
+        <li>检查是否有 CSS 错误或警告</li>
+      </ul>
+      
+      <h3 style="margin-top: 1rem;">🔧 常见问题：</h3>
+      <ul>
+        <li>如果看不到效果：检查浏览器是否禁用了动画或滤镜</li>
+        <li>如果效果太淡：可能需要增加透明度或减少模糊度</li>
+        <li>如果动画不流畅：可能是性能问题，尝试减少模糊度</li>
+      </ul>
+    </div>
+  </div>
+  
+  <script>
+    let animationPaused = false;
+    let currentOpacity = 0.4;
+    let currentBlur = 120;
+    
+    function toggleAnimation() {
+      const blobs = document.querySelectorAll('.blob');
+      animationPaused = !animationPaused;
+      blobs.forEach(blob => {
+        blob.style.animationPlayState = animationPaused ? 'paused' : 'running';
+      });
+    }
+    
+    function increaseOpacity() {
+      currentOpacity = Math.min(currentOpacity + 0.1, 1);
+      updateBlobs();
+    }
+    
+    function decreaseBlur() {
+      currentBlur = Math.max(currentBlur - 20, 20);
+      updateBlobs();
+    }
+    
+    function updateBlobs() {
+      const blob1 = document.querySelector('.blob-1');
+      const blob2 = document.querySelector('.blob-2');
+      const blob3 = document.querySelector('.blob-3');
+      
+      blob1.style.background = `radial-gradient(circle, rgba(120, 113, 108, ${currentOpacity}) 0%, transparent 70%)`;
+      blob1.style.filter = `blur(${currentBlur}px)`;
+      
+      blob2.style.background = `radial-gradient(circle, rgba(168, 162, 158, ${currentOpacity * 0.875}) 0%, transparent 70%)`;
+      blob2.style.filter = `blur(${currentBlur}px)`;
+      
+      blob3.style.background = `radial-gradient(circle, rgba(214, 211, 209, ${currentOpacity * 0.75}) 0%, transparent 70%)`;
+      blob3.style.filter = `blur(${currentBlur * 0.833}px)`;
+    }
+    
+    // 输出诊断信息到控制台
+    console.log('🎨 动态背景诊断工具已加载');
+    console.log('当前配置：');
+    console.log('- 透明度:', currentOpacity);
+    console.log('- 模糊度:', currentBlur + 'px');
+    console.log('- 动画状态:', animationPaused ? '暂停' : '运行中');
+  </script>
+</body>
+</html>

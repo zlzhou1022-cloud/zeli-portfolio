@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
 @import "tailwindcss";
 
 /* 核心魔法：告诉 Tailwind v4，只要发现 <html> 标签带有 .dark，就激活全站的 dark: 样式 */
@@ -5,14 +6,118 @@
 
 /* 给页面的底色做强制兜底 */
 @layer base {
+  html {
+    background-color: #fafaf9; /* 浅色模式背景：stone-50 更温暖 */
+    transition: background-color 0.3s ease;
+  }
+  
+  html.dark {
+    background-color: #0c0a09; /* 暗黑模式背景：stone-950 */
+  }
+  
   body {
-    background-color: #f8fafc; /* 浅色模式背景：slate-50 */
-    color: #0f172a; /* 浅色模式文字：slate-900 */
-    transition: background-color 0.3s ease, color 0.3s ease;
+    background: transparent; /* 透明背景，让动态背景可见 */
+    color: #1c1917; /* 浅色模式文字：stone-900 */
+    transition: color 0.3s ease;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-weight: 400;
+    letter-spacing: -0.01em;
   }
   
   .dark body {
-    background-color: #020617; /* 暗黑模式背景：极深蓝黑 slate-950 */
-    color: #e2e8f0; /* 暗黑模式文字：slate-200 */
+    color: #e7e5e4; /* 暗黑模式文字：stone-200 */
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+  
+  /* 桌面端隐藏默认光标 */
+  @media (hover: hover) and (pointer: fine) {
+    body {
+      cursor: none;
+    }
+    
+    a, button, input, textarea, select, [role="button"] {
+      cursor: none;
+    }
+  }
+}
+
+/* 悬停效果增强 */
+@layer utilities {
+  .hover-lift {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .hover-lift:hover {
+    transform: translateY(-2px);
+  }
+  
+  .hover-underline {
+    position: relative;
+  }
+  
+  .hover-underline::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 1px;
+    background-color: currentColor;
+    transition: width 0.3s ease;
+  }
+  
+  .hover-underline:hover::after {
+    width: 100%;
+  }
+  
+  /* 动态背景动画 */
+  @keyframes float-slow {
+    0%, 100% {
+      transform: translate(0, 0);
+    }
+    33% {
+      transform: translate(50px, -50px);
+    }
+    66% {
+      transform: translate(-30px, 30px);
+    }
+  }
+  
+  @keyframes float-slower {
+    0%, 100% {
+      transform: translate(0, 0);
+    }
+    50% {
+      transform: translate(-60px, 60px);
+    }
+  }
+  
+  @keyframes float-slowest {
+    0%, 100% {
+      transform: translate(-50%, -50%);
+    }
+    33% {
+      transform: translate(calc(-50% + 40px), calc(-50% - 40px));
+    }
+    66% {
+      transform: translate(calc(-50% - 40px), calc(-50% + 40px));
+    }
+  }
+  
+  .animate-float-slow {
+    animation: float-slow 25s ease-in-out infinite;
+  }
+  
+  .animate-float-slower {
+    animation: float-slower 30s ease-in-out infinite;
+  }
+  
+  .animate-float-slowest {
+    animation: float-slowest 35s ease-in-out infinite;
   }
 }

@@ -35,28 +35,27 @@ export function LanguageSwitcher() {
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors opacity-90 hover:opacity-100"
+        className="flex items-center gap-2 px-3 py-1.5 border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-950 text-xs tracking-wider uppercase font-medium text-stone-600 dark:text-stone-400 hover:border-stone-400 dark:hover:border-stone-600 transition-all"
       >
-        <svg className="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
         </svg>
-        {/* 2. 直接渲染当前语言的母语标签，去掉多余的 "LAN :" */}
         {currentLanguage.label}
       </button>
 
       {isOpen && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)}></div>
-          <div className="absolute right-0 mt-2 w-24 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-lg z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="absolute right-0 mt-2 w-28 bg-white dark:bg-stone-950 border border-stone-200 dark:border-stone-800 shadow-xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
             <div className="py-1 flex flex-col">
               {languages.map((lang) => (
                 <button
                   key={lang.code}
                   onClick={() => onSelectChange(lang.code)}
-                  className={`px-4 py-2 text-sm text-center transition-colors ${
+                  className={`px-4 py-2.5 text-xs tracking-wider uppercase font-medium text-center transition-colors ${
                     locale === lang.code
-                      ? "font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
-                      : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                      ? "text-stone-900 dark:text-stone-100 bg-stone-100 dark:bg-stone-900"
+                      : "text-stone-600 dark:text-stone-400 hover:bg-stone-50 dark:hover:bg-stone-900/50"
                   }`}
                 >
                   {lang.label}

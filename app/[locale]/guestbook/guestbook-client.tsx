@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useRouter } from "@/i18n/routing";
 import { useSearchParams } from "next/navigation";
-// 1. 新增引入 useTranslations
 import { useTranslations } from "next-intl";
 
 export interface Post {
@@ -23,7 +22,6 @@ interface GuestbookClientProps {
   currentPage: number;
   totalPage: number;
   addPost: (formData: FormData) => void;
-  // 2. 去掉这里的 t 
   dateLocale: string;
   allPostIds: string[];
   pageSize: number;
@@ -39,7 +37,6 @@ export function GuestbookClient({
   pageSize 
 }: GuestbookClientProps) {
   
-  // 3. 在客户端组件内部直接获取翻译钩子
   const t = useTranslations("GuestbookPage");
 
   const [replyTarget, setReplyTarget] = useState<Post | null>(null);
@@ -54,9 +51,9 @@ export function GuestbookClient({
         const el = document.getElementById(`post-${highlightId}`);
         if (el) {
           el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          el.classList.add('ring-4', 'ring-emerald-500', 'scale-[1.02]');
+          el.classList.add('ring-2', 'ring-stone-900', 'dark:ring-stone-100');
           setTimeout(() => {
-            el.classList.remove('ring-4', 'ring-emerald-500', 'scale-[1.02]');
+            el.classList.remove('ring-2', 'ring-stone-900', 'dark:ring-stone-100');
           }, 1500);
           
           const newParams = new URLSearchParams(searchParams.toString());
@@ -74,7 +71,6 @@ export function GuestbookClient({
   };
 
   const handleScrollToOriginal = (id: string) => {
-    // 💡 核心修复：把双方都强制转换为字符串再比较，无视 number 和 string 的壁垒
     const index = allPostIds.findIndex(postId => String(postId) === String(id));
     
     if (index === -1) {
@@ -88,9 +84,9 @@ export function GuestbookClient({
       const el = document.getElementById(`post-${id}`);
       if (el) {
         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        el.classList.add('ring-4', 'ring-emerald-500', 'scale-[1.02]');
+        el.classList.add('ring-2', 'ring-stone-900', 'dark:ring-stone-100');
         setTimeout(() => {
-          el.classList.remove('ring-4', 'ring-emerald-500', 'scale-[1.02]');
+          el.classList.remove('ring-2', 'ring-stone-900', 'dark:ring-stone-100');
         }, 1500);
       }
     } else {
@@ -110,14 +106,14 @@ export function GuestbookClient({
 
   return (
     <>
-      <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm mb-12 transition-colors">
+      <div className="border border-stone-200 dark:border-stone-800 p-8 mb-16 transition-colors bg-white dark:bg-stone-950">
         
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 transition-colors">
+        <div className="flex justify-between items-center mb-6 pb-4 border-b border-stone-200 dark:border-stone-800">
+          <h2 className="text-lg font-serif text-stone-900 dark:text-stone-100 transition-colors">
             {replyTarget ? `${t("form.replyingTo")} @${replyTarget.author}` : t("form.title")}
           </h2>
           {replyTarget && (
-            <button onClick={() => setReplyTarget(null)} className="text-sm text-red-500 hover:text-red-600 font-medium cursor-pointer">
+            <button onClick={() => setReplyTarget(null)} className="text-xs tracking-wider uppercase font-medium text-stone-500 hover:text-stone-900 dark:hover:text-stone-100 transition-colors cursor-pointer">
               {t("form.cancelReply")}
             </button>
           )}
@@ -137,80 +133,77 @@ export function GuestbookClient({
             </>
           )}
 
-          <div className="flex gap-4">
-            <input required name="author" type="text" placeholder={t("form.authorPlaceholder")} className="flex-1 px-4 py-2 rounded-lg bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-colors" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input required name="author" type="text" placeholder={t("form.authorPlaceholder")} className="px-4 py-2.5 bg-white dark:bg-stone-950 border border-stone-200 dark:border-stone-800 text-stone-900 dark:text-stone-100 placeholder-stone-400 focus:outline-none focus:border-stone-400 dark:focus:border-stone-600 transition-colors font-light text-sm" />
             
             {!replyTarget && (
-              <input name="title" type="text" placeholder={t("form.titlePlaceholder")} className="flex-2 w-full px-4 py-2 rounded-lg bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-colors" />
+              <input name="title" type="text" placeholder={t("form.titlePlaceholder")} className="px-4 py-2.5 bg-white dark:bg-stone-950 border border-stone-200 dark:border-stone-800 text-stone-900 dark:text-stone-100 placeholder-stone-400 focus:outline-none focus:border-stone-400 dark:focus:border-stone-600 transition-colors font-light text-sm" />
             )}
           </div>
           
-          <textarea required name="content" placeholder={t("form.contentPlaceholder")} rows={3} className="w-full px-4 py-2 rounded-lg bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none transition-colors"></textarea>
+          <textarea required name="content" placeholder={t("form.contentPlaceholder")} rows={4} className="w-full px-4 py-2.5 bg-white dark:bg-stone-950 border border-stone-200 dark:border-stone-800 text-stone-900 dark:text-stone-100 placeholder-stone-400 focus:outline-none focus:border-stone-400 dark:focus:border-stone-600 resize-none transition-colors font-light text-sm leading-relaxed"></textarea>
           
-          <button type="submit" className="px-6 py-2 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 rounded-lg hover:bg-slate-800 dark:hover:bg-slate-200 transition-colors font-bold cursor-pointer">
+          <button type="submit" className="px-6 py-2.5 bg-stone-900 dark:bg-stone-100 text-stone-50 dark:text-stone-900 hover:bg-stone-800 dark:hover:bg-stone-200 transition-colors text-xs tracking-wider uppercase font-medium cursor-pointer">
             {replyTarget ? t("form.replySubmit") : t("form.submit")}
           </button>
         </form>
       </div>
 
-      <div className="space-y-6 mb-12">
-        <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 border-b border-slate-200 dark:border-slate-800 pb-2 transition-colors">{t("list.title")}</h2>
+      <div className="space-y-1 mb-16">
+        <h2 className="text-xs tracking-[0.2em] uppercase text-stone-400 dark:text-stone-500 font-medium mb-8">{t("list.title")}</h2>
         
         {!posts || posts.length === 0 ? (
-          <p className="text-slate-500 dark:text-slate-400 italic transition-colors">{t("list.empty")}</p>
+          <p className="text-stone-500 dark:text-stone-400 italic transition-colors font-light text-sm py-12 text-center">{t("list.empty")}</p>
         ) : (
           posts.map((post: Post) => (
             <div 
               key={post.id} 
               id={`post-${post.id}`}
-              className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm transition-all duration-500"
+              className="border-b border-stone-200 dark:border-stone-800 py-8 transition-all duration-500 hover:bg-stone-50 dark:hover:bg-stone-900/50 px-6 -mx-6"
             >
               <div className="flex justify-between items-start mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-blue-500 flex items-center justify-center text-white font-bold text-lg shadow-sm shrink-0">
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 border border-stone-200 dark:border-stone-800 flex items-center justify-center text-stone-900 dark:text-stone-100 font-serif text-lg shrink-0">
                     {post.author.charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <div className="font-bold text-slate-900 dark:text-slate-100 text-base">{post.author}</div>
-                    <div className="text-xs text-slate-400 dark:text-slate-500">
+                    <div className="font-medium text-stone-900 dark:text-stone-100 text-sm">{post.author}</div>
+                    <div className="text-[10px] tracking-wider uppercase text-stone-400 dark:text-stone-500 mt-0.5">
                       {new Date(post.created_at).toLocaleDateString(dateLocale, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                     </div>
                   </div>
                 </div>
-                <button onClick={() => handleReply(post)} className="text-sm font-medium text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 transition-colors flex items-center gap-1 cursor-pointer">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>
+                <button onClick={() => handleReply(post)} className="text-xs tracking-wider uppercase font-medium text-stone-500 hover:text-stone-900 dark:hover:text-stone-100 transition-colors flex items-center gap-1.5 cursor-pointer">
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>
                   {t("list.replyBtn")}
                 </button>
               </div>
 
               {post.reply_to_id && (
-                // 💡 修复：使用 .some() 配合 String() 强制统一两边的类型再比较
                 allPostIds.some(id => String(id) === String(post.reply_to_id)) ? (
-                  /* 原消息存在：正常显示并允许点击跳转 */
                   <div 
                     onClick={() => handleScrollToOriginal(post.reply_to_id as string)}
-                    className="mb-4 pl-3 py-2 border-l-4 border-emerald-200 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/30 rounded-r-lg cursor-pointer hover:bg-emerald-50 dark:hover:bg-emerald-900/40 transition-colors group"
+                    className="mb-4 pl-4 py-3 border-l-2 border-stone-300 dark:border-stone-700 bg-stone-50 dark:bg-stone-900/50 cursor-pointer hover:border-stone-900 dark:hover:border-stone-100 transition-colors group"
                   >
-                    <p className="text-xs font-bold text-emerald-600 dark:text-emerald-500 mb-1 group-hover:underline">
-                      {t("list.quotePrefix")} @{post.reply_to_author} :
+                    <p className="text-[10px] tracking-wider uppercase text-stone-400 dark:text-stone-500 mb-2 group-hover:text-stone-900 dark:group-hover:text-stone-100">
+                      {t("list.quotePrefix")} @{post.reply_to_author}
                     </p>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 italic">
+                    <p className="text-sm text-stone-600 dark:text-stone-400 line-clamp-2 font-light italic">
                       {post.reply_to_content}
                     </p>
                   </div>
                 ) : (
-                  /* 原消息不存在：显示灰色失效提示 */
-                  <div className="mb-4 pl-3 py-2 border-l-4 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 rounded-r-lg">
-                    <p className="text-sm text-slate-400 dark:text-slate-500 italic flex items-center gap-2">
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+                  <div className="mb-4 pl-4 py-3 border-l-2 border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900/50">
+                    <p className="text-sm text-stone-400 dark:text-stone-500 italic flex items-center gap-2 font-light">
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
                       {t("list.notFound")}
                     </p>
                   </div>
                 )
               )}
 
-              {post.title && <h3 className="font-bold text-slate-800 dark:text-slate-200 mb-2">{post.title}</h3>}
-              <p className="text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">{post.content}</p>
+              {post.title && <h3 className="font-serif text-lg text-stone-900 dark:text-stone-100 mb-3">{post.title}</h3>}
+              <p className="text-stone-700 dark:text-stone-300 leading-relaxed whitespace-pre-wrap font-light text-sm">{post.content}</p>
             </div>
           ))
         )}
@@ -220,7 +213,7 @@ export function GuestbookClient({
         <div className="flex items-center justify-center gap-2 mb-8">
           <Link 
             href={`/guestbook?p=${Math.max(1, currentPage - 1)}`}
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${currentPage === 1 ? 'pointer-events-none opacity-30' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+            className={`px-3 py-1.5 text-xs tracking-wider uppercase font-medium transition-colors border border-stone-200 dark:border-stone-800 ${currentPage === 1 ? 'pointer-events-none opacity-30' : 'hover:border-stone-400 dark:hover:border-stone-600'}`}
           >
             ← {t("pagination.prev")}
           </Link>
@@ -229,10 +222,10 @@ export function GuestbookClient({
             <Link
               key={num}
               href={`/guestbook?p=${num}`}
-              className={`w-9 h-9 flex items-center justify-center rounded-lg text-sm font-bold transition-all ${
+              className={`w-9 h-9 flex items-center justify-center text-xs font-medium transition-all border ${
                 num === currentPage 
-                ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 scale-110' 
-                : 'hover:bg-slate-100 dark:hover:bg-slate-800'
+                ? 'bg-stone-900 dark:bg-stone-100 text-stone-50 dark:text-stone-900 border-stone-900 dark:border-stone-100' 
+                : 'border-stone-200 dark:border-stone-800 hover:border-stone-400 dark:hover:border-stone-600'
               }`}
             >
               {num}
@@ -241,7 +234,7 @@ export function GuestbookClient({
 
           <Link 
             href={`/guestbook?p=${Math.min(totalPage, currentPage + 1)}`}
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${currentPage === totalPage ? 'pointer-events-none opacity-30' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+            className={`px-3 py-1.5 text-xs tracking-wider uppercase font-medium transition-colors border border-stone-200 dark:border-stone-800 ${currentPage === totalPage ? 'pointer-events-none opacity-30' : 'hover:border-stone-400 dark:hover:border-stone-600'}`}
           >
             {t("pagination.next")} →
           </Link>

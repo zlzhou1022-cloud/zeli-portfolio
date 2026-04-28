@@ -105,56 +105,65 @@ export function ChatBot({ isQuotaFull }: { isQuotaFull: boolean }) {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
+    <div className="fixed bottom-8 right-8 z-50 flex flex-col items-end">
       {isOpen && (
-        <div className="mb-4 w-80 h-[450px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom-4">
-          <div className="p-4 bg-emerald-500 text-white font-bold flex justify-between">
-            <span>AI Assistant</span>
-            <button onClick={() => setIsOpen(false)} className="cursor-pointer">✕</button>
+        <div className="mb-4 w-96 h-[500px] bg-white dark:bg-stone-950 border border-stone-200 dark:border-stone-800 flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 shadow-2xl">
+          <div className="p-5 border-b border-stone-200 dark:border-stone-800 flex justify-between items-center">
+            <div>
+              <span className="text-sm font-serif text-stone-900 dark:text-stone-100">AI Assistant</span>
+              <p className="text-xs text-stone-500 mt-0.5 font-light">Powered by Groq</p>
+            </div>
+            <button onClick={() => setIsOpen(false)} className="text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 transition-colors text-lg leading-none cursor-pointer">×</button>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div className="flex-1 overflow-y-auto p-5 space-y-6">
             {messages.map((m, i) => {
               const isUser = m.role === "user";
               const ts = formatTs(m.timestamp);
               return (
                 <div key={i} className={`flex flex-col ${isUser ? "items-end" : "items-start"}`}>
                   {ts && (
-                    <span className="text-[10px] text-slate-400 mb-1 px-1">{ts}</span>
+                    <span className="text-[9px] tracking-wider uppercase text-stone-400 mb-2 px-1">{ts}</span>
                   )}
-                  <div className={`max-w-[80%] p-3 rounded-2xl text-sm whitespace-pre-wrap ${
+                  <div className={`max-w-[85%] p-4 text-sm whitespace-pre-wrap leading-relaxed font-light ${
                     isUser
-                      ? "bg-emerald-500 text-white"
-                      : "bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200"
+                      ? "bg-stone-900 dark:bg-stone-100 text-stone-50 dark:text-stone-900 border border-stone-900 dark:border-stone-100"
+                      : "bg-stone-50 dark:bg-stone-900 text-stone-900 dark:text-stone-100 border border-stone-200 dark:border-stone-800"
                   }`}>
                     {m.content}
                   </div>
                 </div>
               );
             })}
-            {isLoading && <div className="text-xs text-slate-400 animate-pulse">Thinking...</div>}
+            {isLoading && <div className="text-xs text-stone-400 animate-pulse font-light italic">Thinking...</div>}
             <div ref={scrollRef} />
           </div>
 
-          <div className="p-4 border-t border-slate-100 dark:border-slate-800 flex gap-2">
+          <div className="p-4 border-t border-stone-200 dark:border-stone-800 flex gap-3">
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSend()}
               placeholder={sessionBlocked ? "Session limit reached." : "Type a message..."}
               disabled={sessionBlocked}
-              className="flex-1 bg-slate-50 dark:bg-slate-950 border-none rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 px-4 py-2.5 text-sm outline-none focus:border-stone-400 dark:focus:border-stone-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-light"
             />
-            <button onClick={handleSend} disabled={sessionBlocked} className="bg-emerald-500 text-white p-2 rounded-xl cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">🚀</button>
+            <button 
+              onClick={handleSend} 
+              disabled={sessionBlocked} 
+              className="bg-stone-900 dark:bg-stone-100 text-stone-50 dark:text-stone-900 px-4 py-2.5 text-xs tracking-wider uppercase font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-stone-800 dark:hover:bg-stone-200 transition-colors"
+            >
+              Send
+            </button>
           </div>
         </div>
       )}
 
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-14 h-14 bg-emerald-500 text-white rounded-full shadow-lg flex items-center justify-center text-2xl hover:scale-110 active:scale-95 transition-transform cursor-pointer"
+        className="w-16 h-16 bg-stone-900 dark:bg-stone-100 text-stone-50 dark:text-stone-900 border border-stone-900 dark:border-stone-100 flex items-center justify-center text-xs tracking-wider uppercase font-medium hover:bg-stone-800 dark:hover:bg-stone-200 transition-all cursor-pointer shadow-lg"
       >
-        {isOpen ? "✕" : "💬"}
+        {isOpen ? "×" : "Chat"}
       </button>
     </div>
   );

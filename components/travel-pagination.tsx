@@ -41,12 +41,12 @@ export function TravelPagination({ tripId, currentPage, totalPage }: Props) {
   };
 
   return (
-    <div className="space-y-8 mt-12 pb-20">
+    <div className="space-y-8 mt-16 pb-20">
       {/* 报错提示 */}
       {error && (
         <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-top-4">
-          <div className="bg-red-500 text-white px-6 py-2 rounded-full shadow-lg text-sm font-bold">
-            ⚠️ {error}
+          <div className="bg-stone-900 dark:bg-stone-100 text-stone-50 dark:text-stone-900 px-6 py-2 shadow-xl text-xs tracking-wider uppercase font-medium">
+            {error}
           </div>
         </div>
       )}
@@ -55,7 +55,7 @@ export function TravelPagination({ tripId, currentPage, totalPage }: Props) {
       <div className="flex flex-wrap items-center justify-center gap-2">
         <Link 
           href={`/travels/${tripId}?p=${Math.max(1, currentPage - 1)}`}
-          className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${currentPage === 1 ? 'pointer-events-none opacity-30' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+          className={`px-3 py-1.5 text-xs tracking-wider uppercase font-medium transition-colors border border-stone-200 dark:border-stone-800 ${currentPage === 1 ? 'pointer-events-none opacity-30' : 'hover:border-stone-400 dark:hover:border-stone-600'}`}
         >
           ← {t("prev")}
         </Link>
@@ -64,10 +64,10 @@ export function TravelPagination({ tripId, currentPage, totalPage }: Props) {
           <Link
             key={num}
             href={`/travels/${tripId}?p=${num}`}
-            className={`w-9 h-9 flex items-center justify-center rounded-lg text-sm font-bold transition-all ${
+            className={`w-9 h-9 flex items-center justify-center text-xs font-medium transition-all border ${
               num === currentPage 
-              ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 scale-110' 
-              : 'hover:bg-slate-100 dark:hover:bg-slate-800'
+              ? 'bg-stone-900 dark:bg-stone-100 text-stone-50 dark:text-stone-900 border-stone-900 dark:border-stone-100' 
+              : 'border-stone-200 dark:border-stone-800 hover:border-stone-400 dark:hover:border-stone-600'
             }`}
           >
             {num}
@@ -76,7 +76,7 @@ export function TravelPagination({ tripId, currentPage, totalPage }: Props) {
 
         <Link 
           href={`/travels/${tripId}?p=${Math.min(totalPage, currentPage + 1)}`}
-          className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${currentPage === totalPage ? 'pointer-events-none opacity-30' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+          className={`px-3 py-1.5 text-xs tracking-wider uppercase font-medium transition-colors border border-stone-200 dark:border-stone-800 ${currentPage === totalPage ? 'pointer-events-none opacity-30' : 'hover:border-stone-400 dark:hover:border-stone-600'}`}
         >
           {t("next")} →
         </Link>
@@ -89,11 +89,11 @@ export function TravelPagination({ tripId, currentPage, totalPage }: Props) {
           value={jumpValue}
           onChange={(e) => setJumpValue(e.target.value)}
           placeholder={`1 ~ ${totalPage}`}
-          className="w-20 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-400 transition-colors"
+          className="w-20 px-3 py-1.5 border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-950 text-xs outline-none focus:border-stone-400 dark:focus:border-stone-600 transition-colors font-light"
         />
         <button 
           onClick={handleJump}
-          className="px-4 py-1.5 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 rounded-lg text-sm font-bold hover:opacity-80 transition-opacity cursor-pointer"
+          className="px-4 py-1.5 bg-stone-900 dark:bg-stone-100 text-stone-50 dark:text-stone-900 text-xs tracking-wider uppercase font-medium hover:bg-stone-800 dark:hover:bg-stone-200 transition-colors cursor-pointer"
         >
           {t("jump")}
         </button>

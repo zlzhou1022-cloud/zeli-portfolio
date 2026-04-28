@@ -30,48 +30,46 @@ export default async function TripDetailPage({
   if (!currentPhoto) notFound();
 
   return (
-    <div className="max-w-6xl mx-auto animate-in fade-in duration-700 mt-8 pb-20">
-      <div className="mb-6 px-4 lg:px-0">
-        <Link href="/travels" className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 transition-colors group">
-          <svg className="w-4 h-4 group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+    <div className="max-w-6xl mx-auto animate-in fade-in duration-1000 mt-8 pb-32">
+      <div className="mb-8 px-4 lg:px-0">
+        <Link href="/travels" className="inline-flex items-center gap-2 text-xs tracking-wider uppercase font-medium text-stone-500 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-100 transition-colors group">
+          <svg className="w-3 h-3 group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
           {t("back")}
         </Link>
       </div>
 
       {/* 💡 手机端默认堆叠，电脑端分为左右两列 */}
-      <div className="flex flex-col lg:flex-row gap-6 lg:gap-12 px-4 lg:px-0">
+      <div className="flex flex-col lg:flex-row gap-8 lg:gap-16 px-4 lg:px-0">
         
         <aside className="w-full lg:w-80 shrink-0">
-          <div className="lg:sticky lg:top-24 bg-white dark:bg-slate-900 lg:border border-slate-200 dark:border-slate-800 rounded-2xl lg:p-5 lg:shadow-sm lg:max-h-[70vh] flex flex-col transition-colors">
+          <div className="lg:sticky lg:top-24 border-b lg:border-b-0 lg:border-r border-stone-200 dark:border-stone-800 pb-8 lg:pb-0 lg:pr-8">
             
-            <div className="mb-4 lg:pb-4 lg:border-b border-slate-200 dark:border-slate-800">
-              <h2 className="text-xl lg:text-lg font-bold text-slate-900 dark:text-slate-100">{tTrips(`${id}.title`)}</h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 font-mono tracking-wider">
+            <div className="mb-6">
+              <h2 className="text-3xl font-serif text-stone-900 dark:text-stone-100 mb-2">{tTrips(`${id}.title`)}</h2>
+              <p className="text-xs tracking-wider uppercase text-stone-500 dark:text-stone-400">
                 {trip.date} • {totalPage} {t("photos")}
               </p>
             </div>
             
             {/* 💡 核心魔术区：手机端 flex-row 横滑，电脑端 flex-col 纵滑 */}
-            <div className="flex flex-row lg:flex-col overflow-x-auto lg:overflow-y-auto lg:pr-2 gap-3 lg:gap-0 lg:space-y-1 pb-2 lg:pb-0 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden">
+            <div className="flex flex-row lg:flex-col overflow-x-auto lg:overflow-y-auto gap-3 lg:gap-2 pb-2 lg:pb-0 snap-x snap-mandatory lg:max-h-[60vh] [&::-webkit-scrollbar]:hidden">
               {trip.photos.map((_, index) => {
                 const pageNum = index + 1;
                 const isActive = pageNum === currentPage;
                 return (
-                  // 💡 2. 使用 ScrollLink 代替原生 Link
                   <ScrollLink 
                     key={pageNum} 
                     href={`/travels/${id}?p=${pageNum}`} 
-                    // 💡 手机端变成固定宽度 (w-48) 的小卡片，防挤压 (shrink-0)
-                    className={`snap-start shrink-0 w-48 lg:w-full block px-4 py-3 lg:px-3 lg:py-2.5 rounded-xl lg:rounded-lg text-sm transition-all border lg:border-transparent ${
+                    className={`snap-start shrink-0 w-56 lg:w-full block py-3 px-4 lg:px-3 lg:py-2 text-sm transition-all border-l-2 lg:border-l-2 ${
                       isActive 
-                        ? "bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-bold border-slate-900 dark:border-slate-100" 
-                        : "bg-slate-50 lg:bg-transparent dark:bg-slate-800/50 lg:dark:bg-transparent border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-100"
+                        ? "border-stone-900 dark:border-stone-100 bg-stone-50 dark:bg-stone-900/50 text-stone-900 dark:text-stone-100 font-medium" 
+                        : "border-transparent text-stone-500 dark:text-stone-400 hover:border-stone-300 dark:hover:border-stone-700 hover:text-stone-900 dark:hover:text-stone-100 font-light"
                     }`}
                   >
-                    <div className="flex flex-col lg:flex-row gap-1 lg:gap-2">
-                      <span className="shrink-0 font-mono text-xs lg:text-sm opacity-70 lg:opacity-100">P{pageNum}</span>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-[10px] tracking-wider uppercase opacity-60">{String(pageNum).padStart(2, '0')}</span>
                       <span className="line-clamp-2">{tTrips(`${id}.photos.${pageNum}`)}</span>
                     </div>
                   </ScrollLink>
@@ -83,21 +81,21 @@ export default async function TripDetailPage({
 
         {/* 💡 3. 加入 id="photo-viewer" 和 scroll-mt-24 防遮挡 */}
         <main id="photo-viewer" className="flex-1 w-full min-w-0 flex flex-col scroll-mt-24">
-          <section className="space-y-6">
+          <section className="space-y-8">
             <ImageViewer src={currentPhoto.src} alt={tTrips(`${id}.photos.${currentPage}`)} />
-            <div className="text-center px-4">
-              <div className="min-h-[3.5rem] flex items-center justify-center mb-2">
-                <p className="text-lg font-medium text-slate-800 dark:text-slate-200 line-clamp-2">
+            <div className="px-4 lg:px-0">
+              <div className="border-l-2 border-stone-200 dark:border-stone-800 pl-6 mb-6">
+                <p className="text-xl font-light text-stone-800 dark:text-stone-200 leading-relaxed">
                   {tTrips(`${id}.photos.${currentPage}`)}
                 </p>
               </div>
-              <p className="text-sm font-mono text-slate-400">
+              <p className="text-xs tracking-wider uppercase text-stone-400">
                 {id.toUpperCase()} / {t("page")} {currentPage}
               </p>
             </div>
           </section>
           
-          <div className="mt-10">
+          <div className="mt-12">
             <TravelPagination tripId={id} currentPage={currentPage} totalPage={totalPage} />
           </div>
         </main>
