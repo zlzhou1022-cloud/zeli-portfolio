@@ -146,7 +146,7 @@ export function ChatBot({ isQuotaFull }: { isQuotaFull: boolean }) {
               onKeyDown={(e) => e.key === "Enter" && handleSend()}
               placeholder={sessionBlocked ? "Session limit reached." : "Type a message..."}
               disabled={sessionBlocked}
-              className="flex-1 bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 px-4 py-2.5 text-sm outline-none focus:border-stone-400 dark:focus:border-stone-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-light"
+              className="flex-1 bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 px-4 py-2.5 text-base outline-none focus:border-stone-400 dark:focus:border-stone-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-light"
             />
             <button 
               onClick={handleSend} 

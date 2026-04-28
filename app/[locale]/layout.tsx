@@ -17,12 +17,20 @@ import { ChatBot } from "@/components/chat-bot";
 import { CustomCursor } from "@/components/custom-cursor";
 import { ScrollProgress } from "@/components/scroll-progress";
 import { AnimatedBackground } from "@/components/animated-background";
+import type { Viewport } from 'next';
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Zeli | 个人主页",
   description: "软件工程师履历、技术博客与生活记录",
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default async function LocaleLayout({

@@ -3,10 +3,18 @@ import { ThemeProvider } from "next-themes";
 import { CustomCursor } from "@/components/custom-cursor";
 import { ScrollProgress } from "@/components/scroll-progress";
 import { AnimatedBackground } from "@/components/animated-background";
+import type { Viewport } from 'next';
 
 export const metadata = {
   title: "管理后台 | Zeli's Space",
   description: "纯中文极简管理后台",
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function AdminLayout({
