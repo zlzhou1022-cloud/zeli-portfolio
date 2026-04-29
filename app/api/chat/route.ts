@@ -156,7 +156,7 @@ export async function POST(req: Request) {
       await redis.expire(globalQuotaKey, 60 * 60 * 24);
     }
 
-    return NextResponse.json(aiMessage);
+    return NextResponse.json(aiMessageWithTs);
 
   } catch (error) {
     console.error("❌ 聊天后端发生未知错误:", error);
