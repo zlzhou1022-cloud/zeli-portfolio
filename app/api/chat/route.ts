@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { reportInfraFailure } from "@/lib/alert";
 import { Redis } from "@upstash/redis";
 import { headers } from "next/headers";
 
 const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL!,
   token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+  signal: () => AbortSignal.timeout(2500), // 硬超时，理由同 middleware
 });
 
 export async function POST(req: Request) {
@@ -21,14 +23,20 @@ export async function POST(req: Request) {
 
     // 层1：全局配额 —— 当天 chat_logs 新建行数超过 50 时关闭所有人的入口
     const globalQuotaKey = `chat_new_sessions:${today}`;
-    const globalQuota = await redis.get<number>(globalQuotaKey) ?? 0;
+    // 层2：session 配额 —— 单个 session 累计消息超过 5000 条时关闭该用户入口
+    const sessionQuotaKey = `chat_session_msgs:${chatId}`;
+    // 容错：Redis 不可用时按「配额未用」降级放行并告警，不让缓存故障关掉聊天入口。
+    let globalQuota = 0;
+    let sessionMsgCount = 0;
+    try {
+      globalQuota = await redis.get<number>(globalQuotaKey) ?? 0;
+      sessionMsgCount = await redis.get<number>(sessionQuotaKey) ?? 0;
+    } catch (err) {
+      await reportInfraFailure('chat/redis-quota', err);
+    }
     if (globalQuota >= 50) {
       return new NextResponse("daily_quota_full", { status: 403 });
     }
-
-    // 层2：session 配额 —— 单个 session 累计消息超过 5000 条时关闭该用户入口
-    const sessionQuotaKey = `chat_session_msgs:${chatId}`;
-    const sessionMsgCount = await redis.get<number>(sessionQuotaKey) ?? 0;
     if (sessionMsgCount >= 5000) {
       return new NextResponse("session_quota_full", { status: 403 });
     }
@@ -151,13 +159,17 @@ export async function POST(req: Request) {
       console.log(`✅ 会话 ${chatId?.slice(0,8)}... 已成功更新数据库快照!`);
     }
       
-    // 5. 更新配额计数
-    // session 消息数：每次对话 +1，永不过期（session 本身就是持久的）
-    await redis.incr(sessionQuotaKey);
-    // 全局新建行数：仅在新 session 首次创建时 +1（通过判断 session 消息数是否为 0）
-    if (sessionMsgCount === 0) {
-      await redis.incr(globalQuotaKey);
-      await redis.expire(globalQuotaKey, 60 * 60 * 24);
+    // 5. 更新配额计数（容错：计数失败只告警，不能把已经成功的回复变成 500）
+    try {
+      // session 消息数：每次对话 +1，永不过期（session 本身就是持久的）
+      await redis.incr(sessionQuotaKey);
+      // 全局新建行数：仅在新 session 首次创建时 +1（通过判断 session 消息数是否为 0）
+      if (sessionMsgCount === 0) {
+        await redis.incr(globalQuotaKey);
+        await redis.expire(globalQuotaKey, 60 * 60 * 24);
+      }
+    } catch (err) {
+      await reportInfraFailure('chat/redis-counter', err);
     }
 
     return NextResponse.json(aiMessageWithTs);

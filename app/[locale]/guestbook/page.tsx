@@ -9,11 +9,13 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
+import { reportInfraFailure } from "@/lib/alert";
 
 // 💡 2. 在组件外部初始化严格的 API 限流器 (每分钟3次)
 const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL!,
   token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+  signal: () => AbortSignal.timeout(2500), // 硬超时，理由同 middleware
 });
 const apiLimit = new Ratelimit({
   redis,
@@ -38,6 +40,11 @@ export default async function GuestbookPage({ searchParams }: { searchParams: Pr
     .order('created_at', { ascending: false })
     .range(start, end);
 
+  // Supabase 读取异常时告警（页面仍按空列表降级渲染）
+  if (error) {
+    await reportInfraFailure('guestbook/supabase', error);
+  }
+
   const totalPage = Math.ceil((count || 0) / pageSize);
 
   const { data: allIds } = await supabase
@@ -53,9 +60,15 @@ export default async function GuestbookPage({ searchParams }: { searchParams: Pr
     'use server'; 
     
     // 💡 3. 第一道关卡：精准的 Server Action 限流
+    // 容错：Redis 不可用时降级放行并告警，不让限流器故障挡住正常留言。
     const headersList = await headers();
     const ip = headersList.get("x-forwarded-for") ?? "127.0.0.1";
-    const { success } = await apiLimit.limit(`ratelimit_api_${ip}`);
+    let success = true;
+    try {
+      ({ success } = await apiLimit.limit(`ratelimit_api_${ip}`));
+    } catch (err) {
+      await reportInfraFailure('guestbook/redis-ratelimit', err);
+    }
 
     // 如果超限，触发 Next.js 内置重定向（完美兼容客户端路由，不会红屏！）
     if (!success) {

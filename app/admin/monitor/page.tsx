@@ -6,10 +6,12 @@ import { redirect } from "next/navigation";
 import { AdminThemeToggle } from "../guestbook/admin-theme-toggle"; // 复用你的暗黑模式按钮
 // 💡 1. 顶部引入 Redis
 import { Redis } from "@upstash/redis";
+import { reportInfraFailure } from "@/lib/alert";
 
 const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL!,
   token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+  signal: () => AbortSignal.timeout(2500), // 硬超时，理由同 middleware
 });
 
 // 💡 修复 1：明确告诉 TypeScript 数据库返回的字段格式
@@ -47,7 +49,12 @@ export default async function MonitorDashboardPage() {
     await supabaseAdmin.from('ip_blocklist').upsert([{ ip, reason }]);
     
     // B. 💡 同步到 Redis（高速拦截），设置过期时间为永久（或很久）
-    await redis.set(`blocked_ip:${ip}`, reason);
+    // 容错：Redis 同步失败只告警——Supabase 里的永久记录已落库，不能让整个操作报错。
+    try {
+      await redis.set(`blocked_ip:${ip}`, reason);
+    } catch (err) {
+      await reportInfraFailure('monitor/redis', err);
+    }
     
     revalidatePath("/admin/monitor");
   }
@@ -60,8 +67,12 @@ export default async function MonitorDashboardPage() {
     // A. 从数据库删除
     await supabaseAdmin.from('ip_blocklist').delete().eq('ip', ip);
     
-    // B. 💡 从 Redis 删除
-    await redis.del(`blocked_ip:${ip}`);
+    // B. 💡 从 Redis 删除（容错同上：失败只告警）
+    try {
+      await redis.del(`blocked_ip:${ip}`);
+    } catch (err) {
+      await reportInfraFailure('monitor/redis', err);
+    }
     
     revalidatePath("/admin/monitor");
   }

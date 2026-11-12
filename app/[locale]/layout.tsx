@@ -13,6 +13,7 @@ import {notFound} from 'next/navigation';
 
 // 💡 1. 引入 Redis 和 聊天机器人组件
 import { Redis } from "@upstash/redis";
+import { reportInfraFailure } from "@/lib/alert";
 import { ChatBot } from "@/components/chat-bot";
 import { CustomCursor } from "@/components/custom-cursor";
 import { ScrollProgress } from "@/components/scroll-progress";
@@ -49,13 +50,21 @@ export default async function LocaleLayout({
   const messages = await getMessages();
 
   // 💡 2. 在服务端检查今日全局配额（新建 session 数超过 50）
-  const redis = new Redis({
-    url: process.env.UPSTASH_REDIS_REST_URL!,
-    token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-  });
-  const today = new Date().toISOString().split('T')[0];
-  const globalQuota = await redis.get<number>(`chat_new_sessions:${today}`) ?? 0;
-  const isQuotaFull = globalQuota >= 50;
+  // 容错：Redis 不可用时按「配额未满」降级渲染并告警——这里是全站布局，
+  // 一次未捕获的异常就会让每个页面 500，绝不能让配额检查成为单点故障。
+  let isQuotaFull = false;
+  try {
+    const redis = new Redis({
+      url: process.env.UPSTASH_REDIS_REST_URL!,
+      token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+      signal: () => AbortSignal.timeout(2500), // 硬超时，理由同 middleware
+    });
+    const today = new Date().toISOString().split('T')[0];
+    const globalQuota = await redis.get<number>(`chat_new_sessions:${today}`) ?? 0;
+    isQuotaFull = globalQuota >= 50;
+  } catch (err) {
+    await reportInfraFailure('layout/redis-quota', err);
+  }
 
   return (
     <html lang={locale} suppressHydrationWarning>
