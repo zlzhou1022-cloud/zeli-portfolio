@@ -63,6 +63,19 @@ export default function ProfilePage() {
             <div className="absolute -left-[33px] top-2 w-2 h-2 bg-stone-900 dark:bg-stone-100 rounded-full"></div>
             <div className="flex flex-col md:flex-row md:justify-between md:items-start mb-3 gap-2">
               <div>
+                <h3 className="text-2xl font-serif text-stone-900 dark:text-stone-100 transition-colors mb-1">{t("mri.name")}</h3>
+                <p className="text-stone-600 dark:text-stone-400 font-light transition-colors">{t("mri.title")}</p>
+              </div>
+              <span className="text-xs tracking-wider text-stone-500 dark:text-stone-400 transition-colors">{t("mri.date")}</span>
+            </div>
+            <p className="text-stone-600 dark:text-stone-400 text-sm leading-relaxed transition-colors font-light max-w-2xl">
+              {t("mri.desc")}
+            </p>
+          </div>
+          <div className="relative">
+            <div className="absolute -left-[33px] top-2 w-2 h-2 bg-stone-900 dark:bg-stone-100 rounded-full"></div>
+            <div className="flex flex-col md:flex-row md:justify-between md:items-start mb-3 gap-2">
+              <div>
                 <h3 className="text-2xl font-serif text-stone-900 dark:text-stone-100 transition-colors mb-1">{t("deloitte.name")}</h3>
                 <p className="text-stone-600 dark:text-stone-400 font-light transition-colors">{t("deloitte.title")}</p>
               </div>
