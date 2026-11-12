@@ -117,7 +117,7 @@ export async function POST(req: Request) {
         "Authorization": `Bearer ${process.env.GROQ_API_KEY}`,
       },
       body: JSON.stringify({
-        model: "llama-3.3-70b-versatile",
+        model: "openai/gpt-oss-120b", // llama-3.3-70b-versatile 已于 2026-08-16 被 Groq 退役，官方替代为 gpt-oss-120b
         messages: [systemPrompt, ...messagesForLLM],
         temperature: 0.7,
       }),
