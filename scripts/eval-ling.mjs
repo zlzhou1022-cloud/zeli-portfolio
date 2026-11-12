@@ -19,6 +19,9 @@ if (!BASE) {
   process.exit(2);
 }
 const PREFIX = process.env.EVAL_PREFIX || `eval-ling-${Date.now()}`;
+// Groq 免费层有 RPM/TPM 限流：连发会 500（2026-11-13 实测连发 5 题后触发，等待 60 秒恢复）。题与题之间默认停 7 秒。
+const DELAY_MS = Number(process.env.EVAL_DELAY_MS || 7000);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const withTools = process.argv.includes("--tools");
 
 function extractContent(text, contentType) {
@@ -105,6 +108,7 @@ function check(c, answer) {
 }
 
 for (const c of CASES) {
+  await sleep(DELAY_MS);
   const chatId = `${PREFIX}-${c.id}`;
   try {
     const answer = await ask(chatId, [{ role: "user", content: c.q }], c.locale);
@@ -135,6 +139,7 @@ for (const c of CASES) {
 
 if (withTools) {
   for (const c of TOOL_CASES) {
+    await sleep(DELAY_MS);
     const chatId = `${PREFIX}-${c.id}`;
     try {
       const answer = await ask(chatId, [{ role: "user", content: c.q }], "cn");
