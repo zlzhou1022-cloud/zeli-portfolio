@@ -34,13 +34,13 @@
     "mri": {
       "name": "三菱综合研究所",
       "title": "顾问",
-      "date": "2026 ~ 至今",
+      "date": "2026.9 ~ 至今",
       "desc": "从事面向金融机构的数据科学与 AI 咨询，负责 RAG、LLM Agent 等生成式 AI 系统的企划与开发，推动业务流程的智能化改造。"
     },
     "deloitte": {
       "name": "Deloitte Tohmatsu Akt",
       "title": "交付分析师",
-      "date": "2024.4 ~ 2026",
+      "date": "2024.4 ~ 2026.8",
       "desc": "主导基于 Salesforce 平台的数字化转型咨询与开发实施，提供从上游到下游的端到端解决方案。"
     },
     "education": "学生经历",
