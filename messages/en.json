@@ -1,8 +1,8 @@
 {
   "Home": {
     "greeting": "Hi, I'm Zeli 👋",
-    "title": "IT Engineer & Consultant",
-    "bio": "With a Master's degree from the University of Tokyo and a background in end-to-end IT solution consulting at Deloitte, I am dedicated to solving complex business challenges through technology. Outside of work, I build quirky side projects and travel across all 47 prefectures of Japan and beyond, documenting my journey through the lens of my camera.",
+    "title": "Data Scientist & Consultant",
+    "bio": "With a Master's degree from the University of Tokyo, I now work at Mitsubishi Research Institute, where I focus on data science and AI consulting in the financial sector — solving complex business challenges with data and generative AI. Before that, I delivered Salesforce-based digital transformation consulting and implementation at Deloitte. Outside of work, I build quirky side projects and travel across all 47 prefectures of Japan and beyond, documenting my journey through the lens of my camera.",
     "modules": {
       "profile": {
         "title": "Profile",
@@ -28,13 +28,19 @@
   },
   "ProfilePage": {
     "backHome": "Back to Home",
-    "role": "IT Engineer & Consultant",
+    "role": "Data Scientist & Consultant",
     "location": "Japan",
     "experience": "Experience",
+    "mri": {
+      "name": "Mitsubishi Research Institute",
+      "title": "Consultant",
+      "date": "Sep 2026 - Present",
+      "desc": "Data science and AI consulting for financial institutions. I design and build generative AI systems — including RAG and LLM agents — that help modernize business processes."
+    },
     "deloitte": {
       "name": "Deloitte Tohmatsu Akt",
       "title": "Delivery Analyst",
-      "date": "Apr 2024 - Present",
+      "date": "Apr 2024 - Aug 2026",
       "desc": "Led digital transformation consulting and development implementation based on the Salesforce platform, delivering end-to-end solutions from upstream strategy to downstream execution."
     },
     "education": "Education",
