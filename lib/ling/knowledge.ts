@@ -77,7 +77,9 @@ function buildKnowledgeInner(locale: LingLocale, fullPhotoCaptions: boolean): st
     // TODO(Phase 4): 行程变多后改为 get_trip_detail 工具按需取逐图说明，常驻提示词只保留标题与张数。
     const shown = fullPhotoCaptions ? captions : captions.slice(0, 4);
     shown.forEach((caption, i) => {
-      lines.push(`  ${i + 1}. ${caption}`);
+      // 带上 travel-data 的短关键词（如「睡魔面部」「生剥鬼下山」），帮模型把照片与祭典/地点对准，避免混淆相近条目。
+      const keyword = trip.photos[i]?.desc;
+      lines.push(keyword ? `  ${i + 1}. 【${keyword}】${caption}` : `  ${i + 1}. ${caption}`);
     });
     if (!fullPhotoCaptions && captions.length > shown.length) {
       lines.push(`  …${h.morePhotos}（${total} ${h.photosUnit}）`);
