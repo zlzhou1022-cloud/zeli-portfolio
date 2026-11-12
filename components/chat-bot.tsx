@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useLocale } from "next-intl";
 
 type Message = {
   role: string;
@@ -20,6 +21,7 @@ function formatTs(ts?: string): string {
 }
 
 export function ChatBot({ isQuotaFull }: { isQuotaFull: boolean }) {
+  const locale = useLocale();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [chatId, setChatId] = useState<string | null>(null);
@@ -77,6 +79,7 @@ export function ChatBot({ isQuotaFull }: { isQuotaFull: boolean }) {
         body: JSON.stringify({
           messages: newMessages,
           chatId: chatId,
+          locale: locale,
         }),
       });
 
