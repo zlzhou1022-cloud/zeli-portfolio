@@ -13,7 +13,11 @@ const COOLDOWN_MS = 6 * 60 * 60 * 1000;
 
 const lastSentAt = new Map<string, number>();
 
-export async function reportInfraFailure(source: string, error: unknown): Promise<void> {
+export async function reportInfraFailure(
+  source: string,
+  error: unknown,
+  opts?: { test?: boolean },
+): Promise<void> {
   try {
     console.error(`[infra-alert] ${source}:`, error);
 
@@ -21,20 +25,29 @@ export async function reportInfraFailure(source: string, error: unknown): Promis
     const userId = process.env.LINE_ALERT_USER_ID;
     if (!token || !userId) return;
 
-    const now = Date.now();
-    const last = lastSentAt.get(source) ?? 0;
-    if (now - last < COOLDOWN_MS) return;
-    lastSentAt.set(source, now); // 先占位，防止并发请求重复发送
+    const isTest = opts?.test === true;
+    if (!isTest) {
+      const now = Date.now();
+      const last = lastSentAt.get(source) ?? 0;
+      if (now - last < COOLDOWN_MS) return;
+      lastSentAt.set(source, now); // 先占位，防止并发请求重复发送
+    }
 
     const time = new Date().toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" });
     const detail = error instanceof Error ? error.message : String(error);
-    const text = [
-      "⚠️ zeli-portfolio 基础设施告警",
-      `来源: ${source}`,
-      `时间: ${time} (JST)`,
-      `异常: ${detail.slice(0, 200)}`,
-      "站点已自动降级运行（相关功能受限，但页面可访问）。请尽快检查 Upstash / Supabase 状态。",
-    ].join("\n");
+    const text = isTest
+      ? [
+          "🧪 zeli-portfolio 告警通道测试",
+          "这是一条手动触发的测试消息，站点没有故障。",
+          `时间: ${time} (JST)`,
+        ].join("\n")
+      : [
+          "⚠️ zeli-portfolio 基础设施告警",
+          `来源: ${source}`,
+          `时间: ${time} (JST)`,
+          `异常: ${detail.slice(0, 200)}`,
+          "站点已自动降级运行（相关功能受限，但页面可访问）。请尽快检查 Upstash / Supabase 状态。",
+        ].join("\n");
 
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 3000);
