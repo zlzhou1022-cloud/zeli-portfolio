@@ -29,6 +29,11 @@ export function ChatBot({ isQuotaFull }: { isQuotaFull: boolean }) {
   const [isLoading, setIsLoading] = useState(false);
   const [sessionBlocked, setSessionBlocked] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
+
+  const handleStop = () => {
+    abortRef.current?.abort();
+  };
 
   // 1. 初始化聊天与持久化
   useEffect(() => {
@@ -73,6 +78,9 @@ export function ChatBot({ isQuotaFull }: { isQuotaFull: boolean }) {
     setInput("");
     setIsLoading(true);
 
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
@@ -81,28 +89,78 @@ export function ChatBot({ isQuotaFull }: { isQuotaFull: boolean }) {
           chatId: chatId,
           locale: locale,
         }),
+        signal: controller.signal,
       });
 
-      if (res.ok) {
-        const aiMsg: Message = await res.json();
-        const fullHistory = [...newMessages, aiMsg];
-        setMessages(fullHistory);
-        localStorage.setItem("chat_history", JSON.stringify(fullHistory));
-      } else {
-        const errorText = await res.text();
+      if (!res.ok || !res.body) {
+        const errorText = res.body ? await res.text() : "Connection failed";
         if (errorText === "session_quota_full") {
           setSessionBlocked(true);
-          const errMsg: Message = { role: "assistant", content: "This session has reached its message limit. Please refresh the page to start a new session.", timestamp: new Date().toISOString() };
+          const errMsg: Message = { role: "assistant", content: "This session has reached its message limit. Please use the clear button to start a new session.", timestamp: new Date().toISOString() };
           setMessages([...newMessages, errMsg]);
         } else {
           const errMsg: Message = { role: "assistant", content: `(System: ${errorText})`, timestamp: new Date().toISOString() };
           setMessages([...newMessages, errMsg]);
         }
+        return;
       }
-    } catch {
-      const errMsg: Message = { role: "assistant", content: "Connection failed. Please try again later.", timestamp: new Date().toISOString() };
-      setMessages([...newMessages, errMsg]);
+
+      // 流式读取（AI SDK UI message stream）：逐行解析 data: JSON，累积 text-delta
+      const aiMsg: Message = { role: "assistant", content: "", timestamp: new Date().toISOString() };
+      setMessages([...newMessages, aiMsg]);
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let acc = "";
+      let streamError = "";
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+        for (const line of lines) {
+          const t = line.trim();
+          if (!t.startsWith("data:")) continue;
+          const payload = t.slice(5).trim();
+          if (!payload || payload === "[DONE]") continue;
+          try {
+            const obj = JSON.parse(payload);
+            if (obj.type === "text-delta" && typeof obj.delta === "string") {
+              acc += obj.delta;
+              const snapshot = acc;
+              setMessages((prev) => {
+                const copy = [...prev];
+                copy[copy.length - 1] = { ...aiMsg, content: snapshot };
+                return copy;
+              });
+            } else if (obj.type === "error") {
+              streamError = String(obj.errorText ?? "stream error");
+            }
+          } catch {
+            /* 忽略无法解析的行 */
+          }
+        }
+      }
+      if (streamError && !acc) {
+        const errMsg: Message = { role: "assistant", content: `(System: ${streamError})`, timestamp: new Date().toISOString() };
+        setMessages([...newMessages, errMsg]);
+      }
+    } catch (err) {
+      if ((err as Error)?.name === "AbortError") {
+        // 访客点了停止：已生成的部分留在界面上（服务端不会落库这半条）
+      } else {
+        const errMsg: Message = { role: "assistant", content: "Connection failed. Please try again later.", timestamp: new Date().toISOString() };
+        setMessages((prev) => {
+          const last = prev[prev.length - 1];
+          if (last && last.role === "assistant" && last.content === "") {
+            return [...newMessages, errMsg];
+          }
+          return [...prev, errMsg];
+        });
+      }
     } finally {
+      abortRef.current = null;
       setIsLoading(false);
     }
   };
@@ -138,7 +196,7 @@ export function ChatBot({ isQuotaFull }: { isQuotaFull: boolean }) {
                 </div>
               );
             })}
-            {isLoading && <div className="text-xs text-stone-400 animate-pulse font-light italic">Thinking...</div>}
+            {isLoading && messages[messages.length - 1]?.role !== "assistant" && <div className="text-xs text-stone-400 animate-pulse font-light italic">Thinking...</div>}
             <div ref={scrollRef} />
           </div>
 
@@ -151,13 +209,22 @@ export function ChatBot({ isQuotaFull }: { isQuotaFull: boolean }) {
               disabled={sessionBlocked}
               className="flex-1 bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 px-4 py-2.5 text-base outline-none focus:border-stone-400 dark:focus:border-stone-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-light"
             />
-            <button 
-              onClick={handleSend} 
-              disabled={sessionBlocked} 
-              className="bg-stone-900 dark:bg-stone-100 text-stone-50 dark:text-stone-900 px-4 py-2.5 text-xs tracking-wider uppercase font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-stone-800 dark:hover:bg-stone-200 transition-colors"
-            >
-              Send
-            </button>
+            {isLoading ? (
+              <button
+                onClick={handleStop}
+                className="bg-stone-100 dark:bg-stone-800 text-stone-900 dark:text-stone-100 border border-stone-300 dark:border-stone-700 px-4 py-2.5 text-xs tracking-wider uppercase font-medium cursor-pointer hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors"
+              >
+                Stop
+              </button>
+            ) : (
+              <button
+                onClick={handleSend}
+                disabled={sessionBlocked}
+                className="bg-stone-900 dark:bg-stone-100 text-stone-50 dark:text-stone-900 px-4 py-2.5 text-xs tracking-wider uppercase font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-stone-800 dark:hover:bg-stone-200 transition-colors"
+              >
+                Send
+              </button>
+            )}
           </div>
         </div>
       )}
