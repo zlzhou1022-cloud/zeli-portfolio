@@ -11,10 +11,13 @@ const H = 460;
 const DURATION = 45;
 const BEST_KEY = "ling_game_best";
 
-type ItemKind = "mote" | "gold" | "ink";
+type ItemKind = "mote" | "gold" | "ink" | "bomb";
 type Item = { x: number; y: number; vy: number; r: number; kind: ItemKind };
 type Popup = { x: number; y: number; text: string; color: string; born: number };
+type Rock = { x: number; w: number; born: number; until: number };
 type Phase = "closed" | "ready" | "playing" | "over";
+const ROCK_H = 30;
+const GROUND_Y = H - 22;
 
 export function LingGame() {
   const t = useTranslations("MiniGame");
@@ -23,17 +26,23 @@ export function LingGame() {
   const [best, setBest] = useState(0);
   const [timeLeft, setTimeLeft] = useState(DURATION);
   const [isNewRecord, setIsNewRecord] = useState(false);
+  const [lives, setLives] = useState(3);
+  const [overReason, setOverReason] = useState<"time" | "lives">("time");
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const stateRef = useRef({
     items: [] as Item[],
     popups: [] as Popup[],
+    rocks: [] as Rock[],
     playerX: W / 2,
     targetX: W / 2,
     keys: { left: false, right: false },
     spawnAcc: 0,
     elapsed: 0,
     score: 0,
+    lives: 3,
+    lastRockAt: 0,
+    hurtAt: 0,
     lastTickSecond: DURATION,
   });
 
@@ -42,6 +51,7 @@ export function LingGame() {
     const open = () => {
       setBest(Number(localStorage.getItem(BEST_KEY) ?? 0) || 0);
       setScore(0);
+      setLives(3);
       setTimeLeft(DURATION);
       setIsNewRecord(false);
       setPhase("ready");
@@ -64,15 +74,21 @@ export function LingGame() {
     stateRef.current = {
       items: [],
       popups: [],
+      rocks: [],
       playerX: W / 2,
       targetX: W / 2,
       keys: { left: false, right: false },
       spawnAcc: 0,
       elapsed: 0,
       score: 0,
+      lives: 3,
+      lastRockAt: 0,
+      hurtAt: 0,
       lastTickSecond: DURATION,
     };
     setScore(0);
+    setLives(3);
+    setOverReason("time");
     setTimeLeft(DURATION);
     setIsNewRecord(false);
     setPhase("playing");
@@ -95,43 +111,89 @@ export function LingGame() {
 
     const spawn = () => {
       const roll = Math.random();
-      const kind: ItemKind = roll < 0.14 ? "gold" : roll < 0.34 ? "ink" : "mote";
+      const kind: ItemKind = roll < 0.12 ? "gold" : roll < 0.28 ? "bomb" : roll < 0.46 ? "ink" : "mote";
       const base = 135 + s.elapsed * 4.5;
       s.items.push({
         x: 24 + Math.random() * (W - 48),
         y: -16,
         vy: base * (0.85 + Math.random() * 0.4),
-        r: kind === "mote" ? 9 : kind === "gold" ? 11 : 12,
+        r: kind === "mote" ? 9 : 12,
         kind,
       });
     };
 
+    const finish = (reason: "time" | "lives") => {
+      cancelAnimationFrame(raf);
+      setScore(s.score);
+      setLives(s.lives);
+      setOverReason(reason);
+      setBest((prev) => {
+        if (s.score > prev) {
+          localStorage.setItem(BEST_KEY, String(s.score));
+          setIsNewRecord(true);
+          return s.score;
+        }
+        return prev;
+      });
+      setPhase("over");
+    };
+
     const drawOrb = (x: number, y: number, now: number) => {
+      // 与吉祥物同步的白色荧光形象：白团子 + 两只眼睛
       const bob = Math.sin(now / 300) * 2;
+      const glow = ctx.createRadialGradient(x, y + bob, 6, x, y + bob, 34);
+      glow.addColorStop(0, "rgba(186,230,253,0.5)");
+      glow.addColorStop(1, "rgba(186,230,253,0)");
+      ctx.beginPath();
+      ctx.arc(x, y + bob, 34, 0, Math.PI * 2);
+      ctx.fillStyle = glow;
+      ctx.fill();
       const g = ctx.createRadialGradient(x, y + bob - 6, 4, x, y + bob, 24);
-      g.addColorStop(0, "#fffdf5");
-      g.addColorStop(0.55, "#ffedb8");
-      g.addColorStop(1, "#ffd98a");
+      g.addColorStop(0, "#ffffff");
+      g.addColorStop(0.58, "#eef3f9");
+      g.addColorStop(1, "#d9e4f2");
       ctx.beginPath();
       ctx.arc(x, y + bob, 20, 0, Math.PI * 2);
       ctx.fillStyle = g;
       ctx.fill();
-      ctx.strokeStyle = "rgba(180,130,60,0.4)";
+      ctx.strokeStyle = "rgba(148,163,184,0.45)";
       ctx.stroke();
       // 眼睛（朝上看落下来的光点）
-      ctx.fillStyle = "#292524";
+      ctx.fillStyle = "#1e293b";
       ctx.beginPath();
-      ctx.arc(x - 7, y + bob - 3, 2.6, 0, Math.PI * 2);
-      ctx.arc(x + 7, y + bob - 3, 2.6, 0, Math.PI * 2);
+      ctx.arc(x - 7, y + bob - 3, 2.7, 0, Math.PI * 2);
+      ctx.arc(x + 7, y + bob - 3, 2.7, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = "rgba(253,164,175,0.6)";
+      ctx.fillStyle = "#ffffff";
       ctx.beginPath();
-      ctx.arc(x - 12, y + bob + 4, 3.4, 0, Math.PI * 2);
-      ctx.arc(x + 12, y + bob + 4, 3.4, 0, Math.PI * 2);
+      ctx.arc(x - 6, y + bob - 4, 0.9, 0, Math.PI * 2);
+      ctx.arc(x + 8, y + bob - 4, 0.9, 0, Math.PI * 2);
       ctx.fill();
     };
 
     const drawItem = (it: Item, now: number) => {
+      if (it.kind === "bomb") {
+        const g2 = ctx.createRadialGradient(it.x - 3, it.y - 3, 2, it.x, it.y, it.r);
+        g2.addColorStop(0, "#78716c");
+        g2.addColorStop(0.4, "#292524");
+        g2.addColorStop(1, "#0c0a09");
+        ctx.beginPath();
+        ctx.arc(it.x, it.y, it.r, 0, Math.PI * 2);
+        ctx.fillStyle = g2;
+        ctx.fill();
+        // 引线 + 闪烁的火花
+        ctx.strokeStyle = "#a8a29e";
+        ctx.beginPath();
+        ctx.moveTo(it.x, it.y - it.r);
+        ctx.quadraticCurveTo(it.x + 3, it.y - it.r - 5, it.x + 6, it.y - it.r - 5);
+        ctx.stroke();
+        const flick = 1 + Math.sin(now / 60 + it.x) * 0.35;
+        ctx.fillStyle = "#f97316";
+        ctx.beginPath();
+        ctx.arc(it.x + 7, it.y - it.r - 6, 2.4 * flick, 0, Math.PI * 2);
+        ctx.fill();
+        return;
+      }
       if (it.kind === "ink") {
         ctx.beginPath();
         ctx.arc(it.x, it.y, it.r, 0, Math.PI * 2);
@@ -174,25 +236,41 @@ export function LingGame() {
         setTimeLeft(remain);
       }
       if (s.elapsed >= DURATION) {
-        cancelAnimationFrame(raf);
-        setScore(s.score);
-        setBest((prev) => {
-          if (s.score > prev) {
-            localStorage.setItem(BEST_KEY, String(s.score));
-            setIsNewRecord(true);
-            return s.score;
-          }
-          return prev;
-        });
-        setPhase("over");
+        finish("time");
+        return;
+      }
+      if (s.lives <= 0) {
+        finish("lives");
         return;
       }
 
+      // 岩石地形：5 秒后开始冒出，最多两块，停留约 6.5 秒；不落在玩家附近、不与已有岩石重叠
+      if (s.elapsed > 5 && s.rocks.length < 2 && now - s.lastRockAt > 6500) {
+        const rw = 38 + Math.random() * 22;
+        const rx = 8 + Math.random() * (W - rw - 16);
+        const nearPlayer = Math.abs(rx + rw / 2 - s.playerX) < 78;
+        const overlaps = s.rocks.some((r) => rx < r.x + r.w + 24 && rx + rw > r.x - 24);
+        if (!nearPlayer && !overlaps) {
+          s.rocks.push({ x: rx, w: rw, born: now, until: now + 6500 });
+          s.lastRockAt = now;
+        } else {
+          s.lastRockAt = now - 5200; // 条件不合，1.3 秒后再试
+        }
+      }
+      s.rocks = s.rocks.filter((r) => now < r.until);
+
       // 玩家移动：键盘优先，其次平滑跟随目标点
+      const prevX = s.playerX;
       if (s.keys.left) s.targetX -= 340 * dt;
       if (s.keys.right) s.targetX += 340 * dt;
       s.targetX = Math.max(22, Math.min(W - 22, s.targetX));
       s.playerX += (s.targetX - s.playerX) * Math.min(1, dt * 14);
+      // 岩石阻挡：小灵不能穿过岩石
+      for (const r of s.rocks) {
+        if (s.playerX + 16 > r.x && s.playerX - 16 < r.x + r.w) {
+          s.playerX = prevX <= r.x + r.w / 2 ? r.x - 16 : r.x + r.w + 16;
+        }
+      }
 
       // 生成
       s.spawnAcc += dt;
@@ -220,15 +298,45 @@ export function LingGame() {
       ctx.moveTo(0, H - 22);
       ctx.lineTo(W, H - 22);
       ctx.stroke();
+      // 岩石（淡入淡出）
+      for (const r of s.rocks) {
+        const age = now - r.born;
+        const alpha = Math.min(1, age / 500, (r.until - now) / 800);
+        ctx.globalAlpha = Math.max(0, alpha);
+        ctx.beginPath();
+        ctx.moveTo(r.x, GROUND_Y);
+        ctx.lineTo(r.x, GROUND_Y - ROCK_H + 8);
+        ctx.quadraticCurveTo(r.x + r.w / 2, GROUND_Y - ROCK_H - 8, r.x + r.w, GROUND_Y - ROCK_H + 8);
+        ctx.lineTo(r.x + r.w, GROUND_Y);
+        ctx.closePath();
+        ctx.fillStyle = dark ? "#57534e" : "#a8a29e";
+        ctx.fill();
+        ctx.fillStyle = dark ? "#44403c" : "#78716c";
+        ctx.beginPath();
+        ctx.arc(r.x + r.w * 0.32, GROUND_Y - ROCK_H + 6, 2.2, 0, Math.PI * 2);
+        ctx.arc(r.x + r.w * 0.66, GROUND_Y - ROCK_H + 11, 1.7, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
 
       // 物品更新与绘制
       const playerY = H - 46;
       s.items = s.items.filter((it) => {
         it.y += it.vy * dt;
+        // 落到岩石顶上 → 碎掉消失
+        const rockHit = s.rocks.find(
+          (r) => it.x > r.x && it.x < r.x + r.w && it.y + it.r >= GROUND_Y - ROCK_H && it.y < GROUND_Y - ROCK_H + 14
+        );
+        if (rockHit) return false;
         const caught =
           it.y > playerY - 26 && it.y < playerY + 16 && Math.abs(it.x - s.playerX) < 30;
         if (caught) {
-          if (it.kind === "ink") {
+          if (it.kind === "bomb") {
+            s.lives -= 1;
+            s.hurtAt = now;
+            setLives(s.lives);
+            s.popups.push({ x: it.x, y: it.y - 10, text: "-1", color: "#dc2626", born: now });
+          } else if (it.kind === "ink") {
             s.score = Math.max(0, s.score - 20);
             s.popups.push({ x: it.x, y: it.y - 10, text: "-20", color: "#f87171", born: now });
           } else {
@@ -251,6 +359,15 @@ export function LingGame() {
       });
 
       drawOrb(s.playerX, playerY, now);
+
+      // 受击红闪
+      if (s.hurtAt) {
+        const a = 0.32 - (now - s.hurtAt) / 900;
+        if (a > 0) {
+          ctx.fillStyle = `rgba(220, 38, 38, ${a.toFixed(3)})`;
+          ctx.fillRect(0, 0, W, H);
+        }
+      }
 
       // 得分浮字
       s.popups = s.popups.filter((p) => now - p.born < 700);
@@ -315,12 +432,15 @@ export function LingGame() {
           </button>
         </div>
 
-        <div className="flex items-center gap-4 text-xs tracking-wider uppercase text-stone-500 dark:text-stone-400 mb-2">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs tracking-wider uppercase text-stone-500 dark:text-stone-400 mb-2">
           <span>
             {t("scoreLabel")} <span className="text-stone-900 dark:text-stone-100 font-semibold">{score}</span>
           </span>
           <span>
             {t("timeLabel")} <span className="text-stone-900 dark:text-stone-100 font-semibold">{timeLeft}{t("secondsUnit")}</span>
+          </span>
+          <span>
+            {t("livesLabel")} <span className="text-red-500 tracking-normal">{"♥".repeat(lives)}{"♡".repeat(Math.max(0, 3 - lives))}</span>
           </span>
           <span className="ml-auto">
             {t("bestLabel")} <span className="text-stone-900 dark:text-stone-100 font-semibold">{best}</span>
@@ -350,7 +470,7 @@ export function LingGame() {
           )}
           {phase === "over" && (
             <div className="absolute inset-0 bg-white/85 dark:bg-stone-900/85 flex flex-col items-center justify-center gap-3 p-6 text-center">
-              <p className="font-serif text-2xl text-stone-900 dark:text-stone-100">{t("gameOver")}</p>
+              <p className="font-serif text-2xl text-stone-900 dark:text-stone-100">{overReason === "lives" ? t("gameOverLives") : t("gameOver")}</p>
               <p className="text-sm text-stone-600 dark:text-stone-300">
                 {t("finalScore")} <span className="font-semibold text-stone-900 dark:text-stone-100">{score}</span>
                 {isNewRecord && <span className="ml-2 text-amber-600 dark:text-amber-400 font-medium">{t("newRecord")}</span>}
