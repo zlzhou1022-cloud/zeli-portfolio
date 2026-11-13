@@ -41,6 +41,14 @@ const SITE_TECH: Record<LingLocale, string> = {
   en: "This site: built with Next.js + React, deployed on Vercel; source code is public on GitHub (github.com/zlzhou1022-cloud/zeli-portfolio)",
 };
 
+// 摄影器材。此前这条事实只出现在 few-shot 示例的回答里，模型在游记语境下
+// 检索不到、误答「没有提到相机型号」（体检 G7.4），故提升为作者区正式事实。
+const CAMERA_GEAR: Record<LingLocale, string> = {
+  cn: "摄影器材：旅行照片主要使用 Fujifilm X-S20 拍摄",
+  jp: "撮影機材：旅行写真は主に Fujifilm X-S20 で撮影",
+  en: "Camera gear: travel photos are mainly shot on a Fujifilm X-S20",
+};
+
 // 输出体积守卫：超过此长度时逐图说明降级（见 buildKnowledge）。
 const MAX_KNOWLEDGE_CHARS = 6000;
 
@@ -56,6 +64,7 @@ function buildKnowledgeInner(locale: LingLocale, fullPhotoCaptions: boolean): st
   // 邮箱是 Profile 页公开信息，仅在事实区列出；提示词规定仅在访客明确询问联系方式时给出。
   lines.push(`- Email: zlzhou1022@gmail.com`);
   lines.push(`- ${SITE_TECH[locale]}`);
+  lines.push(`- ${CAMERA_GEAR[locale]}`);
 
   lines.push(`## ${h.career}`);
   lines.push(`- ${p.mri.name}｜${p.mri.title}｜${p.mri.date}｜${p.mri.desc}`);
