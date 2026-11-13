@@ -153,6 +153,21 @@ export function LingMascot() {
     reactionTimerRef.current = setTimeout(() => setReaction(null), 1900);
   };
 
+  // 召唤（站长 2026-11-14）：她被藏起来时右下角挂「召唤慕斯」按钮（取代原
+  // CHAT 按钮成为显隐开关）；点一下她出来、招手打招呼并打开气泡——气泡里的
+  // 「问问慕斯」就是聊天入口。她出来时按钮消失；首次访问默认她就在外面。
+  const summon = () => {
+    localStorage.removeItem(HIDDEN_KEY);
+    setHidden(false);
+    touch();
+    setTimeout(() => {
+      playReaction("wave");
+      setPageLine(null);
+      setLineIdx(0);
+      setBubbleOpen(true);
+    }, 380);
+  };
+
   // ---- 页面感知：当前页解析 / 介绍文 / 点击台词池 ----
   const currentInfo = (): PageInfo =>
     parsePage(pathname ?? "", typeof window !== "undefined" ? window.location.search : "");
@@ -402,7 +417,18 @@ export function LingMascot() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname, mounted, hidden]);
 
-  if (!MASCOT_ENABLED || !mounted || hidden) return null;
+  if (!MASCOT_ENABLED || !mounted) return null;
+
+  if (hidden) {
+    return (
+      <button
+        onClick={summon}
+        className="fixed bottom-8 right-8 z-40 h-16 px-5 bg-stone-900 dark:bg-stone-100 text-stone-50 dark:text-stone-900 border border-stone-900 dark:border-stone-100 flex items-center justify-center text-xs tracking-wider uppercase font-medium hover:bg-stone-800 dark:hover:bg-stone-200 transition-all cursor-pointer shadow-lg"
+      >
+        {t("summon")}
+      </button>
+    );
+  }
 
   const toggleBubble = () => {
     touch();
