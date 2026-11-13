@@ -135,7 +135,7 @@
     "title": "AI Assistant",
     "greeting": "Hello! I'm Ling, the AI assistant for this site. Feel free to ask me anything about the site or its author, Zeli.",
     "disclaimer": "AI-generated responses are for reference only and may contain errors.",
-    "placeholder": "Type a message… (Shift+Enter for a new line)",
+    "placeholder": "Type a message…",
     "send": "Send",
     "stop": "Stop",
     "clear": "Clear chat",
@@ -148,10 +148,7 @@
     "suggestions": [
       "Where does he work now?",
       "Which travel stories does he have?",
-      "Where should I go to see snow in winter?",
-      "Where was the Nebuta photo taken?",
-      "What projects has he built?",
-      "How can I contact him?"
+      "Where should I go to see snow in winter?"
     ]
   }
 }
