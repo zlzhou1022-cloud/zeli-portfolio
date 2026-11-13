@@ -160,6 +160,11 @@ export function LingMascot() {
     window.dispatchEvent(new CustomEvent("ling:open-chat"));
   };
 
+  const openGame = () => {
+    setBubbleOpen(false);
+    window.dispatchEvent(new CustomEvent("ling:open-game"));
+  };
+
   const hideForever = () => {
     localStorage.setItem(HIDDEN_KEY, "1");
     setHidden(true);
@@ -184,6 +189,12 @@ export function LingMascot() {
               className="bg-stone-900 dark:bg-stone-100 text-stone-50 dark:text-stone-900 px-3 py-1.5 text-xs font-medium cursor-pointer hover:bg-stone-700 dark:hover:bg-stone-300 transition-colors"
             >
               {t("chatCta")}
+            </button>
+            <button
+              onClick={openGame}
+              className="border border-amber-500 text-amber-700 dark:text-amber-400 px-3 py-1.5 text-xs font-medium cursor-pointer hover:bg-amber-50 dark:hover:bg-amber-950 transition-colors"
+            >
+              {t("playCta")}
             </button>
             <button
               onClick={() => setBubbleOpen(false)}
