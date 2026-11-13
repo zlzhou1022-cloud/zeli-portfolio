@@ -383,12 +383,16 @@ export function ChatBot({ isQuotaFull }: { isQuotaFull: boolean }) {
         </div>
       )}
 
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-16 h-16 bg-stone-900 dark:bg-stone-100 text-stone-50 dark:text-stone-900 border border-stone-900 dark:border-stone-100 flex items-center justify-center text-xs tracking-wider uppercase font-medium hover:bg-stone-800 dark:hover:bg-stone-200 transition-all cursor-pointer shadow-lg"
-      >
-        {isOpen ? "×" : "Chat"}
-      </button>
+      {/* 聊天入口已移到慕斯气泡（站长 2026-11-14：原 CHAT 按钮改为她的召唤
+          按钮）。仅当桌宠被开关整体禁用时保留老按钮兜底，否则聊天无入口。 */}
+      {process.env.NEXT_PUBLIC_LING_MASCOT_ENABLED === "0" && (
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="w-16 h-16 bg-stone-900 dark:bg-stone-100 text-stone-50 dark:text-stone-900 border border-stone-900 dark:border-stone-100 flex items-center justify-center text-xs tracking-wider uppercase font-medium hover:bg-stone-800 dark:hover:bg-stone-200 transition-all cursor-pointer shadow-lg"
+        >
+          {isOpen ? "×" : "Chat"}
+        </button>
+      )}
     </div>
   );
 }
