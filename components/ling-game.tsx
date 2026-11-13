@@ -170,21 +170,26 @@ export function LingGame() {
     let raf = 0;
     let last = performance.now();
 
-    // 障碍生成：每道障碍留一个缺口（左端 / 右端 / 中间），必须绕行
+    // 障碍生成：每道障碍留缺口绕行；长短随机拉开（站长反馈原先太一致）：
+    // 左/右端缺口（缺口 90–170）、中间缺口（两段不对称）、单段短墙（其余全开）
     const spawnBar = () => {
       const y = -BAR_T - 2;
       const roll = Math.random();
-      if (roll < 0.38) {
-        const gap = 100 + Math.random() * 34;
+      if (roll < 0.3) {
+        const gap = 90 + Math.random() * 80;
         s.bars.push({ x: gap, w: W - gap, y });
-      } else if (roll < 0.76) {
-        const gap = 100 + Math.random() * 34;
+      } else if (roll < 0.6) {
+        const gap = 90 + Math.random() * 80;
         s.bars.push({ x: 0, w: W - gap, y });
-      } else {
-        const gapW = 108 + Math.random() * 26;
-        const gx = 40 + Math.random() * (W - gapW - 80);
+      } else if (roll < 0.85) {
+        const gapW = 96 + Math.random() * 44;
+        const gx = 30 + Math.random() * (W - gapW - 60);
         s.bars.push({ x: 0, w: gx, y });
         s.bars.push({ x: gx + gapW, w: W - gx - gapW, y });
+      } else {
+        const w = 90 + Math.random() * 80;
+        if (Math.random() < 0.5) s.bars.push({ x: 0, w, y });
+        else s.bars.push({ x: W - w, w, y });
       }
     };
 
@@ -299,23 +304,40 @@ export function LingGame() {
 
     const drawItem = (it: Item, now: number) => {
       if (it.kind === "bomb") {
+        // 病毒（站长 2026-11-14：不要炸弹的样子）——紫红球体 + 一圈刺突小球，
+        // 刺突朝向随时间极慢旋转，看着活物一样
+        const spikes = 9;
+        const rot = now / 1600 + it.x;
+        ctx.strokeStyle = "#a21caf";
+        ctx.fillStyle = "#a21caf";
+        ctx.lineWidth = 2.4;
+        for (let i = 0; i < spikes; i++) {
+          const ang = (i / spikes) * Math.PI * 2 + rot;
+          const x1 = it.x + Math.cos(ang) * it.r * 0.7;
+          const y1 = it.y + Math.sin(ang) * it.r * 0.7;
+          const x2 = it.x + Math.cos(ang) * (it.r + 3.5);
+          const y2 = it.y + Math.sin(ang) * (it.r + 3.5);
+          ctx.beginPath();
+          ctx.moveTo(x1, y1);
+          ctx.lineTo(x2, y2);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(x2, y2, 2.6, 0, Math.PI * 2);
+          ctx.fill();
+        }
         const g2 = ctx.createRadialGradient(it.x - 3, it.y - 3, 2, it.x, it.y, it.r);
-        g2.addColorStop(0, "#78716c");
-        g2.addColorStop(0.4, "#292524");
-        g2.addColorStop(1, "#0c0a09");
+        g2.addColorStop(0, "#e879f9");
+        g2.addColorStop(0.55, "#c026d3");
+        g2.addColorStop(1, "#86198f");
         ctx.beginPath();
         ctx.arc(it.x, it.y, it.r, 0, Math.PI * 2);
         ctx.fillStyle = g2;
         ctx.fill();
-        ctx.strokeStyle = "#a8a29e";
+        ctx.fillStyle = "rgba(255,255,255,0.55)";
         ctx.beginPath();
-        ctx.moveTo(it.x, it.y - it.r);
-        ctx.quadraticCurveTo(it.x + 3, it.y - it.r - 5, it.x + 6, it.y - it.r - 5);
-        ctx.stroke();
-        const flick = 1 + Math.sin(now / 60 + it.x) * 0.35;
-        ctx.fillStyle = "#f97316";
-        ctx.beginPath();
-        ctx.arc(it.x + 7, it.y - it.r - 6, 2.4 * flick, 0, Math.PI * 2);
+        ctx.arc(it.x - 4, it.y - 2, 2.1, 0, Math.PI * 2);
+        ctx.arc(it.x + 3.5, it.y + 3.5, 1.6, 0, Math.PI * 2);
+        ctx.arc(it.x + 4.5, it.y - 4.5, 1.3, 0, Math.PI * 2);
         ctx.fill();
         return;
       }
@@ -471,17 +493,32 @@ export function LingGame() {
         ctx.fill();
       }
 
-      // 障碍（石板墙：顶边天蓝、下沿压暗、两端加深收口，读起来是一堵墙）
+      // 障碍 = 砖墙（倒塌的防火墙）：砖红底 + 浅色灰浆缝（横缝一道、竖缝
+      // 上下错开），一眼读成「一堵墙」
       for (const b of s.bars) {
-        ctx.fillStyle = dark ? "#44403c" : "#d6d3d1";
+        ctx.fillStyle = dark ? "#7c3f2c" : "#c06543";
         ctx.fillRect(b.x, b.y, b.w, BAR_T);
-        ctx.fillStyle = "#38bdf8";
-        ctx.fillRect(b.x, b.y, b.w, 3);
-        ctx.fillStyle = dark ? "rgba(0,0,0,0.35)" : "rgba(120,113,108,0.4)";
-        ctx.fillRect(b.x, b.y + BAR_T - 2, b.w, 2);
-        ctx.fillStyle = dark ? "#292524" : "#a8a29e";
-        ctx.fillRect(b.x, b.y, 3, BAR_T);
-        ctx.fillRect(b.x + b.w - 3, b.y, 3, BAR_T);
+        ctx.strokeStyle = dark ? "rgba(0,0,0,0.45)" : "rgba(250,243,230,0.8)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(b.x, b.y + BAR_T / 2);
+        ctx.lineTo(b.x + b.w, b.y + BAR_T / 2);
+        ctx.stroke();
+        const joint = 26;
+        for (let row = 0; row < 2; row++) {
+          const yy = b.y + row * (BAR_T / 2);
+          const off = row === 0 ? 0 : joint / 2;
+          for (let x = b.x + off + joint; x < b.x + b.w - 2; x += joint) {
+            ctx.beginPath();
+            ctx.moveTo(x, yy + 1);
+            ctx.lineTo(x, yy + BAR_T / 2 - 1);
+            ctx.stroke();
+          }
+        }
+        ctx.fillStyle = "rgba(255,255,255,0.13)";
+        ctx.fillRect(b.x, b.y, b.w, 2);
+        ctx.strokeStyle = dark ? "rgba(0,0,0,0.5)" : "rgba(90,50,30,0.45)";
+        ctx.strokeRect(b.x + 0.5, b.y + 0.5, b.w - 1, BAR_T - 1);
       }
 
       // 物品更新与绘制（随世界下移；与慕斯身体中心判碰撞）
@@ -620,7 +657,7 @@ export function LingGame() {
           />
           {phase === "ready" && (
             <div className="absolute inset-0 bg-white/85 dark:bg-stone-900/85 flex flex-col items-center justify-center gap-4 p-6 text-center">
-              <p className="text-sm leading-relaxed text-stone-600 dark:text-stone-300">{t("howTo")}</p>
+              <p className="text-sm leading-relaxed text-left whitespace-pre-line text-stone-600 dark:text-stone-300">{t("howTo")}</p>
               <button
                 onClick={startGame}
                 className="bg-stone-900 dark:bg-stone-100 text-stone-50 dark:text-stone-900 px-6 py-2.5 text-xs tracking-wider uppercase font-medium cursor-pointer hover:bg-stone-700 dark:hover:bg-stone-300 transition-colors"
