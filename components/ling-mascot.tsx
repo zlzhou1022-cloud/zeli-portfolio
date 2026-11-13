@@ -10,11 +10,13 @@ import { useTranslations } from "next-intl";
 //   拖动时换「被提溜起来」姿势（站长选定慌张版：兜帽被攥成一束、身体垂着
 //   挣扎，接入时按身体等大放大 1.43 倍、帽尖向上伸出框外）+ 钟摆式晃动 +
 //   影子拉长；拖到拖动时固定出现在页面顶部中央的投放气泡上松手（变 present
-//   姿势）打开小游戏——气泡必须视口固定，挂在她头顶会跟着她一起跑、永远拖不到。
-// - 尺寸：与最初的团子吉祥物同量级（高 76/84px）；全部姿势按同一身体高度
-//   规范裁切（严阈值取形、高 560），且图片按高度驱动渲染（h-full w-auto）——
-//   注意 bob 层必须带 h-full，否则高度链断裂、图片会按宽度撑出自然高（各姿势
-//   宽高比不同 → 忽大忽小），2026-11-13 站长反馈后定位修复。
+//   姿势）打开小游戏——气泡必须视口固定，挂在她头顶会跟着她一起跑、永远拖不到；
+//   投中后她回到被拖起前的位置，不留在投放点。
+// - 尺寸：站长 2026-11-13 定版为高 168px（窄屏 152），约 CHAT 方块高的 2 倍
+//   （此前 84 版太小、139 溢出版太大）。全部姿势按同一身体高度规范裁切
+//   （严阈值取形、高 560），且图片按高度驱动渲染（h-full w-auto）——注意 bob
+//   层必须带 h-full，否则高度链断裂、图片会按宽度撑出自然高（各姿势宽高比
+//   不同 → 忽大忽小），同日晚间站长反馈后定位修复。
 // - 互动：点击轮换反应姿势 wave→wink→stareyes→scratch→sorry 并开气泡说话；
 //   整体朝指针视差倾斜（2.5D），切换带弹跳、按下压扁。
 // - 待机生活：18 秒没人理 → 轮流看书/看信/闻闻/张望；75 秒 → 打盹（专用睡觉
@@ -67,14 +69,14 @@ function clampPos(p: { x: number; y: number }) {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
   return {
-    x: Math.max(-12, Math.min(vw - 56, p.x)),
-    y: Math.max(0, Math.min(vh - 56, p.y)),
+    x: Math.max(-24, Math.min(vw - 96, p.x)),
+    y: Math.max(0, Math.min(vh - 96, p.y)),
   };
 }
 
 function defaultPos() {
   const wide = window.innerWidth >= 480;
-  const h = wide ? 84 : 76;
+  const h = wide ? 168 : 152;
   return { x: wide ? 32 : 20, y: window.innerHeight - h - (wide ? 32 : 20) };
 }
 
@@ -368,12 +370,23 @@ export function LingMascot() {
     if (d?.active) {
       suppressClickRef.current = Date.now();
       touch();
-      try {
-        localStorage.setItem(POS_KEY, JSON.stringify(posRef.current));
-      } catch {
-        /* 存不下就算了 */
+      if (zoneHotRef.current) {
+        // 投进游戏气泡：游戏打开的同时她回到被拖起前的位置（不留在投放点）
+        const origin = { x: d.originX, y: d.originY };
+        setPos(origin);
+        try {
+          localStorage.setItem(POS_KEY, JSON.stringify(origin));
+        } catch {
+          /* 存不下就算了 */
+        }
+        openGame();
+      } else {
+        try {
+          localStorage.setItem(POS_KEY, JSON.stringify(posRef.current));
+        } catch {
+          /* 存不下就算了 */
+        }
       }
-      if (zoneHotRef.current) openGame();
     }
     dragRef.current = null;
     zoneHotRef.current = false;
@@ -409,7 +422,7 @@ export function LingMascot() {
         @media (prefers-reduced-motion: reduce) { .ling-bob, .ling-zone, .muse-pop, .muse-doze, .muse-z { animation: none; } }
       `}</style>
 
-      <div className="relative w-[64px] h-[76px] min-[480px]:w-[72px] min-[480px]:h-[84px]">
+      <div className="relative w-[128px] h-[152px] min-[480px]:w-[144px] min-[480px]:h-[168px]">
         {bubbleOpen && !dragging && (
           <div
             className={`absolute left-0 z-20 w-60 max-w-[calc(100vw-3rem)] rounded-2xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 shadow-xl p-3.5 ${
@@ -499,14 +512,10 @@ export function LingMascot() {
                   key={shownPose}
                   className="muse-pop w-full h-full"
                   style={{
-                    transform:
-                      pressed && !dragging
-                        ? "scale(0.94, 0.9)"
-                        : dragging
-                          ? zoneHot
-                            ? "scale(1.04)"
-                            : `scale(${LIFT_SCALE})`
-                          : undefined,
+                    // 拖动态的放大不能放这层：muse-pop 弹跳动画在播放期间会覆盖
+                    // 行内 transform，动画一结束缩放才突然生效——表现为「拖着过
+                    // 一会儿突然变大」。放大改放 img 本身（见下），与动画层叠加。
+                    transform: pressed && !dragging ? "scale(0.94, 0.9)" : undefined,
                     transformOrigin: "50% 100%",
                     transition: "transform .15s ease-out",
                     filter: dragging
@@ -520,6 +529,11 @@ export function LingMascot() {
                     alt=""
                     draggable={false}
                     className="block h-full w-auto max-w-none mx-auto pointer-events-none"
+                    style={{
+                      transform: dragging ? (zoneHot ? "scale(1.04)" : `scale(${LIFT_SCALE})`) : undefined,
+                      transformOrigin: "50% 100%",
+                      transition: "transform .15s ease-out",
+                    }}
                   />
                 </div>
               </div>
