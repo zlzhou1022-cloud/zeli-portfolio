@@ -11,7 +11,9 @@ import { useTranslations } from "next-intl";
 //   挣扎，接入时按身体等大放大 1.43 倍、帽尖向上伸出框外）+ 钟摆式晃动 +
 //   影子拉长；拖到上方出现的投放气泡上松手（变 present 姿势）打开小游戏。
 // - 尺寸：与最初的团子吉祥物同量级（高 76/84px）；全部姿势按同一身体高度
-//   规范裁切（严阈值取形、高 560），切换不忽大忽小。
+//   规范裁切（严阈值取形、高 560），且图片按高度驱动渲染（h-full w-auto）——
+//   注意 bob 层必须带 h-full，否则高度链断裂、图片会按宽度撑出自然高（各姿势
+//   宽高比不同 → 忽大忽小），2026-11-13 站长反馈后定位修复。
 // - 互动：点击轮换反应姿势 wave→wink→stareyes→scratch→sorry 并开气泡说话；
 //   整体朝指针视差倾斜（2.5D），切换带弹跳、按下压扁。
 // - 待机生活：18 秒没人理 → 轮流看书/看信/闻闻/张望；75 秒 → 打盹（点头 + Zzz）。
@@ -475,7 +477,7 @@ export function LingMascot() {
           }}
         >
           <div ref={wrapRef} className="relative w-full h-full will-change-transform">
-            <div className={dozing ? "muse-doze" : "ling-bob"}>
+            <div className={`h-full w-full ${dozing ? "muse-doze" : "ling-bob"}`}>
               <div
                 role="button"
                 tabIndex={0}
@@ -513,7 +515,7 @@ export function LingMascot() {
                     src={POSES[shownPose]}
                     alt=""
                     draggable={false}
-                    className="w-full h-full object-contain object-bottom pointer-events-none"
+                    className="block h-full w-auto max-w-none mx-auto pointer-events-none"
                   />
                 </div>
               </div>
