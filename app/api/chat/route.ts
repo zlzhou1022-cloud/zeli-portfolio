@@ -4,8 +4,9 @@ import { reportInfraFailure } from "@/lib/alert";
 import { buildSystemPrompt, LING_PROMPT_VERSION } from "@/lib/ling/prompt";
 import { Redis } from "@upstash/redis";
 import { headers } from "next/headers";
-import { streamText } from "ai";
+import { streamText, stepCountIs } from "ai";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
+import { createLingTools, LING_TOOLS_ENABLED } from "@/lib/ling/tools";
 
 const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL!,
@@ -76,6 +77,11 @@ export async function POST(req: Request) {
       model: groq("openai/gpt-oss-120b"), // llama-3.3-70b-versatile 已于 2026-08-16 被 Groq 退役，官方替代为 gpt-oss-120b
       system: systemContent,
       messages: messagesForLLM,
+      // Phase 4 工具调用：步数上限 3 步防死循环；工具失败降级为纯文本回答。
+      // LING_TOOLS_ENABLED=false 时不传 tools，即退回 Phase 3 行为（配置级止血）。
+      ...(LING_TOOLS_ENABLED
+        ? { tools: createLingTools(resolvedLocale), stopWhen: stepCountIs(3) }
+        : {}),
       temperature: 0.5,
       maxOutputTokens: 800,
       abortSignal: req.signal,

@@ -1,6 +1,6 @@
 import { buildKnowledge, isLingLocale, type LingLocale } from "./knowledge";
 
-export const LING_PROMPT_VERSION = "ling-v2";
+export const LING_PROMPT_VERSION = "ling-v2.1";
 
 const IDENTITY: Record<LingLocale, string> = {
   cn: `你是小灵（日文名レイ，英文名 Ling），Zeli Zhou 个人主页的 AI 助手。你了解这个网站的全部内容（见下方事实），帮访客找到他们想看的东西，也可以陪访客聊旅行、摄影、技术等轻松话题。`,
@@ -95,6 +95,15 @@ Q: Any travel photos worth seeing?
 A: Start with "Tohoku's February: Snow & Festivals" — a 12-photo series shot on his Fujifilm X-S20 across Aomori, Akita, and Iwate: [take a look](/en/travels/tohoku-feb-2026).`,
 };
 
+const TOOLS_GUIDE: Record<LingLocale, string> = {
+  cn: `## 工具
+你有站内工具可用：访客问游记或项目的具体细节时，先用 list_trips、get_trip_detail 或 list_projects 核实再回答；访客想按季节或主题找旅行灵感时，先用 recommend_trip 取候选再推荐；当你明确建议访客去某个站内页面时，调用 navigate_to 生成跳转卡片，正文里照常写一句说明即可。工具查不到的内容就直说没有，绝不编造不存在的行程或项目。简单问题（履历、联系方式等事实区已有的内容）直接回答，不必调工具。`,
+  jp: `## ツール
+サイト内ツールが使えます。旅行記やプロジェクトの具体的な詳細を聞かれたら、list_trips、get_trip_detail、list_projects で確認してから答えてください。季節やテーマで旅行先を探している場合は、先に recommend_trip で候補を取り出してから提案してください。特定のページへの移動を勧めるときは navigate_to を呼んでジャンプ用カードを作り、本文では通常どおり一文で案内してください。ツールで見つからない内容は「ない」と正直に伝え、存在しない旅行記やプロジェクトを捏造してはいけません。経歴や連絡先など、事実セクションにある内容はツールなしで直接答えて構いません。`,
+  en: `## Tools
+You have site tools available. When the visitor asks for specific details about a travel story or a project, check with list_trips, get_trip_detail, or list_projects first, then answer. When they want travel ideas by season or theme, call recommend_trip to get candidates before recommending. When you explicitly suggest a specific internal page, call navigate_to to create a navigation card, and still write one normal sentence about the page in your reply. If a tool finds nothing, say so honestly — never invent trips or projects that do not exist. For simple facts already in the facts section (career, contact, etc.), answer directly without calling tools.`,
+};
+
 export function resolveLocale(input: unknown, fallbackText?: string): LingLocale {
   if (isLingLocale(input)) return input;
   const text = fallbackText ?? "";
@@ -114,6 +123,7 @@ export function buildSystemPrompt(localeInput: unknown, fallbackText?: string): 
     NAVIGATION[locale],
     BOUNDARIES[locale],
     FEWSHOT[locale],
+    TOOLS_GUIDE[locale],
   ].join("\n\n");
   return { locale, prompt };
 }
