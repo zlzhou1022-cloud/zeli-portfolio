@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { reportInfraFailure } from "@/lib/alert";
 import { buildSystemPrompt, LING_PROMPT_VERSION } from "@/lib/ling/prompt";
+import { buildPageContext } from "@/lib/ling/page-context";
 import { Redis } from "@upstash/redis";
 import { headers } from "next/headers";
 import { streamText, stepCountIs } from "ai";
@@ -26,8 +27,9 @@ export async function POST(req: Request) {
     const headersList = await headers();
     const ip = headersList.get("x-forwarded-for") ?? "127.0.0.1";
 
-    // 接收前端传来的完整聊天记录、唯一会话 ID 和当前语言（locale 可缺省）
-    const { messages, chatId, locale } = await req.json();
+    // 接收前端传来的完整聊天记录、唯一会话 ID 和当前语言（locale 可缺省）；
+    // page 是访客当前页面描述（页面感知二期），只用于本次提示词，不落库。
+    const { messages, chatId, locale, page } = await req.json();
 
     // 1. 检查配额（两层）
     const today = new Date().toISOString().split('T')[0];
@@ -56,7 +58,10 @@ export async function POST(req: Request) {
     // 事实由 lib/ling/knowledge.ts 在请求时从 messages/lab-data/travel-data 拼装（单一真相）。
     const lastUserContent = [...messages].reverse().find((m: { role: string }) => m.role === "user")?.content ?? "";
     const { locale: resolvedLocale, prompt: systemContent } = buildSystemPrompt(locale, lastUserContent);
-    console.log(`[ling] version=${LING_PROMPT_VERSION} locale=${resolvedLocale} chat=${String(chatId).slice(0, 8)}`);
+    // 页面感知：把「访客当前页面」追加到系统提示词末尾（校验在 buildPageContext 内）
+    const pageContext = buildPageContext(resolvedLocale, page);
+    const finalSystemContent = pageContext ? `${systemContent}\n\n${pageContext}` : systemContent;
+    console.log(`[ling] version=${LING_PROMPT_VERSION} locale=${resolvedLocale} chat=${String(chatId).slice(0, 8)} page=${pageContext ? (page as { kind?: string })?.kind ?? "?" : "none"}`);
 
     // 3. 流式呼叫大模型：只发最近 20 条历史；剥离 timestamp 等非标准字段。
     // text 只含正文（reasoning 是独立 part，不会进入 text），存库与计数在 onFinish 里做。
@@ -75,7 +80,7 @@ export async function POST(req: Request) {
 
     const result = streamText({
       model: groq("openai/gpt-oss-120b"), // llama-3.3-70b-versatile 已于 2026-08-16 被 Groq 退役，官方替代为 gpt-oss-120b
-      system: systemContent,
+      system: finalSystemContent,
       messages: messagesForLLM,
       // Phase 4 工具调用：步数上限 3 步防死循环；工具失败降级为纯文本回答。
       // LING_TOOLS_ENABLED=false 时不传 tools，即退回 Phase 3 行为（配置级止血）。
