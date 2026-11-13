@@ -17,8 +17,9 @@ import { useTranslations } from "next-intl";
 //   宽高比不同 → 忽大忽小），2026-11-13 站长反馈后定位修复。
 // - 互动：点击轮换反应姿势 wave→wink→stareyes→scratch→sorry 并开气泡说话；
 //   整体朝指针视差倾斜（2.5D），切换带弹跳、按下压扁。
-// - 待机生活：18 秒没人理 → 轮流看书/看信/闻闻/张望；75 秒 → 打盹（点头 + Zzz）。
-//   一碰就醒，待机计时重新开始。
+// - 待机生活：18 秒没人理 → 轮流看书/看信/闻闻/张望；75 秒 → 打盹（专用睡觉
+//   姿势——站长选定的站着打盹版生成图，绿幕键控 + 点头 + Zzz；此前拿睁眼待机
+//   图冒充被站长指出）。一碰就醒，待机计时重新开始。
 // - 点 × 藏起后，再打开聊天窗她会回来（ling:chat-opened）。
 // 聊天窗里也是慕斯本人（同日晚间站长决定与小灵合并）。纯前端、无后端调用。
 // 开关：NEXT_PUBLIC_LING_MASCOT_ENABLED=0 时整体不渲染（默认开；键名沿用历史）。
@@ -38,7 +39,8 @@ type Pose =
   | "scratch"
   | "sorry"
   | "present"
-  | "lifted";
+  | "lifted"
+  | "doze";
 
 const POSES: Record<Pose, string> = {
   look: "/muse-pet/look.webp",
@@ -52,6 +54,7 @@ const POSES: Record<Pose, string> = {
   sorry: "/muse-pet/sorry.webp",
   present: "/muse-pet/present.webp",
   lifted: "/muse-pet/lifted.webp",
+  doze: "/muse-pet/doze.webp",
 };
 // lifted 图里兜帽被拉长，身体只占总高约 70%——拖动态按此倍数放大回等大
 const LIFT_SCALE = 1.43;
@@ -114,7 +117,7 @@ export function LingMascot() {
   const reactionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastTouchRef = useRef(0);
 
-  const shownPose: Pose = dragging ? (zoneHot ? "present" : "lifted") : reaction ?? idlePose;
+  const shownPose: Pose = dragging ? (zoneHot ? "present" : "lifted") : reaction ?? (dozing ? "doze" : idlePose);
   const bubbleBelow = pos.y < 330;
 
   useEffect(() => {
