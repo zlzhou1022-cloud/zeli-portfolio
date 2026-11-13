@@ -7,7 +7,7 @@ import jpMessages from "@/messages/jp.json";
 import enMessages from "@/messages/en.json";
 import type { LingLocale} from "./knowledge";
 
-// 工具总开关（配置级止血）：改 false 后 route 不传 tools，小灵退回 PR-C 的纯文本行为，
+// 工具总开关（配置级止血）：改 false 后 route 不传 tools，慕斯退回 PR-C 的纯文本行为，
 // 无需 revert 即可下线工具调用（规格 §6 Phase 4）。
 export const LING_TOOLS_ENABLED = true;
 

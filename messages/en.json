@@ -133,7 +133,7 @@
   },
   "ChatBot": {
     "title": "AI Assistant",
-    "greeting": "Hello! I'm Ling, the AI assistant for this site. Feel free to ask me anything about the site or its author, Zeli.",
+    "greeting": "Hello! I'm Muse, Zeli's little agent. Feel free to ask me anything about the site or its author, Zeli.",
     "disclaimer": "AI-generated responses are for reference only and may contain errors.",
     "placeholder": "Type a message…",
     "send": "Send",
@@ -153,18 +153,18 @@
   },
   "Mascot": {
     "ariaLabel": "Muse the desktop pet",
-    "chatCta": "Ask Ling",
+    "chatCta": "Ask Muse",
     "playCta": "Play a game",
     "closeBubble": "Close",
     "dismiss": "Hide her away",
     "hide": "Hide pet",
     "lines": [
-      "Hi, I'm Muse — visiting from Bilibili!",
-      "Over there I share new things I've learned, curious wonders, and little ideas that pop up.",
+      "Hi, I'm Muse — Zeli's little agent.",
+      "I look after this site. Let me keep you company while you browse.",
       "Poke me and I'll make a face — poke again for another one.",
-      "Curious about the site's owner? Ling, in the bottom right, knows him best — ask her.",
+      "Curious about Zeli? Ask me in the chat, bottom right — I remember it all.",
       "Drag me onto the bubble above and we can play Muse Dash.",
-      "I'll keep you company while you browse — linger on the pages you like."
+      "You can also drag me anywhere and leave me there. I don't mind."
     ]
   },
   "MiniGame": {
