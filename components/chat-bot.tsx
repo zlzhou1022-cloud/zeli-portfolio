@@ -168,7 +168,8 @@ export function ChatBot({ isQuotaFull }: { isQuotaFull: boolean }) {
           const errMsg: Message = { role: "assistant", content: t("sessionFull"), timestamp: new Date().toISOString() };
           setMessages([...newMessages, errMsg]);
         } else {
-          const errMsg: Message = { role: "assistant", content: `(System: ${errorText})`, timestamp: new Date().toISOString() };
+          // 不把服务端原始报错（如限流英文详情）原样展示给访客，统一用本地化友好文案。
+          const errMsg: Message = { role: "assistant", content: t("connectionError"), timestamp: new Date().toISOString() };
           setMessages([...newMessages, errMsg]);
         }
         return;
@@ -223,7 +224,8 @@ export function ChatBot({ isQuotaFull }: { isQuotaFull: boolean }) {
         }
       }
       if (streamError && !acc) {
-        const errMsg: Message = { role: "assistant", content: `(System: ${streamError})`, timestamp: new Date().toISOString() };
+        // 流内错误（如 Groq 限流）同样不外露原始报错，统一用本地化友好文案。
+        const errMsg: Message = { role: "assistant", content: t("connectionError"), timestamp: new Date().toISOString() };
         setMessages([...newMessages, errMsg]);
       }
     } catch (err) {
