@@ -3,15 +3,41 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 
-// 小灵吉祥物：页面左下角的白色荧光小精灵（小灵的「身体」，聊天窗是她的「大脑」）。
-// 形象：白团子 + 两只眼睛，极简（站长 2026-11-13 定稿，去嘴/腮红）。
-// 行为：眼睛跟随指针、随机眨眼、点击冒气泡；可拖动——拖到上方出现的
-// 「玩接光点」气泡上松手即打开小游戏；点 × 藏起后，再打开聊天窗她会回来。
-// 纯前端、无后端调用、不吃聊天配额。
-// 开关：NEXT_PUBLIC_LING_MASCOT_ENABLED=0 时整体不渲染（默认开）。
+// 慕斯桌宠（站长 2026-11-13 拍板「路线 A」）：左下角的桌宠换成 Bilibili 频道
+// 吉祥物慕斯本人来串门——聊天窗仍是小灵（右下角），分工不混。
+// 素材：自媒体定稿 v3 抠图（cuts-v3）压成 WebP，共 9 个姿势：
+//   待机 look/book 轮换；点击轮换反应 wave→wink→stareyes→scratch→sorry；
+//   拖动 reach，拖到投放气泡上变 present 并松手打开小游戏。
+// 半 3D 感：整体朝指针方向视差倾斜 + 姿势切换弹跳 + 按压缩扁（单张平面图的 2.5D 手法）。
+// 纯前端、无后端调用、不吃聊天配额。点 × 藏起后，再打开聊天窗她会回来。
+// 开关：NEXT_PUBLIC_LING_MASCOT_ENABLED=0 时整体不渲染（默认开；键名沿用历史）。
 const MASCOT_ENABLED = process.env.NEXT_PUBLIC_LING_MASCOT_ENABLED !== "0";
 const HIDDEN_KEY = "ling_mascot_hidden";
 const INVITED_KEY = "ling_mascot_invited";
+
+type Pose =
+  | "look"
+  | "book"
+  | "wave"
+  | "wink"
+  | "stareyes"
+  | "scratch"
+  | "sorry"
+  | "reach"
+  | "present";
+
+const POSES: Record<Pose, string> = {
+  look: "/muse-pet/look.webp",
+  book: "/muse-pet/book.webp",
+  wave: "/muse-pet/wave.webp",
+  wink: "/muse-pet/wink.webp",
+  stareyes: "/muse-pet/stareyes.webp",
+  scratch: "/muse-pet/scratch.webp",
+  sorry: "/muse-pet/sorry.webp",
+  reach: "/muse-pet/reach.webp",
+  present: "/muse-pet/present.webp",
+};
+const REACTIONS: Pose[] = ["wave", "wink", "stareyes", "scratch", "sorry"];
 
 export function LingMascot() {
   const t = useTranslations("Mascot");
@@ -21,14 +47,15 @@ export function LingMascot() {
   const [hidden, setHidden] = useState(true);
   const [bubbleOpen, setBubbleOpen] = useState(false);
   const [lineIdx, setLineIdx] = useState(0);
-  const [blinking, setBlinking] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [zoneHot, setZoneHot] = useState(false);
+  const [idlePose, setIdlePose] = useState<Pose>("look");
+  const [reaction, setReaction] = useState<Pose | null>(null);
+  const [pressed, setPressed] = useState(false);
 
   const wrapRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<HTMLDivElement>(null);
   const zoneRef = useRef<HTMLDivElement>(null);
-  const pupilRef = useRef<SVGGElement>(null);
   const pointerRef = useRef<{ x: number; y: number; at: number } | null>(null);
   const wanderRef = useRef<{ x: number; y: number; until: number }>({ x: 0, y: 0, until: 0 });
   const curRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
@@ -37,9 +64,19 @@ export function LingMascot() {
   const draggingRef = useRef(false);
   const zoneHotRef = useRef(false);
   const suppressClickRef = useRef(0);
+  const reactionIdxRef = useRef(0);
+  const reactionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const shownPose: Pose = dragging ? (zoneHot ? "present" : "reach") : reaction ?? idlePose;
+
+  const playReaction = (pose: Pose) => {
+    setReaction(pose);
+    if (reactionTimerRef.current) clearTimeout(reactionTimerRef.current);
+    reactionTimerRef.current = setTimeout(() => setReaction(null), 1900);
+  };
 
   // 挂载后读 localStorage（setTimeout 写法与 chat-bot 一致，避开 lint 同步 setState 规则）。
-  // 同时注册「聊天窗打开 → 吉祥物回来」监听：藏起后点 Chat 即可复活。
+  // 同时注册「聊天窗打开 → 桌宠回来」监听：藏起后点 Chat 即可复活。
   useEffect(() => {
     reducedRef.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const revive = () => {
@@ -56,6 +93,24 @@ export function LingMascot() {
       window.removeEventListener("ling:chat-opened", revive);
     };
   }, []);
+
+  // 其余姿势图在挂载后预加载，切换时不闪烁
+  useEffect(() => {
+    if (!mounted) return;
+    Object.values(POSES).forEach((src) => {
+      const img = new Image();
+      img.src = src;
+    });
+  }, [mounted]);
+
+  // 待机生活感：look（站着张望）与 book（抱书读）每 16 秒轮换
+  useEffect(() => {
+    if (!mounted || hidden) return;
+    const id = setInterval(() => {
+      setIdlePose((p) => (p === "look" ? "book" : "look"));
+    }, 16000);
+    return () => clearInterval(id);
+  }, [mounted, hidden]);
 
   // 指针追踪：鼠标移动 / 触摸点按都记下位置与时间
   useEffect(() => {
@@ -75,8 +130,8 @@ export function LingMascot() {
     };
   }, [mounted, hidden]);
 
-  // rAF 主循环：瞳孔与身体朝指针方向平滑跟随；指针静止 4 秒后眼睛自己四处张望。
-  // 拖动中暂停（拖动层接管位置）。
+  // rAF 主循环：整只桌宠朝指针方向平滑倾斜/漂移（2.5D 视差）；指针静止 4 秒后
+  // 自己轻轻四处张望。拖动中暂停（拖动层接管位置）。
   useEffect(() => {
     if (!mounted || hidden || reducedRef.current) return;
     let raf = 0;
@@ -84,8 +139,7 @@ export function LingMascot() {
       raf = requestAnimationFrame(loop);
       if (draggingRef.current) return;
       const el = wrapRef.current;
-      const pupils = pupilRef.current;
-      if (!el || !pupils) return;
+      if (!el) return;
       const rect = el.getBoundingClientRect();
       const cx = rect.left + rect.width / 2;
       const cy = rect.top + rect.height / 2;
@@ -97,66 +151,40 @@ export function LingMascot() {
         const vx = p.x - cx;
         const vy = p.y - cy;
         const len = Math.hypot(vx, vy) || 1;
-        const strength = Math.min(1, len / 240);
+        const strength = Math.min(1, len / 260);
         dx = (vx / len) * strength;
         dy = (vy / len) * strength;
       } else {
         if (now > wanderRef.current.until) {
           wanderRef.current = {
-            x: (Math.random() * 2 - 1) * 0.7,
-            y: (Math.random() * 2 - 1) * 0.5,
-            until: now + 2600,
+            x: (Math.random() * 2 - 1) * 0.55,
+            y: (Math.random() * 2 - 1) * 0.35,
+            until: now + 2800,
           };
         }
         dx = wanderRef.current.x;
         dy = wanderRef.current.y;
       }
       const cur = curRef.current;
-      cur.x += (dx - cur.x) * 0.12;
-      cur.y += (dy - cur.y) * 0.12;
-      pupils.setAttribute("transform", `translate(${(cur.x * 3.1).toFixed(2)} ${(cur.y * 2.5).toFixed(2)})`);
-      el.style.transform = `rotate(${(cur.x * 3.2).toFixed(2)}deg) translate(${(cur.x * 1.6).toFixed(2)}px, 0)`;
+      cur.x += (dx - cur.x) * 0.09;
+      cur.y += (dy - cur.y) * 0.09;
+      el.style.transform = `rotate(${(cur.x * 2.6).toFixed(2)}deg) translate(${(cur.x * 3.4).toFixed(2)}px, ${(cur.y * 2.2).toFixed(2)}px)`;
     };
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);
   }, [mounted, hidden]);
 
-  // 眨眼：每 2.2–5.4 秒眨一次
-  useEffect(() => {
-    if (!mounted || hidden || reducedRef.current) return;
-    let alive = true;
-    let t1: ReturnType<typeof setTimeout>;
-    let t2: ReturnType<typeof setTimeout>;
-    const schedule = () => {
-      t1 = setTimeout(() => {
-        if (!alive) return;
-        setBlinking(true);
-        t2 = setTimeout(() => {
-          if (!alive) return;
-          setBlinking(false);
-          schedule();
-        }, 130);
-      }, 2200 + Math.random() * 3200);
-    };
-    schedule();
-    return () => {
-      alive = false;
-      clearTimeout(t1);
-      clearTimeout(t2);
-    };
-  }, [mounted, hidden]);
-
-  // 首次访问 6 秒后主动打一次招呼（每会话只邀一次，方便被发现）
+  // 首次访问 6 秒后主动打一次招呼（每会话只邀一次，方便被发现），并挥手
   useEffect(() => {
     if (!mounted || hidden) return;
     if (sessionStorage.getItem(INVITED_KEY)) return;
     const id = setTimeout(() => {
       sessionStorage.setItem(INVITED_KEY, "1");
-      setLineIdx(Math.floor(Math.random() * Math.max(1, lines.length)));
+      setLineIdx(0);
       setBubbleOpen(true);
+      playReaction("wave");
     }, 6000);
     return () => clearTimeout(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mounted, hidden]);
 
   if (!MASCOT_ENABLED || !mounted || hidden) return null;
@@ -166,6 +194,10 @@ export function LingMascot() {
       setBubbleOpen(false);
       return;
     }
+    // 每开一次气泡轮换一个反应姿势，台词跟着轮换到不同句
+    const pose = REACTIONS[reactionIdxRef.current % REACTIONS.length];
+    reactionIdxRef.current += 1;
+    playReaction(pose);
     setLineIdx((prev) => {
       if (lines.length <= 1) return 0;
       let next = prev;
@@ -193,6 +225,7 @@ export function LingMascot() {
   // ---- 拖动：拖到投放气泡上松手 → 打开接光点 ----
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     downRef.current = { x: e.clientX, y: e.clientY };
+    setPressed(true);
     e.currentTarget.setPointerCapture(e.pointerId);
   };
 
@@ -208,7 +241,7 @@ export function LingMascot() {
       if (dragRef.current) dragRef.current.style.transition = "none";
     }
     if (draggingRef.current && dragRef.current) {
-      dragRef.current.style.transform = `translate(${dx}px, ${dy}px) scale(1.07)`;
+      dragRef.current.style.transform = `translate(${dx}px, ${dy}px) scale(1.05)`;
       const z = zoneRef.current?.getBoundingClientRect();
       const hot = !!z && e.clientX >= z.left && e.clientX <= z.right && e.clientY >= z.top && e.clientY <= z.bottom;
       if (hot !== zoneHotRef.current) {
@@ -219,6 +252,7 @@ export function LingMascot() {
   };
 
   const endDrag = () => {
+    setPressed(false);
     if (draggingRef.current) {
       suppressClickRef.current = Date.now();
       if (zoneHotRef.current) openGame();
@@ -250,17 +284,19 @@ export function LingMascot() {
   };
 
   return (
-    <div className="fixed bottom-8 left-8 z-40 flex flex-col items-start select-none">
+    <div className="fixed bottom-5 left-5 min-[480px]:bottom-8 min-[480px]:left-8 z-40 flex flex-col items-start select-none">
       <style>{`
         @keyframes ling-bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
         .ling-bob { animation: ling-bob 3.4s ease-in-out infinite; }
         @keyframes ling-zone { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
         .ling-zone { animation: ling-zone 1.1s ease-in-out infinite; }
-        @media (prefers-reduced-motion: reduce) { .ling-bob, .ling-zone { animation: none; } }
+        @keyframes muse-pop { 0% { transform: scale(0.9) translateY(3px); } 55% { transform: scale(1.045) translateY(-2px); } 100% { transform: scale(1) translateY(0); } }
+        .muse-pop { animation: muse-pop .38s ease-out; }
+        @media (prefers-reduced-motion: reduce) { .ling-bob, .ling-zone, .muse-pop { animation: none; } }
       `}</style>
 
       {bubbleOpen && !dragging && (
-        <div className="mb-2 ml-1 w-60 max-w-[calc(100vw-6rem)] rounded-2xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 shadow-xl p-3.5">
+        <div className="mb-1 ml-1 w-60 max-w-[calc(100vw-6rem)] rounded-2xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 shadow-xl p-3.5">
           <p className="text-sm leading-relaxed text-stone-800 dark:text-stone-100">
             {lines[lineIdx] ?? lines[0] ?? ""}
           </p>
@@ -293,7 +329,7 @@ export function LingMascot() {
         </div>
       )}
 
-      {/* 拖放目标气泡：拖动时出现在吉祥物上方 */}
+      {/* 拖放目标气泡：拖动时出现在桌宠上方 */}
       {dragging && (
         <div
           ref={zoneRef}
@@ -320,46 +356,26 @@ export function LingMascot() {
               onPointerMove={onPointerMove}
               onPointerUp={endDrag}
               onPointerCancel={endDrag}
-              className="block w-[72px] h-[72px] cursor-grab active:cursor-grabbing drop-shadow-lg outline-none"
+              className="block w-[118px] h-[138px] min-[480px]:w-[138px] min-[480px]:h-[162px] cursor-grab active:cursor-grabbing outline-none"
               style={{ touchAction: "none" }}
             >
-              <svg viewBox="0 0 100 100" className="w-full h-full" aria-hidden="true">
-                <defs>
-                  <radialGradient id="ling-body" cx="50%" cy="36%" r="78%">
-                    <stop offset="0%" stopColor="#ffffff" />
-                    <stop offset="58%" stopColor="#eef3f9" />
-                    <stop offset="100%" stopColor="#d9e4f2" />
-                  </radialGradient>
-                  <radialGradient id="ling-glow" cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" stopColor="#bae6fd" stopOpacity="0.65" />
-                    <stop offset="100%" stopColor="#bae6fd" stopOpacity="0" />
-                  </radialGradient>
-                </defs>
-                <circle cx="50" cy="52" r="47" fill="url(#ling-glow)" />
-                <path
-                  d="M50 10 C69 10 82 27 82 47 C82 58 79 66 75 73 C71 67 67 65 63 73 C58 66 54 66 50 74 C46 66 42 66 37 73 C33 65 29 67 25 73 C21 66 18 58 18 47 C18 27 31 10 50 10 Z"
-                  fill="url(#ling-body)"
-                  stroke="rgba(148,163,184,0.4)"
-                  strokeWidth="1"
+              <div
+                key={shownPose}
+                className="muse-pop w-full h-full"
+                style={{
+                  transform: pressed && !dragging ? "scale(0.94, 0.9)" : undefined,
+                  transition: "transform .15s ease-out",
+                  filter: "drop-shadow(0 10px 14px rgba(60,50,30,0.28))",
+                }}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={POSES[shownPose]}
+                  alt=""
+                  draggable={false}
+                  className="w-full h-full object-contain object-bottom pointer-events-none"
                 />
-                <g
-                  style={{
-                    transform: blinking ? "scaleY(0.1)" : "scaleY(1)",
-                    transition: "transform 70ms ease-in-out",
-                    transformBox: "fill-box",
-                    transformOrigin: "center",
-                  }}
-                >
-                  <ellipse cx="38.5" cy="47" rx="6.8" ry="7.8" fill="#ffffff" />
-                  <ellipse cx="61.5" cy="47" rx="6.8" ry="7.8" fill="#ffffff" />
-                  <g ref={pupilRef}>
-                    <circle cx="38.5" cy="47" r="3.3" fill="#1e293b" />
-                    <circle cx="61.5" cy="47" r="3.3" fill="#1e293b" />
-                    <circle cx="39.7" cy="45.8" r="1.1" fill="#ffffff" />
-                    <circle cx="62.7" cy="45.8" r="1.1" fill="#ffffff" />
-                  </g>
-                </g>
-              </svg>
+              </div>
             </div>
           </div>
           {!dragging && (
@@ -367,7 +383,7 @@ export function LingMascot() {
               onClick={hideForNow}
               aria-label={t("hide")}
               title={t("hide")}
-              className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-stone-900/60 dark:bg-stone-100/70 text-stone-50 dark:text-stone-900 text-[11px] leading-none flex items-center justify-center opacity-40 hover:opacity-100 focus:opacity-100 cursor-pointer transition-opacity"
+              className="absolute top-0 -right-2 w-5 h-5 rounded-full bg-stone-900/60 dark:bg-stone-100/70 text-stone-50 dark:text-stone-900 text-[11px] leading-none flex items-center justify-center opacity-40 hover:opacity-100 focus:opacity-100 cursor-pointer transition-opacity"
             >
               ×
             </button>
