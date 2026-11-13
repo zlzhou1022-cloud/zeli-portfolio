@@ -9,11 +9,15 @@ import { useTranslations } from "next-intl";
 // 横向障碍是实心墙——从下方撞上会被拦住、被顶着往下带，必须绕开障碍两端
 // 或中间的缺口冲过去，被顶出画面下沿扣 1 点生命并在中场复活（1.6 秒无
 // 敌）。空中光点（+10）/金色（+30）/墨团（−20）/炸弹（−1 生命），冲过的
-// 距离也计分。奔跑动画 = 奔跑帧 A/B 两张每 150ms 轮换；被障碍拦住时切站
-// 立帧。纯前端 canvas，最高分存 localStorage，无后端、不吃聊天配额。
+// 距离也计分。背景故事（写在规则里）：数据风暴吹散了主页的星光，她冲上去
+// 把光收集回来；障碍是倒塌的「防火墙」，墨团是乱码，炸弹是病毒。障碍密
+// 度与元素速度按站长 2026-11-14 反馈调过：墙约 1.55 秒一道，物品以约 1.5
+// 倍墙速下落，两者错速避免「躲墙必撞弹」。形象按移动方向切：向左跑用向左
+// 贴图、向右跑用向右贴图（同一张侧面图的镜像），停下/被拦住用站立帧。
+// 纯前端 canvas，最高分存 localStorage，无后端、不吃聊天配额。
 // 打开方式：window 事件 "ling:open-game"（桌宠气泡、Lab 页卡片派发）。
-// 主角形象：桌宠同款慕斯抠图 /muse-pet/run-a.webp、run-b.webp、look.webp，
-// 加载失败时回退白团子。
+// 主角形象：桌宠同款慕斯抠图 /muse-pet/run-left.webp、run-right.webp、
+// look.webp，加载失败时回退白团子。
 const W = 400;
 const H = 460;
 const DURATION = 45;
@@ -42,9 +46,9 @@ export function LingGame() {
   const [overReason, setOverReason] = useState<"time" | "lives">("time");
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const imgRef = useRef<{ a: HTMLImageElement | null; b: HTMLImageElement | null; look: HTMLImageElement | null }>({
-    a: null,
-    b: null,
+  const imgRef = useRef<{ left: HTMLImageElement | null; right: HTMLImageElement | null; look: HTMLImageElement | null }>({
+    left: null,
+    right: null,
     look: null,
   });
   const stateRef = useRef({
@@ -58,6 +62,8 @@ export function LingGame() {
     targetY: 300,
     pointerSeen: false,
     vx: 0,
+    face: 1,
+    speedNow: 0,
     blocked: false,
     keys: { left: false, right: false, up: false, down: false },
     barAcc: 0,
@@ -74,15 +80,15 @@ export function LingGame() {
 
   // 主角图预加载（组件全局挂载，页面打开时就拉好，进游戏不等待）
   useEffect(() => {
-    const load = (key: "a" | "b" | "look", src: string) => {
+    const load = (key: "left" | "right" | "look", src: string) => {
       const img = new Image();
       img.src = src;
       img.onload = () => {
         imgRef.current[key] = img;
       };
     };
-    load("a", "/muse-pet/run-a.webp");
-    load("b", "/muse-pet/run-b.webp");
+    load("left", "/muse-pet/run-left.webp");
+    load("right", "/muse-pet/run-right.webp");
     load("look", "/muse-pet/look.webp");
   }, []);
 
@@ -126,6 +132,8 @@ export function LingGame() {
       targetY: 300,
       pointerSeen: false,
       vx: 0,
+      face: 1,
+      speedNow: 0,
       blocked: false,
       keys: { left: false, right: false, up: false, down: false },
       barAcc: 0.55, // 第一道障碍稍晚一点出现
@@ -193,7 +201,8 @@ export function LingGame() {
       s.items.push({
         x,
         y: -16,
-        spd: 0.9 + Math.random() * 0.2,
+        // 物品比墙快约 1.5 倍下落（与墙错速，站长 2026-11-14 指示）
+        spd: 1.35 + Math.random() * 0.3,
         r: kind === "mote" ? 9 : 12,
         kind,
       });
@@ -259,15 +268,17 @@ export function LingGame() {
 
     const drawPlayer = (now: number) => {
       const imgs = imgRef.current;
-      // 被障碍拦在下方 → 站立帧；其余时间两张奔跑帧轮换
+      // 按移动方向切贴图：跑动中用朝向那侧的侧面奔跑图（朝向记忆最近一次
+      // 明显的左右移动，纯上下移动时保持朝向）；停下或被拦住 → 站立帧。
+      const running = !s.blocked && s.speedNow > 30;
       let img: HTMLImageElement | null;
-      if (s.blocked) img = imgs.look ?? imgs.a;
-      else img = Math.floor(now / 150) % 2 === 0 ? imgs.a : imgs.b;
-      img = img ?? imgs.a ?? imgs.b ?? imgs.look;
+      if (running) img = s.face < 0 ? imgs.left : imgs.right;
+      else img = imgs.look;
+      img = img ?? imgs.right ?? imgs.left ?? imgs.look;
       const inv = now < s.invUntil;
       const blinkOff = inv && Math.floor(now / 110) % 2 === 0;
-      const tilt = Math.max(-0.12, Math.min(0.12, s.vx * 0.00035));
-      const bob = s.blocked ? 0 : Math.sin(now / 78) * 1.4;
+      const tilt = running ? Math.max(-0.07, Math.min(0.07, s.vx * 0.00022)) : 0;
+      const bob = running ? Math.sin(now / 78) * 1.4 : 0;
       ctx.save();
       ctx.translate(s.px, s.py + bob);
       ctx.rotate(tilt);
@@ -366,9 +377,9 @@ export function LingGame() {
         setScore(total);
       }
 
-      // 生成障碍与物品
+      // 生成障碍与物品（墙放稀：约 1.55 秒一道，站长反馈太密）
       s.barAcc += dt;
-      if (s.barAcc >= 1.15) {
+      if (s.barAcc >= 1.55) {
         s.barAcc = 0;
         spawnBar();
       }
@@ -400,6 +411,9 @@ export function LingGame() {
         }
       }
       s.vx = vx;
+      if (vx < -40) s.face = -1;
+      else if (vx > 40) s.face = 1;
+      s.speedNow = Math.hypot(vx, vy);
       s.px += vx * dt;
       s.py += vy * dt;
       s.px = Math.max(22, Math.min(W - 22, s.px));
