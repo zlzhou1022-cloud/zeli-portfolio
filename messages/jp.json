@@ -187,6 +187,55 @@
     "labCardDesc": "データストームで吹き飛んだホームページのデータを、ムースと一緒に45秒で集め直そう。倒れたファイアウォールを回り込んで上へ！",
     "labCardCta": "遊んでみる"
   },
+  "PrefectureGame": {
+    "pageTitle": "写真で県当て · 日本地図スタンプ帳",
+    "pageDesc": "Zeli は日本の 47 都道府県をすべて巡り、旅先で撮った写真をアルバムに残しています。写真を見て、どの県で撮ったか当ててみてください——正解すると、地図のその県にスタンプが押せます。進行役はムースです。",
+    "backLab": "ラボに戻る",
+    "labCardTitle": "写真で県当て · 日本地図スタンプ帳",
+    "labCardDesc": "Zeli の旅行アルバムの写真を見て、どの都道府県で撮ったか当てるゲーム。正解すると日本地図にスタンプが集まります。進行役はムース、47 県制覇を目指そう。",
+    "labCardCta": "当ててみる",
+    "tabQuiz": "写真で県当て",
+    "tabMap": "スタンプ地図",
+    "question": "この写真はどの都道府県で撮ったでしょう？",
+    "next": "次の問題",
+    "again": "もう一周",
+    "roundEnd": "このラウンドはおしまい！",
+    "introLine": "私が出題するよ！写真を見て県を当てて、正解したらスタンプゲット。",
+    "correctLines": [
+      "正解！ここだよ。",
+      "その通り、スタンプ！",
+      "すごい、よくわかったね！"
+    ],
+    "wrongLines": [
+      "残念、正解はこちら。",
+      "おしい！答え合わせしてみて。",
+      "今回はハズレ。場所を覚えてね。"
+    ],
+    "stampLine": "新しいスタンプゲット！地図がまた一つ光ったよ。",
+    "scoreLine": "{n} 問目 · 正解 {correct} · スタンプ {stamps} / {total}",
+    "answerLabel": "撮影地",
+    "viewTrip": "この旅を見に行く →",
+    "legendVisited": "Zeli 訪問済み",
+    "legendPhoto": "アルバムに写真あり",
+    "legendStamped": "スタンプ済み",
+    "mapHint": "県をタップすると詳細が見られます。「写真で県当て」で正解するとスタンプが押せます。",
+    "zeliBadge": "Zeli 訪問済み ✓",
+    "photoBadge": "アルバム写真 {count} 枚",
+    "noPhotoBadge": "アルバム写真はまだなし",
+    "stampedBadge": "スタンプ済み ✓",
+    "notStampedBadge": "まだスタンプなし",
+    "playThisPref": "この県で出題",
+    "regions": {
+      "hokkaido": "北海道",
+      "tohoku": "東北",
+      "kanto": "関東",
+      "chubu": "中部",
+      "kinki": "近畿",
+      "chugoku": "中国",
+      "shikoku": "四国",
+      "kyushu": "九州・沖縄"
+    }
+  },
   "PageGuide": {
     "home": {
       "intro": "着いた！ここは Zeli の個人ホームページ。私はムース、彼の小さなエージェントです。案内なら任せてください。",
