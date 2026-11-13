@@ -7,8 +7,11 @@ import { useTranslations } from "next-intl";
 // 站长追加要求升级）：
 // - 形象：Bilibili 频道吉祥物慕斯的 v3 定稿抠图（cuts-v3 → WebP，public/muse-pet/）。
 // - 自由拖动：可拖到页面任意位置放着，位置存 localStorage，刷新/换页不丢；
-//   拖动时是「被提起来」的表现——微惊讶脸 + 钟摆式晃动 + 影子拉长；拖到上方
-//   出现的投放气泡上松手（变 present 姿势）打开小游戏。
+//   拖动时换「被提溜起来」姿势（站长选定慌张版：兜帽被攥成一束、身体垂着
+//   挣扎，接入时按身体等大放大 1.43 倍、帽尖向上伸出框外）+ 钟摆式晃动 +
+//   影子拉长；拖到上方出现的投放气泡上松手（变 present 姿势）打开小游戏。
+// - 尺寸：与最初的团子吉祥物同量级（高 76/84px）；全部姿势按同一身体高度
+//   规范裁切（严阈值取形、高 560），切换不忽大忽小。
 // - 互动：点击轮换反应姿势 wave→wink→stareyes→scratch→sorry 并开气泡说话；
 //   整体朝指针视差倾斜（2.5D），切换带弹跳、按下压扁。
 // - 待机生活：18 秒没人理 → 轮流看书/看信/闻闻/张望；75 秒 → 打盹（点头 + Zzz）。
@@ -31,7 +34,8 @@ type Pose =
   | "stareyes"
   | "scratch"
   | "sorry"
-  | "present";
+  | "present"
+  | "lifted";
 
 const POSES: Record<Pose, string> = {
   look: "/muse-pet/look.webp",
@@ -44,7 +48,10 @@ const POSES: Record<Pose, string> = {
   scratch: "/muse-pet/scratch.webp",
   sorry: "/muse-pet/sorry.webp",
   present: "/muse-pet/present.webp",
+  lifted: "/muse-pet/lifted.webp",
 };
+// lifted 图里兜帽被拉长，身体只占总高约 70%——拖动态按此倍数放大回等大
+const LIFT_SCALE = 1.43;
 const REACTIONS: Pose[] = ["wave", "wink", "stareyes", "scratch", "sorry"];
 const IDLE_ALT: Pose[] = ["book", "letter", "smell", "look"];
 const IDLE_AFTER_MS = 18000;
@@ -54,14 +61,14 @@ function clampPos(p: { x: number; y: number }) {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
   return {
-    x: Math.max(-16, Math.min(vw - 96, p.x)),
-    y: Math.max(0, Math.min(vh - 84, p.y)),
+    x: Math.max(-12, Math.min(vw - 56, p.x)),
+    y: Math.max(0, Math.min(vh - 56, p.y)),
   };
 }
 
 function defaultPos() {
   const wide = window.innerWidth >= 480;
-  const h = wide ? 162 : 138;
+  const h = wide ? 84 : 76;
   return { x: wide ? 32 : 20, y: window.innerHeight - h - (wide ? 32 : 20) };
 }
 
@@ -104,7 +111,7 @@ export function LingMascot() {
   const reactionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastTouchRef = useRef(0);
 
-  const shownPose: Pose = dragging ? (zoneHot ? "present" : "look") : reaction ?? idlePose;
+  const shownPose: Pose = dragging ? (zoneHot ? "present" : "lifted") : reaction ?? idlePose;
   const bubbleBelow = pos.y < 330;
 
   useEffect(() => {
@@ -396,7 +403,7 @@ export function LingMascot() {
         @media (prefers-reduced-motion: reduce) { .ling-bob, .ling-zone, .muse-pop, .muse-doze, .muse-z { animation: none; } }
       `}</style>
 
-      <div className="relative w-[118px] h-[138px] min-[480px]:w-[138px] min-[480px]:h-[162px]">
+      <div className="relative w-[64px] h-[76px] min-[480px]:w-[72px] min-[480px]:h-[84px]">
         {bubbleOpen && !dragging && (
           <div
             className={`absolute left-0 z-20 w-60 max-w-[calc(100vw-3rem)] rounded-2xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 shadow-xl p-3.5 ${
@@ -486,7 +493,15 @@ export function LingMascot() {
                   key={shownPose}
                   className="muse-pop w-full h-full"
                   style={{
-                    transform: pressed && !dragging ? "scale(0.94, 0.9)" : dragging ? "scale(1.04)" : undefined,
+                    transform:
+                      pressed && !dragging
+                        ? "scale(0.94, 0.9)"
+                        : dragging
+                          ? zoneHot
+                            ? "scale(1.04)"
+                            : `scale(${LIFT_SCALE})`
+                          : undefined,
+                    transformOrigin: "50% 100%",
                     transition: "transform .15s ease-out",
                     filter: dragging
                       ? "drop-shadow(0 22px 16px rgba(60,50,30,0.35))"
