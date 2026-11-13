@@ -150,5 +150,19 @@
       "Which travel stories does he have?",
       "Where should I go to see snow in winter?"
     ]
+  },
+  "Mascot": {
+    "ariaLabel": "Ling the mascot",
+    "chatCta": "Chat with me",
+    "closeBubble": "Close",
+    "dismiss": "Hide me away",
+    "hide": "Hide mascot",
+    "lines": [
+      "Hi, I'm Ling — the little spirit of this site.",
+      "Wherever your cursor goes, my eyes follow.",
+      "Go ahead, poke me. Stay and play a while?",
+      "Zeli has traveled to all 47 prefectures of Japan — the stories are in the travel log.",
+      "Curious about his work? Ask me in the chat, bottom right."
+    ]
   }
 }
