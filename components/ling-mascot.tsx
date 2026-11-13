@@ -9,7 +9,8 @@ import { useTranslations } from "next-intl";
 // - 自由拖动：可拖到页面任意位置放着，位置存 localStorage，刷新/换页不丢；
 //   拖动时换「被提溜起来」姿势（站长选定慌张版：兜帽被攥成一束、身体垂着
 //   挣扎，接入时按身体等大放大 1.43 倍、帽尖向上伸出框外）+ 钟摆式晃动 +
-//   影子拉长；拖到上方出现的投放气泡上松手（变 present 姿势）打开小游戏。
+//   影子拉长；拖到拖动时固定出现在页面顶部中央的投放气泡上松手（变 present
+//   姿势）打开小游戏——气泡必须视口固定，挂在她头顶会跟着她一起跑、永远拖不到。
 // - 尺寸：与最初的团子吉祥物同量级（高 76/84px）；全部姿势按同一身体高度
 //   规范裁切（严阈值取形、高 560），且图片按高度驱动渲染（h-full w-auto）——
 //   注意 bob 层必须带 h-full，否则高度链断裂、图片会按宽度撑出自然高（各姿势
@@ -444,11 +445,11 @@ export function LingMascot() {
           </div>
         )}
 
-        {/* 拖放目标气泡：拖动时出现在桌宠正上方 */}
+        {/* 拖放目标气泡：拖动时固定在页面顶部中央（不随桌宠移动，否则永远拖不到） */}
         {dragging && (
           <div
             ref={zoneRef}
-            className={`ling-zone absolute left-0 -top-16 z-20 whitespace-nowrap rounded-full border-2 px-4 py-2 text-sm font-medium shadow-xl pointer-events-none transition-colors ${
+            className={`ling-zone fixed inset-x-0 top-24 z-20 mx-auto w-max whitespace-nowrap rounded-full border-2 px-4 py-2 text-sm font-medium shadow-xl pointer-events-none transition-colors ${
               zoneHot
                 ? "border-sky-400 bg-sky-400 text-white"
                 : "border-dashed border-sky-400 bg-white/95 dark:bg-stone-900/95 text-sky-700 dark:text-sky-300"
