@@ -82,6 +82,20 @@ export async function POST(req: Request) {
       ...(LING_TOOLS_ENABLED
         ? { tools: createLingTools(resolvedLocale), stopWhen: stepCountIs(3) }
         : {}),
+      // 多步工具调用的第二步起，assistant 历史里会带 reasoning part，
+      // openai-compatible provider 会把它序列化为 reasoning_content 发给 Groq，
+      // 而 gpt-oss 拒绝请求历史中的 reasoning_content（2026-11-13 线上实测报错
+      // "'messages.2' : property 'reasoning_content' is unsupported"，导致工具后无正文）。
+      // 因此每步发送前剥掉 assistant 消息的 reasoning part（工具调用与正文不受影响）。
+      prepareStep: ({ messages }) => ({
+        messages: messages.map((m) => {
+          if (m.role !== "assistant" || typeof m.content === "string") return m;
+          const filtered = m.content.filter(
+            (part) => (part as { type: string }).type !== "reasoning",
+          );
+          return filtered.length > 0 ? { ...m, content: filtered } : m;
+        }) as typeof messages,
+      }),
       temperature: 0.5,
       maxOutputTokens: 800,
       abortSignal: req.signal,
