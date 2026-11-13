@@ -75,6 +75,30 @@ export function ChatBot({ isQuotaFull }: { isQuotaFull: boolean }) {
     }
   };
 
+  // 开场白本地化：历史第一条 assistant 消息必是开场白（其余 assistant 消息都跟在用户消息后）。
+  // localStorage 的历史跨语言共用，若不处理，访客在中文站留下的开场白会被带到日/英站
+  // （旧版三语堆叠开场白同理）。加载与语言切换时都把开场白槽位换成当前语言版本；
+  // 真实问答历史不改动。
+  const greetingText = t("greeting");
+  const localizeGreeting = (list: Message[]): Message[] => {
+    if (list.length === 0 || list[0].role !== "assistant" || list[0].content === greetingText) {
+      return list;
+    }
+    const copy = [...list];
+    copy[0] = { ...copy[0], content: greetingText };
+    return copy;
+  };
+
+  // 语言切换时同步开场白语言（本站语言切换是整页刷新，初始化已处理；
+  // 这里再兜一层无刷新的语言变化。写法与初始化一致，用 setTimeout 异步执行）。
+  useEffect(() => {
+    const id = setTimeout(() => {
+      setMessages((prev) => localizeGreeting(prev));
+    }, 0);
+    return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [greetingText]);
+
   // 1. 初始化聊天与持久化
   useEffect(() => {
     const saved = localStorage.getItem("chat_history");
@@ -83,7 +107,7 @@ export function ChatBot({ isQuotaFull }: { isQuotaFull: boolean }) {
     const timer = setTimeout(() => {
       if (saved && savedId) {
         try {
-          setMessages(JSON.parse(saved));
+          setMessages(localizeGreeting(JSON.parse(saved)));
         } catch {
           setMessages([makeGreeting()]);
         }
