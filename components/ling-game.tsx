@@ -3,21 +3,29 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 
-// 接光点小游戏：45 秒一局。拖动/方向键移动底部的小灵，接光点得分、躲墨团。
+// 慕斯向前冲：45 秒一局的竖版卷轴小游戏（站长 2026-11-13 定稿，倒置版
+// 「是男人就下一百层」）。画面自动向下卷动——慕斯在往前（上）冲，玩家只
+// 能左右移动：落在横杆上会被带着往下走，必须在横杆沉到底前挪开；画面
+// 最底部是整排地刺，碰到扣 1 点生命并弹回半空（1.6 秒无敌）。空中还有
+// 光点（+10）/金色（+30）/墨团（−20）/炸弹（−1 生命），冲过的距离也计分。
 // 纯前端 canvas，最高分存 localStorage，无后端、不吃聊天配额。
-// 打开方式：window 事件 "ling:open-game"（吉祥物气泡、Lab 页卡片派发）。
+// 打开方式：window 事件 "ling:open-game"（桌宠气泡、Lab 页卡片派发）。
+// 主角形象：桌宠同款慕斯抠图 /muse-pet/look.webp，加载失败时回退白团子。
 const W = 400;
 const H = 460;
 const DURATION = 45;
 const BEST_KEY = "ling_game_best";
+const SPIKE_H = 34;
+const CRUISE_Y = 292; // 自由状态下脚底回到的巡航高度
+const RISE_SPEED = 112; // 自由状态下朝巡航高度回位的速度（px/s）
+const PLAYER_H = 62;
 
 type ItemKind = "mote" | "gold" | "ink" | "bomb";
-type Item = { x: number; y: number; vy: number; r: number; kind: ItemKind };
+type Item = { x: number; y: number; spd: number; r: number; kind: ItemKind };
 type Popup = { x: number; y: number; text: string; color: string; born: number };
-type Rock = { x: number; w: number; born: number; until: number };
+type Bar = { x: number; w: number; y: number };
 type Phase = "closed" | "ready" | "playing" | "over";
-const ROCK_H = 30;
-const GROUND_Y = H - 22;
+const BAR_T = 13;
 
 export function LingGame() {
   const t = useTranslations("MiniGame");
@@ -30,21 +38,37 @@ export function LingGame() {
   const [overReason, setOverReason] = useState<"time" | "lives">("time");
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const imgRef = useRef<HTMLImageElement | null>(null);
   const stateRef = useRef({
     items: [] as Item[],
     popups: [] as Popup[],
-    rocks: [] as Rock[],
+    bars: [] as Bar[],
+    dots: [] as { x: number; y0: number; f: number }[],
     playerX: W / 2,
     targetX: W / 2,
+    feetY: CRUISE_Y,
+    standing: null as Bar | null,
     keys: { left: false, right: false },
-    spawnAcc: 0,
+    barAcc: 0,
+    itemAcc: 0,
     elapsed: 0,
+    distance: 0,
+    pickup: 0,
     score: 0,
     lives: 3,
-    lastRockAt: 0,
     hurtAt: 0,
+    invUntil: 0,
     lastTickSecond: DURATION,
   });
+
+  // 主角图预加载（组件全局挂载，页面打开时就拉好，进游戏不等待）
+  useEffect(() => {
+    const img = new Image();
+    img.src = "/muse-pet/look.webp";
+    img.onload = () => {
+      imgRef.current = img;
+    };
+  }, []);
 
   // 打开事件
   useEffect(() => {
@@ -74,16 +98,26 @@ export function LingGame() {
     stateRef.current = {
       items: [],
       popups: [],
-      rocks: [],
+      bars: [],
+      dots: Array.from({ length: 42 }, () => ({
+        x: Math.random() * W,
+        y0: Math.random() * H,
+        f: 0.45 + Math.random() * 0.75,
+      })),
       playerX: W / 2,
       targetX: W / 2,
+      feetY: CRUISE_Y,
+      standing: null,
       keys: { left: false, right: false },
-      spawnAcc: 0,
+      barAcc: 0.55, // 第一根横杆稍晚一点出现
+      itemAcc: 0,
       elapsed: 0,
+      distance: 0,
+      pickup: 0,
       score: 0,
       lives: 3,
-      lastRockAt: 0,
       hurtAt: 0,
+      invUntil: 0,
       lastTickSecond: DURATION,
     };
     setScore(0);
@@ -109,14 +143,18 @@ export function LingGame() {
     let raf = 0;
     let last = performance.now();
 
-    const spawn = () => {
+    const spawnBar = () => {
+      const w = 110 + Math.random() * 90;
+      s.bars.push({ x: 6 + Math.random() * (W - w - 12), w, y: -BAR_T - 2 });
+    };
+
+    const spawnItem = () => {
       const roll = Math.random();
       const kind: ItemKind = roll < 0.12 ? "gold" : roll < 0.28 ? "bomb" : roll < 0.46 ? "ink" : "mote";
-      const base = 135 + s.elapsed * 4.5;
       s.items.push({
         x: 24 + Math.random() * (W - 48),
         y: -16,
-        vy: base * (0.85 + Math.random() * 0.4),
+        spd: 0.9 + Math.random() * 0.2,
         r: kind === "mote" ? 9 : 12,
         kind,
       });
@@ -138,37 +176,63 @@ export function LingGame() {
       setPhase("over");
     };
 
-    const drawOrb = (x: number, y: number, now: number) => {
-      // 与吉祥物同步的白色荧光形象：白团子 + 两只眼睛
-      const bob = Math.sin(now / 300) * 2;
-      const glow = ctx.createRadialGradient(x, y + bob, 6, x, y + bob, 34);
+    const hurt = (now: number, x: number, y: number) => {
+      s.lives -= 1;
+      s.hurtAt = now;
+      s.invUntil = now + 1600;
+      setLives(s.lives);
+      s.popups.push({ x, y, text: "-1", color: "#dc2626", born: now });
+    };
+
+    const drawOrbFallback = (cx: number, cy: number, now: number) => {
+      // 抠图没加载好时的回退形象：与旧版一致的白色荧光团子
+      const glow = ctx.createRadialGradient(cx, cy, 6, cx, cy, 34);
       glow.addColorStop(0, "rgba(186,230,253,0.5)");
       glow.addColorStop(1, "rgba(186,230,253,0)");
       ctx.beginPath();
-      ctx.arc(x, y + bob, 34, 0, Math.PI * 2);
+      ctx.arc(cx, cy, 34, 0, Math.PI * 2);
       ctx.fillStyle = glow;
       ctx.fill();
-      const g = ctx.createRadialGradient(x, y + bob - 6, 4, x, y + bob, 24);
+      const g = ctx.createRadialGradient(cx, cy - 6, 4, cx, cy, 24);
       g.addColorStop(0, "#ffffff");
       g.addColorStop(0.58, "#eef3f9");
       g.addColorStop(1, "#d9e4f2");
       ctx.beginPath();
-      ctx.arc(x, y + bob, 20, 0, Math.PI * 2);
+      ctx.arc(cx, cy, 20, 0, Math.PI * 2);
       ctx.fillStyle = g;
       ctx.fill();
       ctx.strokeStyle = "rgba(148,163,184,0.45)";
       ctx.stroke();
-      // 眼睛（朝上看落下来的光点）
       ctx.fillStyle = "#1e293b";
       ctx.beginPath();
-      ctx.arc(x - 7, y + bob - 3, 2.7, 0, Math.PI * 2);
-      ctx.arc(x + 7, y + bob - 3, 2.7, 0, Math.PI * 2);
+      ctx.arc(cx - 7, cy - 3, 2.7, 0, Math.PI * 2);
+      ctx.arc(cx + 7, cy - 3, 2.7, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = "#ffffff";
-      ctx.beginPath();
-      ctx.arc(x - 6, y + bob - 4, 0.9, 0, Math.PI * 2);
-      ctx.arc(x + 8, y + bob - 4, 0.9, 0, Math.PI * 2);
-      ctx.fill();
+      void now;
+    };
+
+    const drawPlayer = (now: number) => {
+      const img = imgRef.current;
+      const inv = now < s.invUntil;
+      const blinkOff = inv && Math.floor(now / 110) % 2 === 0;
+      const tilt = Math.max(-0.14, Math.min(0.14, (s.targetX - s.playerX) * 0.0016));
+      const bob = s.standing ? 0 : Math.sin(now / 240) * 1.6;
+      ctx.save();
+      ctx.translate(s.playerX, s.feetY + bob);
+      ctx.rotate(tilt);
+      if (blinkOff) ctx.globalAlpha = 0.3;
+      if (img) {
+        const w = (PLAYER_H * img.naturalWidth) / img.naturalHeight;
+        // 脚下软影
+        ctx.fillStyle = "rgba(60,50,30,0.18)";
+        ctx.beginPath();
+        ctx.ellipse(0, -1, w * 0.36, 3.4, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.drawImage(img, -w / 2, -PLAYER_H, w, PLAYER_H);
+      } else {
+        drawOrbFallback(0, -26, now);
+      }
+      ctx.restore();
     };
 
     const drawItem = (it: Item, now: number) => {
@@ -181,7 +245,6 @@ export function LingGame() {
         ctx.arc(it.x, it.y, it.r, 0, Math.PI * 2);
         ctx.fillStyle = g2;
         ctx.fill();
-        // 引线 + 闪烁的火花
         ctx.strokeStyle = "#a8a29e";
         ctx.beginPath();
         ctx.moveTo(it.x, it.y - it.r);
@@ -229,7 +292,6 @@ export function LingGame() {
       last = now;
       s.elapsed += dt;
 
-      // 倒计时（整秒变化时才 setState）
       const remain = Math.max(0, Math.ceil(DURATION - s.elapsed));
       if (remain !== s.lastTickSecond) {
         s.lastTickSecond = remain;
@@ -244,40 +306,70 @@ export function LingGame() {
         return;
       }
 
-      // 岩石地形：5 秒后开始冒出，最多两块，停留约 6.5 秒；不落在玩家附近、不与已有岩石重叠
-      if (s.elapsed > 5 && s.rocks.length < 2 && now - s.lastRockAt > 6500) {
-        const rw = 38 + Math.random() * 22;
-        const rx = 8 + Math.random() * (W - rw - 16);
-        const nearPlayer = Math.abs(rx + rw / 2 - s.playerX) < 78;
-        const overlaps = s.rocks.some((r) => rx < r.x + r.w + 24 && rx + rw > r.x - 24);
-        if (!nearPlayer && !overlaps) {
-          s.rocks.push({ x: rx, w: rw, born: now, until: now + 6500 });
-          s.lastRockAt = now;
-        } else {
-          s.lastRockAt = now - 5200; // 条件不合，1.3 秒后再试
-        }
+      // 世界卷动：速度随时间爬升
+      const speed = Math.min(240, 125 + s.elapsed * 3.2);
+      s.distance += speed * dt;
+      const total = s.pickup + Math.floor(s.distance / 100);
+      if (total !== s.score) {
+        s.score = total;
+        setScore(total);
       }
-      s.rocks = s.rocks.filter((r) => now < r.until);
 
-      // 玩家移动：键盘优先，其次平滑跟随目标点
-      const prevX = s.playerX;
+      // 生成横杆与物品
+      s.barAcc += dt;
+      if (s.barAcc >= 1.05) {
+        s.barAcc = 0;
+        spawnBar();
+      }
+      s.itemAcc += dt;
+      if (s.itemAcc >= 0.8) {
+        s.itemAcc = 0;
+        spawnItem();
+      }
+
+      // 横杆随世界下移
+      for (const b of s.bars) b.y += speed * dt;
+      if (s.standing && s.standing.y > H + 24) s.standing = null;
+      s.bars = s.bars.filter((b) => b.y < H + 24);
+
+      // 玩家左右移动
       if (s.keys.left) s.targetX -= 340 * dt;
       if (s.keys.right) s.targetX += 340 * dt;
-      s.targetX = Math.max(22, Math.min(W - 22, s.targetX));
+      s.targetX = Math.max(20, Math.min(W - 20, s.targetX));
       s.playerX += (s.targetX - s.playerX) * Math.min(1, dt * 14);
-      // 岩石阻挡：小灵不能穿过岩石
-      for (const r of s.rocks) {
-        if (s.playerX + 16 > r.x && s.playerX - 16 < r.x + r.w) {
-          s.playerX = prevX <= r.x + r.w / 2 ? r.x - 16 : r.x + r.w + 16;
+
+      // 玩家纵向：站在横杆上随杆下行；离开杆沿 → 自由回位巡航高度；途中可落杆
+      if (s.standing) {
+        const b = s.standing;
+        if (s.playerX < b.x - 12 || s.playerX > b.x + b.w + 12) {
+          s.standing = null;
+        } else {
+          s.feetY = b.y;
+        }
+      }
+      if (!s.standing) {
+        const dy = CRUISE_Y - s.feetY;
+        const step = Math.max(-RISE_SPEED * dt, Math.min(RISE_SPEED * dt, dy));
+        s.feetY += step;
+        for (const b of s.bars) {
+          if (
+            s.playerX > b.x - 12 &&
+            s.playerX < b.x + b.w + 12 &&
+            s.feetY >= b.y &&
+            s.feetY <= b.y + 18
+          ) {
+            s.standing = b;
+            s.feetY = b.y;
+            break;
+          }
         }
       }
 
-      // 生成
-      s.spawnAcc += dt;
-      const interval = Math.max(0.34, 0.55 - s.elapsed * 0.005);
-      if (s.spawnAcc >= interval) {
-        s.spawnAcc = 0;
-        spawn();
+      // 地刺：脚底扎进刺区 → 扣命并弹回半空
+      if (s.feetY >= H - SPIKE_H + 12 && now > s.invUntil) {
+        hurt(now, s.playerX, H - SPIKE_H - 8);
+        s.standing = null;
+        s.feetY = 186;
       }
 
       // 背景
@@ -292,56 +384,41 @@ export function LingGame() {
       }
       ctx.fillStyle = bg;
       ctx.fillRect(0, 0, W, H);
-      // 地面线
-      ctx.strokeStyle = dark ? "rgba(231,229,228,0.18)" : "rgba(120,113,108,0.25)";
-      ctx.beginPath();
-      ctx.moveTo(0, H - 22);
-      ctx.lineTo(W, H - 22);
-      ctx.stroke();
-      // 岩石（淡入淡出）
-      for (const r of s.rocks) {
-        const age = now - r.born;
-        const alpha = Math.min(1, age / 500, (r.until - now) / 800);
-        ctx.globalAlpha = Math.max(0, alpha);
+      // 卷动光点（速度感）
+      ctx.fillStyle = dark ? "rgba(231,229,228,0.35)" : "rgba(168,162,158,0.5)";
+      for (const d of s.dots) {
+        const y = (d.y0 + s.distance * d.f) % (H + 8);
         ctx.beginPath();
-        ctx.moveTo(r.x, GROUND_Y);
-        ctx.lineTo(r.x, GROUND_Y - ROCK_H + 8);
-        ctx.quadraticCurveTo(r.x + r.w / 2, GROUND_Y - ROCK_H - 8, r.x + r.w, GROUND_Y - ROCK_H + 8);
-        ctx.lineTo(r.x + r.w, GROUND_Y);
-        ctx.closePath();
-        ctx.fillStyle = dark ? "#57534e" : "#a8a29e";
+        ctx.arc(d.x, y - 4, 1.5, 0, Math.PI * 2);
         ctx.fill();
-        ctx.fillStyle = dark ? "#44403c" : "#78716c";
-        ctx.beginPath();
-        ctx.arc(r.x + r.w * 0.32, GROUND_Y - ROCK_H + 6, 2.2, 0, Math.PI * 2);
-        ctx.arc(r.x + r.w * 0.66, GROUND_Y - ROCK_H + 11, 1.7, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.globalAlpha = 1;
       }
 
-      // 物品更新与绘制
-      const playerY = H - 46;
+      // 横杆（石板 + 天蓝顶边）
+      for (const b of s.bars) {
+        ctx.fillStyle = dark ? "#44403c" : "#d6d3d1";
+        ctx.fillRect(b.x, b.y, b.w, BAR_T);
+        ctx.fillStyle = "#38bdf8";
+        ctx.fillRect(b.x, b.y, b.w, 3);
+        ctx.fillStyle = dark ? "rgba(231,229,228,0.25)" : "rgba(120,113,108,0.35)";
+        ctx.fillRect(b.x, b.y + BAR_T - 2, b.w, 2);
+      }
+
+      // 物品更新与绘制（随世界下移；与慕斯身体中心判碰撞）
+      const centerY = s.feetY - 30;
       s.items = s.items.filter((it) => {
-        it.y += it.vy * dt;
-        // 落到岩石顶上 → 碎掉消失
-        const rockHit = s.rocks.find(
-          (r) => it.x > r.x && it.x < r.x + r.w && it.y + it.r >= GROUND_Y - ROCK_H && it.y < GROUND_Y - ROCK_H + 14
-        );
-        if (rockHit) return false;
-        const caught =
-          it.y > playerY - 26 && it.y < playerY + 16 && Math.abs(it.x - s.playerX) < 30;
-        if (caught) {
+        it.y += speed * it.spd * dt;
+        const dx = it.x - s.playerX;
+        const dy2 = it.y - centerY;
+        if (dx * dx + dy2 * dy2 < 30 * 30) {
           if (it.kind === "bomb") {
-            s.lives -= 1;
-            s.hurtAt = now;
-            setLives(s.lives);
-            s.popups.push({ x: it.x, y: it.y - 10, text: "-1", color: "#dc2626", born: now });
+            if (now <= s.invUntil) return false; // 无敌期间炸弹直接穿过
+            hurt(now, it.x, it.y - 10);
           } else if (it.kind === "ink") {
-            s.score = Math.max(0, s.score - 20);
+            s.pickup = Math.max(0, s.pickup - 20);
             s.popups.push({ x: it.x, y: it.y - 10, text: "-20", color: "#f87171", born: now });
           } else {
             const gain = it.kind === "gold" ? 30 : 10;
-            s.score += gain;
+            s.pickup += gain;
             s.popups.push({
               x: it.x,
               y: it.y - 10,
@@ -350,7 +427,6 @@ export function LingGame() {
               born: now,
             });
           }
-          setScore(s.score);
           return false;
         }
         if (it.y > H + 20) return false;
@@ -358,7 +434,28 @@ export function LingGame() {
         return true;
       });
 
-      drawOrb(s.playerX, playerY, now);
+      drawPlayer(now);
+
+      // 底部地刺
+      const spikeTop = H - SPIKE_H;
+      const danger = ctx.createLinearGradient(0, spikeTop - 12, 0, spikeTop);
+      danger.addColorStop(0, "rgba(220,38,38,0)");
+      danger.addColorStop(1, "rgba(220,38,38,0.13)");
+      ctx.fillStyle = danger;
+      ctx.fillRect(0, spikeTop - 12, W, 12);
+      ctx.fillStyle = dark ? "#78716c" : "#57534e";
+      ctx.beginPath();
+      ctx.moveTo(0, H);
+      const tooth = 16;
+      for (let x = 0; x < W; x += tooth) {
+        ctx.lineTo(x + tooth / 2, spikeTop);
+        ctx.lineTo(x + tooth, H);
+      }
+      ctx.lineTo(W, H);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = dark ? "#a8a29e" : "#292524";
+      ctx.fillRect(0, H - 3, W, 3);
 
       // 受击红闪
       if (s.hurtAt) {
@@ -385,7 +482,7 @@ export function LingGame() {
     return () => cancelAnimationFrame(raf);
   }, [phase]);
 
-  // 指针控制
+  // 指针控制（只取横向位置）
   const onPointer = (e: React.PointerEvent<HTMLCanvasElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     stateRef.current.targetX = ((e.clientX - rect.left) / rect.width) * W;
