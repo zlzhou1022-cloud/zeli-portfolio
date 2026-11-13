@@ -3,41 +3,67 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 
-// 慕斯桌宠（站长 2026-11-13 拍板「路线 A」）：左下角的桌宠换成 Bilibili 频道
-// 吉祥物慕斯本人来串门——聊天窗仍是小灵（右下角），分工不混。
-// 素材：自媒体定稿 v3 抠图（cuts-v3）压成 WebP，共 9 个姿势：
-//   待机 look/book 轮换；点击轮换反应 wave→wink→stareyes→scratch→sorry；
-//   拖动 reach，拖到投放气泡上变 present 并松手打开小游戏。
-// 半 3D 感：整体朝指针方向视差倾斜 + 姿势切换弹跳 + 按压缩扁（单张平面图的 2.5D 手法）。
-// 纯前端、无后端调用、不吃聊天配额。点 × 藏起后，再打开聊天窗她会回来。
+// 慕斯桌宠：站长的小代理，住在页面左下角（2026-11-13 路线 A 上线，当晚按
+// 站长追加要求升级）：
+// - 形象：Bilibili 频道吉祥物慕斯的 v3 定稿抠图（cuts-v3 → WebP，public/muse-pet/）。
+// - 自由拖动：可拖到页面任意位置放着，位置存 localStorage，刷新/换页不丢；
+//   拖动时是「被提起来」的表现——微惊讶脸 + 钟摆式晃动 + 影子拉长；拖到上方
+//   出现的投放气泡上松手（变 present 姿势）打开小游戏。
+// - 互动：点击轮换反应姿势 wave→wink→stareyes→scratch→sorry 并开气泡说话；
+//   整体朝指针视差倾斜（2.5D），切换带弹跳、按下压扁。
+// - 待机生活：18 秒没人理 → 轮流看书/看信/闻闻/张望；75 秒 → 打盹（点头 + Zzz）。
+//   一碰就醒，待机计时重新开始。
+// - 点 × 藏起后，再打开聊天窗她会回来（ling:chat-opened）。
+// 聊天窗里也是慕斯本人（同日晚间站长决定与小灵合并）。纯前端、无后端调用。
 // 开关：NEXT_PUBLIC_LING_MASCOT_ENABLED=0 时整体不渲染（默认开；键名沿用历史）。
 const MASCOT_ENABLED = process.env.NEXT_PUBLIC_LING_MASCOT_ENABLED !== "0";
 const HIDDEN_KEY = "ling_mascot_hidden";
 const INVITED_KEY = "ling_mascot_invited";
+const POS_KEY = "muse_pet_pos";
 
 type Pose =
   | "look"
   | "book"
+  | "letter"
+  | "smell"
   | "wave"
   | "wink"
   | "stareyes"
   | "scratch"
   | "sorry"
-  | "reach"
   | "present";
 
 const POSES: Record<Pose, string> = {
   look: "/muse-pet/look.webp",
   book: "/muse-pet/book.webp",
+  letter: "/muse-pet/letter.webp",
+  smell: "/muse-pet/smell.webp",
   wave: "/muse-pet/wave.webp",
   wink: "/muse-pet/wink.webp",
   stareyes: "/muse-pet/stareyes.webp",
   scratch: "/muse-pet/scratch.webp",
   sorry: "/muse-pet/sorry.webp",
-  reach: "/muse-pet/reach.webp",
   present: "/muse-pet/present.webp",
 };
 const REACTIONS: Pose[] = ["wave", "wink", "stareyes", "scratch", "sorry"];
+const IDLE_ALT: Pose[] = ["book", "letter", "smell", "look"];
+const IDLE_AFTER_MS = 18000;
+const DOZE_AFTER_MS = 75000;
+
+function clampPos(p: { x: number; y: number }) {
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  return {
+    x: Math.max(-16, Math.min(vw - 96, p.x)),
+    y: Math.max(0, Math.min(vh - 84, p.y)),
+  };
+}
+
+function defaultPos() {
+  const wide = window.innerWidth >= 480;
+  const h = wide ? 162 : 138;
+  return { x: wide ? 32 : 20, y: window.innerHeight - h - (wide ? 32 : 20) };
+}
 
 export function LingMascot() {
   const t = useTranslations("Mascot");
@@ -45,29 +71,51 @@ export function LingMascot() {
 
   const [mounted, setMounted] = useState(false);
   const [hidden, setHidden] = useState(true);
+  const [pos, setPos] = useState<{ x: number; y: number }>({ x: 20, y: 20 });
   const [bubbleOpen, setBubbleOpen] = useState(false);
   const [lineIdx, setLineIdx] = useState(0);
   const [dragging, setDragging] = useState(false);
   const [zoneHot, setZoneHot] = useState(false);
+  const [sway, setSway] = useState(0);
   const [idlePose, setIdlePose] = useState<Pose>("look");
+  const [dozing, setDozing] = useState(false);
   const [reaction, setReaction] = useState<Pose | null>(null);
   const [pressed, setPressed] = useState(false);
 
   const wrapRef = useRef<HTMLDivElement>(null);
-  const dragRef = useRef<HTMLDivElement>(null);
   const zoneRef = useRef<HTMLDivElement>(null);
+  const posRef = useRef<{ x: number; y: number }>({ x: 20, y: 20 });
   const pointerRef = useRef<{ x: number; y: number; at: number } | null>(null);
   const wanderRef = useRef<{ x: number; y: number; until: number }>({ x: 0, y: 0, until: 0 });
   const curRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const reducedRef = useRef(false);
-  const downRef = useRef<{ x: number; y: number } | null>(null);
-  const draggingRef = useRef(false);
+  const dragRef = useRef<{
+    startX: number;
+    startY: number;
+    originX: number;
+    originY: number;
+    lastX: number;
+    lastT: number;
+    active: boolean;
+  } | null>(null);
   const zoneHotRef = useRef(false);
   const suppressClickRef = useRef(0);
   const reactionIdxRef = useRef(0);
   const reactionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastTouchRef = useRef(0);
 
-  const shownPose: Pose = dragging ? (zoneHot ? "present" : "reach") : reaction ?? idlePose;
+  const shownPose: Pose = dragging ? (zoneHot ? "present" : "look") : reaction ?? idlePose;
+  const bubbleBelow = pos.y < 330;
+
+  useEffect(() => {
+    posRef.current = pos;
+  }, [pos]);
+
+  const touch = () => {
+    lastTouchRef.current = Date.now();
+    setDozing(false);
+    setIdlePose("look");
+  };
 
   const playReaction = (pose: Pose) => {
     setReaction(pose);
@@ -79,6 +127,7 @@ export function LingMascot() {
   // 同时注册「聊天窗打开 → 桌宠回来」监听：藏起后点 Chat 即可复活。
   useEffect(() => {
     reducedRef.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    lastTouchRef.current = Date.now();
     const revive = () => {
       localStorage.removeItem(HIDDEN_KEY);
       setHidden(false);
@@ -86,6 +135,17 @@ export function LingMascot() {
     window.addEventListener("ling:chat-opened", revive);
     const id = setTimeout(() => {
       setHidden(localStorage.getItem(HIDDEN_KEY) === "1");
+      let initial = defaultPos();
+      try {
+        const raw = localStorage.getItem(POS_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw) as { x: number; y: number };
+          if (typeof parsed.x === "number" && typeof parsed.y === "number") initial = parsed;
+        }
+      } catch {
+        /* 位置记录坏了就用默认角落 */
+      }
+      setPos(clampPos(initial));
       setMounted(true);
     }, 0);
     return () => {
@@ -93,6 +153,14 @@ export function LingMascot() {
       window.removeEventListener("ling:chat-opened", revive);
     };
   }, []);
+
+  // 窗口尺寸变化时把桌宠夹回可视范围
+  useEffect(() => {
+    if (!mounted) return;
+    const onResize = () => setPos((p) => clampPos(p));
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [mounted]);
 
   // 其余姿势图在挂载后预加载，切换时不闪烁
   useEffect(() => {
@@ -103,24 +171,36 @@ export function LingMascot() {
     });
   }, [mounted]);
 
-  // 待机生活感：look（站着张望）与 book（抱书读）每 16 秒轮换
+  // 待机生活节律：每秒检查一次「多久没人理她」
   useEffect(() => {
     if (!mounted || hidden) return;
     const id = setInterval(() => {
-      setIdlePose((p) => (p === "look" ? "book" : "look"));
-    }, 16000);
+      if (dragRef.current?.active) return;
+      const idleFor = Date.now() - lastTouchRef.current;
+      if (idleFor > DOZE_AFTER_MS) {
+        setIdlePose("look");
+        setDozing(true);
+      } else if (idleFor > IDLE_AFTER_MS) {
+        setDozing(false);
+        const idx = Math.floor((idleFor - IDLE_AFTER_MS) / 10000) % IDLE_ALT.length;
+        setIdlePose(IDLE_ALT[idx]);
+      } else {
+        setDozing(false);
+        setIdlePose("look");
+      }
+    }, 1000);
     return () => clearInterval(id);
   }, [mounted, hidden]);
 
-  // 指针追踪：鼠标移动 / 触摸点按都记下位置与时间
+  // 指针追踪（视差倾斜用）：鼠标移动 / 触摸点按都记下位置与时间
   useEffect(() => {
     if (!mounted || hidden) return;
     const onMove = (e: MouseEvent) => {
       pointerRef.current = { x: e.clientX, y: e.clientY, at: performance.now() };
     };
     const onTouch = (e: TouchEvent) => {
-      const touch = e.touches[0];
-      if (touch) pointerRef.current = { x: touch.clientX, y: touch.clientY, at: performance.now() };
+      const touchPoint = e.touches[0];
+      if (touchPoint) pointerRef.current = { x: touchPoint.clientX, y: touchPoint.clientY, at: performance.now() };
     };
     window.addEventListener("mousemove", onMove, { passive: true });
     window.addEventListener("touchstart", onTouch, { passive: true });
@@ -131,13 +211,13 @@ export function LingMascot() {
   }, [mounted, hidden]);
 
   // rAF 主循环：整只桌宠朝指针方向平滑倾斜/漂移（2.5D 视差）；指针静止 4 秒后
-  // 自己轻轻四处张望。拖动中暂停（拖动层接管位置）。
+  // 自己轻轻四处张望。拖动中暂停（位置由拖动直接接管）。
   useEffect(() => {
     if (!mounted || hidden || reducedRef.current) return;
     let raf = 0;
     const loop = () => {
       raf = requestAnimationFrame(loop);
-      if (draggingRef.current) return;
+      if (dragRef.current?.active) return;
       const el = wrapRef.current;
       if (!el) return;
       const rect = el.getBoundingClientRect();
@@ -190,11 +270,11 @@ export function LingMascot() {
   if (!MASCOT_ENABLED || !mounted || hidden) return null;
 
   const toggleBubble = () => {
+    touch();
     if (bubbleOpen) {
       setBubbleOpen(false);
       return;
     }
-    // 每开一次气泡轮换一个反应姿势，台词跟着轮换到不同句
     const pose = REACTIONS[reactionIdxRef.current % REACTIONS.length];
     reactionIdxRef.current += 1;
     playReaction(pose);
@@ -208,11 +288,13 @@ export function LingMascot() {
   };
 
   const openChat = () => {
+    touch();
     setBubbleOpen(false);
     window.dispatchEvent(new CustomEvent("ling:open-chat"));
   };
 
   const openGame = () => {
+    touch();
     setBubbleOpen(false);
     window.dispatchEvent(new CustomEvent("ling:open-game"));
   };
@@ -222,26 +304,41 @@ export function LingMascot() {
     setHidden(true);
   };
 
-  // ---- 拖动：拖到投放气泡上松手 → 打开接光点 ----
+  // ---- 自由拖动：拖到哪儿放哪儿；拖进投放气泡松手 → 打开小游戏 ----
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    downRef.current = { x: e.clientX, y: e.clientY };
+    touch();
+    dragRef.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      originX: pos.x,
+      originY: pos.y,
+      lastX: e.clientX,
+      lastT: performance.now(),
+      active: false,
+    };
     setPressed(true);
     e.currentTarget.setPointerCapture(e.pointerId);
   };
 
   const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    const down = downRef.current;
-    if (!down) return;
-    const dx = e.clientX - down.x;
-    const dy = e.clientY - down.y;
-    if (!draggingRef.current && Math.hypot(dx, dy) > 9) {
-      draggingRef.current = true;
+    const d = dragRef.current;
+    if (!d) return;
+    const dx = e.clientX - d.startX;
+    const dy = e.clientY - d.startY;
+    if (!d.active && Math.hypot(dx, dy) > 9) {
+      d.active = true;
       setDragging(true);
       setBubbleOpen(false);
-      if (dragRef.current) dragRef.current.style.transition = "none";
     }
-    if (draggingRef.current && dragRef.current) {
-      dragRef.current.style.transform = `translate(${dx}px, ${dy}px) scale(1.05)`;
+    if (d.active) {
+      setPos(clampPos({ x: d.originX + dx, y: d.originY + dy }));
+      // 钟摆晃动：横向速度越快，身体朝反方向甩得越厉害（被拎着走的感觉）
+      const now = performance.now();
+      const dtMs = Math.max(16, now - d.lastT);
+      const vx = (e.clientX - d.lastX) / dtMs; // px/ms
+      d.lastX = e.clientX;
+      d.lastT = now;
+      setSway(Math.max(-17, Math.min(17, -vx * 15)));
       const z = zoneRef.current?.getBoundingClientRect();
       const hot = !!z && e.clientX >= z.left && e.clientX <= z.right && e.clientY >= z.top && e.clientY <= z.bottom;
       if (hot !== zoneHotRef.current) {
@@ -253,19 +350,19 @@ export function LingMascot() {
 
   const endDrag = () => {
     setPressed(false);
-    if (draggingRef.current) {
+    setSway(0);
+    const d = dragRef.current;
+    if (d?.active) {
       suppressClickRef.current = Date.now();
-      if (zoneHotRef.current) openGame();
-      if (dragRef.current) {
-        dragRef.current.style.transition = "transform .38s cubic-bezier(.2,.9,.3,1.35)";
-        dragRef.current.style.transform = "";
-        setTimeout(() => {
-          if (dragRef.current) dragRef.current.style.transition = "";
-        }, 420);
+      touch();
+      try {
+        localStorage.setItem(POS_KEY, JSON.stringify(posRef.current));
+      } catch {
+        /* 存不下就算了 */
       }
+      if (zoneHotRef.current) openGame();
     }
-    downRef.current = null;
-    draggingRef.current = false;
+    dragRef.current = null;
     zoneHotRef.current = false;
     setDragging(false);
     setZoneHot(false);
@@ -284,7 +381,7 @@ export function LingMascot() {
   };
 
   return (
-    <div className="fixed bottom-5 left-5 min-[480px]:bottom-8 min-[480px]:left-8 z-40 flex flex-col items-start select-none">
+    <div className="fixed z-40 select-none" style={{ left: pos.x, top: pos.y }}>
       <style>{`
         @keyframes ling-bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
         .ling-bob { animation: ling-bob 3.4s ease-in-out infinite; }
@@ -292,103 +389,132 @@ export function LingMascot() {
         .ling-zone { animation: ling-zone 1.1s ease-in-out infinite; }
         @keyframes muse-pop { 0% { transform: scale(0.9) translateY(3px); } 55% { transform: scale(1.045) translateY(-2px); } 100% { transform: scale(1) translateY(0); } }
         .muse-pop { animation: muse-pop .38s ease-out; }
-        @media (prefers-reduced-motion: reduce) { .ling-bob, .ling-zone, .muse-pop { animation: none; } }
+        @keyframes muse-doze { from { transform: rotate(0deg) translateY(0); } to { transform: rotate(2.8deg) translateY(3px); } }
+        .muse-doze { animation: muse-doze 2.6s ease-in-out infinite alternate; transform-origin: 50% 92%; }
+        @keyframes muse-zzz { 0% { opacity: 0; transform: translate(0, 6px) scale(0.7) rotate(-6deg); } 30% { opacity: 1; } 100% { opacity: 0; transform: translate(13px, -30px) scale(1.15) rotate(8deg); } }
+        .muse-z { animation: muse-zzz 2.8s linear infinite; }
+        @media (prefers-reduced-motion: reduce) { .ling-bob, .ling-zone, .muse-pop, .muse-doze, .muse-z { animation: none; } }
       `}</style>
 
-      {bubbleOpen && !dragging && (
-        <div className="mb-1 ml-1 w-60 max-w-[calc(100vw-6rem)] rounded-2xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 shadow-xl p-3.5">
-          <p className="text-sm leading-relaxed text-stone-800 dark:text-stone-100">
-            {lines[lineIdx] ?? lines[0] ?? ""}
-          </p>
-          <div className="mt-3 flex items-center gap-2">
+      <div className="relative w-[118px] h-[138px] min-[480px]:w-[138px] min-[480px]:h-[162px]">
+        {bubbleOpen && !dragging && (
+          <div
+            className={`absolute left-0 z-20 w-60 max-w-[calc(100vw-3rem)] rounded-2xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 shadow-xl p-3.5 ${
+              bubbleBelow ? "top-full mt-2" : "bottom-full mb-1"
+            }`}
+          >
+            <p className="text-sm leading-relaxed text-stone-800 dark:text-stone-100">
+              {lines[lineIdx] ?? lines[0] ?? ""}
+            </p>
+            <div className="mt-3 flex items-center gap-2">
+              <button
+                onClick={openChat}
+                className="bg-stone-900 dark:bg-stone-100 text-stone-50 dark:text-stone-900 px-3 py-1.5 text-xs font-medium cursor-pointer hover:bg-stone-700 dark:hover:bg-stone-300 transition-colors"
+              >
+                {t("chatCta")}
+              </button>
+              <button
+                onClick={openGame}
+                className="border border-sky-400 text-sky-700 dark:text-sky-300 px-3 py-1.5 text-xs font-medium cursor-pointer hover:bg-sky-50 dark:hover:bg-sky-950 transition-colors"
+              >
+                {t("playCta")}
+              </button>
+              <button
+                onClick={() => setBubbleOpen(false)}
+                className="px-2 py-1.5 text-xs text-stone-500 dark:text-stone-400 cursor-pointer hover:text-stone-800 dark:hover:text-stone-200 transition-colors"
+              >
+                {t("closeBubble")}
+              </button>
+            </div>
             <button
-              onClick={openChat}
-              className="bg-stone-900 dark:bg-stone-100 text-stone-50 dark:text-stone-900 px-3 py-1.5 text-xs font-medium cursor-pointer hover:bg-stone-700 dark:hover:bg-stone-300 transition-colors"
+              onClick={hideForNow}
+              className="mt-2 text-[11px] text-stone-400 dark:text-stone-500 underline underline-offset-2 cursor-pointer hover:text-stone-600 dark:hover:text-stone-300 transition-colors"
             >
-              {t("chatCta")}
-            </button>
-            <button
-              onClick={openGame}
-              className="border border-sky-400 text-sky-700 dark:text-sky-300 px-3 py-1.5 text-xs font-medium cursor-pointer hover:bg-sky-50 dark:hover:bg-sky-950 transition-colors"
-            >
-              {t("playCta")}
-            </button>
-            <button
-              onClick={() => setBubbleOpen(false)}
-              className="px-2 py-1.5 text-xs text-stone-500 dark:text-stone-400 cursor-pointer hover:text-stone-800 dark:hover:text-stone-200 transition-colors"
-            >
-              {t("closeBubble")}
+              {t("dismiss")}
             </button>
           </div>
-          <button
-            onClick={hideForNow}
-            className="mt-2 text-[11px] text-stone-400 dark:text-stone-500 underline underline-offset-2 cursor-pointer hover:text-stone-600 dark:hover:text-stone-300 transition-colors"
+        )}
+
+        {/* 拖放目标气泡：拖动时出现在桌宠正上方 */}
+        {dragging && (
+          <div
+            ref={zoneRef}
+            className={`ling-zone absolute left-0 -top-16 z-20 whitespace-nowrap rounded-full border-2 px-4 py-2 text-sm font-medium shadow-xl pointer-events-none transition-colors ${
+              zoneHot
+                ? "border-sky-400 bg-sky-400 text-white"
+                : "border-dashed border-sky-400 bg-white/95 dark:bg-stone-900/95 text-sky-700 dark:text-sky-300"
+            }`}
           >
-            {t("dismiss")}
-          </button>
-        </div>
-      )}
+            ✦ {t("playCta")}
+          </div>
+        )}
 
-      {/* 拖放目标气泡：拖动时出现在桌宠上方 */}
-      {dragging && (
+        {/* 打盹的 Zzz */}
+        {dozing && !dragging && (
+          <div className="absolute -top-4 right-0 z-10 pointer-events-none font-bold text-sky-400 dark:text-sky-300">
+            <span className="muse-z inline-block text-xs" style={{ animationDelay: "0s" }}>Z</span>
+            <span className="muse-z inline-block text-sm ml-0.5" style={{ animationDelay: "0.9s" }}>Z</span>
+            <span className="muse-z inline-block text-base ml-0.5" style={{ animationDelay: "1.8s" }}>Z</span>
+          </div>
+        )}
+
+        {/* 摆动层：拖动时像被拎着一样晃；平时无变换 */}
         <div
-          ref={zoneRef}
-          className={`ling-zone absolute left-0 -top-16 whitespace-nowrap rounded-full border-2 px-4 py-2 text-sm font-medium shadow-xl pointer-events-none transition-colors ${
-            zoneHot
-              ? "border-sky-400 bg-sky-400 text-white"
-              : "border-dashed border-sky-400 bg-white/95 dark:bg-stone-900/95 text-sky-700 dark:text-sky-300"
-          }`}
+          className="absolute inset-0 will-change-transform"
+          style={{
+            transform: `rotate(${sway}deg)`,
+            transformOrigin: "50% 8%",
+            transition: dragging ? "transform .12s ease-out" : "transform .55s cubic-bezier(.2,.9,.3,1.35)",
+          }}
         >
-          ✦ {t("playCta")}
-        </div>
-      )}
-
-      <div ref={dragRef} className="relative will-change-transform">
-        <div ref={wrapRef} className="relative will-change-transform">
-          <div className="ling-bob">
-            <div
-              role="button"
-              tabIndex={0}
-              aria-label={t("ariaLabel")}
-              onClick={onClick}
-              onKeyDown={onKeyDown}
-              onPointerDown={onPointerDown}
-              onPointerMove={onPointerMove}
-              onPointerUp={endDrag}
-              onPointerCancel={endDrag}
-              className="block w-[118px] h-[138px] min-[480px]:w-[138px] min-[480px]:h-[162px] cursor-grab active:cursor-grabbing outline-none"
-              style={{ touchAction: "none" }}
-            >
+          <div ref={wrapRef} className="relative w-full h-full will-change-transform">
+            <div className={dozing ? "muse-doze" : "ling-bob"}>
               <div
-                key={shownPose}
-                className="muse-pop w-full h-full"
-                style={{
-                  transform: pressed && !dragging ? "scale(0.94, 0.9)" : undefined,
-                  transition: "transform .15s ease-out",
-                  filter: "drop-shadow(0 10px 14px rgba(60,50,30,0.28))",
-                }}
+                role="button"
+                tabIndex={0}
+                aria-label={t("ariaLabel")}
+                onClick={onClick}
+                onKeyDown={onKeyDown}
+                onPointerDown={onPointerDown}
+                onPointerMove={onPointerMove}
+                onPointerUp={endDrag}
+                onPointerCancel={endDrag}
+                className="block w-full h-full cursor-grab active:cursor-grabbing outline-none"
+                style={{ touchAction: "none" }}
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={POSES[shownPose]}
-                  alt=""
-                  draggable={false}
-                  className="w-full h-full object-contain object-bottom pointer-events-none"
-                />
+                <div
+                  key={shownPose}
+                  className="muse-pop w-full h-full"
+                  style={{
+                    transform: pressed && !dragging ? "scale(0.94, 0.9)" : dragging ? "scale(1.04)" : undefined,
+                    transition: "transform .15s ease-out",
+                    filter: dragging
+                      ? "drop-shadow(0 22px 16px rgba(60,50,30,0.35))"
+                      : "drop-shadow(0 10px 14px rgba(60,50,30,0.28))",
+                  }}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={POSES[shownPose]}
+                    alt=""
+                    draggable={false}
+                    className="w-full h-full object-contain object-bottom pointer-events-none"
+                  />
+                </div>
               </div>
             </div>
           </div>
-          {!dragging && (
-            <button
-              onClick={hideForNow}
-              aria-label={t("hide")}
-              title={t("hide")}
-              className="absolute top-0 -right-2 w-5 h-5 rounded-full bg-stone-900/60 dark:bg-stone-100/70 text-stone-50 dark:text-stone-900 text-[11px] leading-none flex items-center justify-center opacity-40 hover:opacity-100 focus:opacity-100 cursor-pointer transition-opacity"
-            >
-              ×
-            </button>
-          )}
         </div>
+        {!dragging && (
+          <button
+            onClick={hideForNow}
+            aria-label={t("hide")}
+            title={t("hide")}
+            className="absolute top-0 -right-2 z-20 w-5 h-5 rounded-full bg-stone-900/60 dark:bg-stone-100/70 text-stone-50 dark:text-stone-900 text-[11px] leading-none flex items-center justify-center opacity-40 hover:opacity-100 focus:opacity-100 cursor-pointer transition-opacity"
+          >
+            ×
+          </button>
+        )}
       </div>
     </div>
   );
