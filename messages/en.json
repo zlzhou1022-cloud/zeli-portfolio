@@ -163,13 +163,13 @@
       "Over there I share new things I've learned, curious wonders, and little ideas that pop up.",
       "Poke me and I'll make a face — poke again for another one.",
       "Curious about the site's owner? Ling, in the bottom right, knows him best — ask her.",
-      "Drag me onto the bubble above and we can play Catch the Light.",
+      "Drag me onto the bubble above and we can play Muse Dash.",
       "I'll keep you company while you browse — linger on the pages you like."
     ]
   },
   "MiniGame": {
-    "title": "Catch the Light",
-    "howTo": "Move Ling to catch the falling light: regular motes +10, golden ones +30. Ink blobs cost you −20 points, and bombs are worse — catching one takes a life. You only have 3 lives; lose them all and the run ends early. Rocks also pop up on the ground: Ling can't pass through them, and motes that land on a rock shatter. Drag with your mouse or finger, or use the arrow keys. 45 seconds — how many can you get?",
+    "title": "Muse Dash",
+    "howTo": "Muse charges ahead! The world scrolls down on its own — you only steer left and right. Land on a horizontal bar and it carries you down, so step off in time: a full row of spikes waits at the bottom and costs 1 life. Motes +10, golden +30, ink −20, bombs cost 1 life — and the farther you charge, the higher the score. Only 3 lives; lose them all and the run ends early. Mouse, finger, or arrow keys. 45 seconds!",
     "start": "Start",
     "again": "Play again",
     "close": "Close",
@@ -182,8 +182,8 @@
     "livesLabel": "Lives",
     "finalScore": "Your score",
     "newRecord": "New record!",
-    "labCardTitle": "Mini game: Catch the Light",
-    "labCardDesc": "Ling's 45-second mini game: catch the light, dodge the ink. Your best score lives only in your own browser.",
+    "labCardTitle": "Mini game: Muse Dash",
+    "labCardDesc": "Muse's 45-second dash: ride the bars, dodge the spikes, grab the light. Your best score lives only in your own browser.",
     "labCardCta": "Play"
   }
 }
