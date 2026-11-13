@@ -30,6 +30,10 @@ import { getTripById } from "@/lib/travel-data";
 //   指引，相册/实验室/个人介绍给感想（多条随机，相册详情页结合当前照片的
 //   说明）。台词在 messages 的 PageGuide 命名空间（三语），页面解析与聊天窗
 //   共用 lib/page-guide.ts。
+// - 三方向停靠探头（站长 2026-11-14 定版，图经多轮候选挑选）：拖到屏幕
+//   左/右/下边缘松手 → 她换上专用的「暗中观察」探头图贴边躲好——侧边是歪头
+//   版（只露头和扒边的手，右侧用镜像图），底边是趴边版（只露兜帽顶、眼睛和
+//   两只小手）；点一下回到原位。停靠中不轮换待机姿势、不打盹、不弹气泡。
 // - 点 × 藏起后，再打开聊天窗她会回来（ling:chat-opened）。
 // 聊天窗里也是慕斯本人（同日晚间站长决定与小灵合并）。纯前端、无后端调用。
 // 开关：NEXT_PUBLIC_LING_MASCOT_ENABLED=0 时整体不渲染（默认开；键名沿用历史）。
@@ -51,7 +55,10 @@ type Pose =
   | "sorry"
   | "present"
   | "lifted"
-  | "doze";
+  | "doze"
+  | "peekSide"
+  | "peekSideR"
+  | "peekBottom";
 
 const POSES: Record<Pose, string> = {
   look: "/muse-pet/look.webp",
@@ -66,11 +73,16 @@ const POSES: Record<Pose, string> = {
   present: "/muse-pet/present.webp",
   lifted: "/muse-pet/lifted.webp",
   doze: "/muse-pet/doze.webp",
+  peekSide: "/muse-pet/peek-side.webp",
+  peekSideR: "/muse-pet/peek-side-r.webp",
+  peekBottom: "/muse-pet/peek-bottom.webp",
 };
 // lifted 图里兜帽被拉长，身体只占总高约 70%——拖动态按此倍数放大回等大
 const LIFT_SCALE = 1.43;
-// 侧边停靠时露在屏幕里的宽度（探头部分）
-const PEEK = 54;
+// 停靠探头图的宽高比：侧边图 357×560（切边在图的一侧，贴屏边时整图露完）；
+// 底边图 679×400（横宽图，切边在底部，按固定显示宽渲染）
+const PEEK_SIDE_ASPECT = 357 / 560;
+const PEEK_BOTTOM_ASPECT = 679 / 400;
 const REACTIONS: Pose[] = ["wave", "wink", "stareyes", "scratch", "sorry"];
 const IDLE_ALT: Pose[] = ["book", "letter", "smell", "look"];
 const IDLE_AFTER_MS = 18000;
@@ -111,8 +123,8 @@ export function LingMascot() {
   const [dozing, setDozing] = useState(false);
   const [reaction, setReaction] = useState<Pose | null>(null);
   const [pressed, setPressed] = useState(false);
-  // 侧边停靠（拖到屏幕左右边缘时缩进去探头，点击才出来）与出入场动画状态
-  const [dock, setDock] = useState<"left" | "right" | null>(null);
+  // 三方向停靠（拖到屏幕左/右/下边缘时换探头图贴边，点击才出来）与出入场动画状态
+  const [dock, setDock] = useState<"left" | "right" | "bottom" | null>(null);
   const [entering, setEntering] = useState(false);
   const [leaving, setLeaving] = useState(false);
 
@@ -139,14 +151,31 @@ export function LingMascot() {
   const reactionIdxRef = useRef(0);
   const reactionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const leaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dockRef = useRef<"left" | "right" | "bottom" | null>(null);
   const lastTouchRef = useRef(0);
 
-  const shownPose: Pose = dragging ? (zoneHot ? "present" : "lifted") : reaction ?? (dozing ? "doze" : idlePose);
+  // 停靠中强制探头姿势（按停靠方向选图），压过待机/打盹/反应轮换
+  const shownPose: Pose =
+    dock && !dragging
+      ? dock === "left"
+        ? "peekSide"
+        : dock === "right"
+          ? "peekSideR"
+          : "peekBottom"
+      : dragging
+        ? zoneHot
+          ? "present"
+          : "lifted"
+        : (reaction ?? (dozing ? "doze" : idlePose));
   const bubbleBelow = pos.y < 330;
 
   useEffect(() => {
     posRef.current = pos;
   }, [pos]);
+
+  useEffect(() => {
+    dockRef.current = dock;
+  }, [dock]);
 
   const touch = () => {
     lastTouchRef.current = Date.now();
@@ -343,6 +372,12 @@ export function LingMascot() {
       if (dragRef.current?.active) return;
       const el = wrapRef.current;
       if (!el) return;
+      // 底边停靠时探头图的下切边必须贴死屏幕底边，视差倾斜/漂移会让切边
+      // 抬起露缝——停靠在底边时停用倾斜变换
+      if (dockRef.current === "bottom") {
+        el.style.transform = "";
+        return;
+      }
       const rect = el.getBoundingClientRect();
       const cx = rect.left + rect.width / 2;
       const cy = rect.top + rect.height / 2;
@@ -570,11 +605,16 @@ export function LingMascot() {
         } catch {
           /* 存不下就算了 */
         }
-        // 拖到屏幕左右边缘松手 → 停靠：缩到边缘后面探头，点击才出来
+        // 拖到屏幕左/右/下边缘松手 → 停靠：换探头图贴边躲好，点击才出来
+        // （角落优先判左右：拖到左下/右下角算侧边停靠）
         const px = posRef.current.x;
-        const w = window.innerWidth >= 480 ? 144 : 128;
+        const py = posRef.current.y;
+        const wide = window.innerWidth >= 480;
+        const w = wide ? 144 : 128;
+        const h = wide ? 168 : 152;
         if (px <= 6) setDock("left");
         else if (px + w >= window.innerWidth - 6) setDock("right");
+        else if (py + h >= window.innerHeight - 6) setDock("bottom");
         else setDock(null);
       }
     }
@@ -597,17 +637,37 @@ export function LingMascot() {
     }
   };
 
-  const petW = typeof window !== "undefined" && window.innerWidth >= 480 ? 144 : 128;
+  const wide = typeof window !== "undefined" && window.innerWidth >= 480;
+  const petW = wide ? 144 : 128;
+  const petH = wide ? 168 : 152;
+  // 侧探头：图片按高度驱动渲染（宽 = 高 × 宽高比），在框内水平居中——把框
+  // 往屏外推「居中留白」的量，图的有画一侧就正好贴齐屏幕边缘、整图露完。
+  const sideImgW = petH * PEEK_SIDE_ASPECT;
+  const sideInset = (petW - sideImgW) / 2;
+  // 底探头：横宽图按固定显示宽渲染（宽 200/170，高随之确定）
+  const bottomImgW = wide ? 200 : 170;
+  const bottomImgH = bottomImgW / PEEK_BOTTOM_ASPECT;
   const renderX =
-    dock === "left" ? -(petW - PEEK) : dock === "right" ? window.innerWidth - PEEK : pos.x;
+    dock === "left"
+      ? -sideInset
+      : dock === "right"
+        ? window.innerWidth - petW + sideInset
+        : dock === "bottom"
+          ? Math.max(
+              (bottomImgW - petW) / 2,
+              Math.min(window.innerWidth - petW - (bottomImgW - petW) / 2, pos.x),
+            )
+          : pos.x;
+  // 底探头图是顶对齐渲染的：框顶 = 屏高 − 图高，图的下切边正好落在屏幕底边
+  const renderY = dock === "bottom" ? window.innerHeight - bottomImgH : pos.y;
 
   return (
     <div
       className="fixed z-40 select-none"
       style={{
         left: renderX,
-        top: pos.y,
-        transition: dragging ? "none" : "left .45s cubic-bezier(.34,1.25,.5,1)",
+        top: renderY,
+        transition: dragging ? "none" : "left .45s cubic-bezier(.34,1.25,.5,1), top .45s cubic-bezier(.34,1.25,.5,1)",
       }}
     >
       <style>{`
@@ -682,7 +742,7 @@ export function LingMascot() {
         )}
 
         {/* 打盹的 Zzz */}
-        {dozing && !dragging && (
+        {dozing && !dragging && !dock && (
           <div className="absolute -top-4 right-0 z-10 pointer-events-none font-bold text-sky-400 dark:text-sky-300">
             <span className="muse-z inline-block text-xs" style={{ animationDelay: "0s" }}>Z</span>
             <span className="muse-z inline-block text-sm ml-0.5" style={{ animationDelay: "0.9s" }}>Z</span>
@@ -700,7 +760,7 @@ export function LingMascot() {
           }}
         >
           <div ref={wrapRef} className="relative w-full h-full will-change-transform">
-            <div className={`h-full w-full ${dozing ? "muse-doze" : "ling-bob"}`}>
+            <div className={`h-full w-full ${dock === "bottom" ? "" : dozing ? "muse-doze" : "ling-bob"}`}>
               <div
                 role="button"
                 tabIndex={0}
@@ -736,6 +796,9 @@ export function LingMascot() {
                     draggable={false}
                     className="block h-full w-auto max-w-none mx-auto pointer-events-none"
                     style={{
+                      // 底探头是横宽图，不能按框高撑满：固定图高（行内样式压
+                      // 过 h-full），图宽按比例，居中溢出框外两侧
+                      height: dock === "bottom" ? bottomImgH : undefined,
                       transform: dragging ? (zoneHot ? "scale(1.04)" : `scale(${LIFT_SCALE})`) : undefined,
                       transformOrigin: "50% 100%",
                       transition: "transform .15s ease-out",
