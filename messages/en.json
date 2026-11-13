@@ -169,7 +169,7 @@
   },
   "MiniGame": {
     "title": "Muse Dash",
-    "howTo": "📖 Last night a data storm scattered all the starlight of this homepage! Muse has 45 seconds to charge upward and gather the light back. Drag her (or use the arrow keys) to run anywhere in the field: golden starlight +30, plain motes +10 — but dodge the garbled ink blobs (−20) and virus bombs (−1 life)! Fallen firewalls lie across the road: solid walls that stop you from below and carry you down, so slip around the gaps at their ends or in the middle. Pushed off the screen costs 1 life too. You have 3 lives — the farther you run and the more you gather, the higher the score. Charge, for the homepage's starlight!",
+    "howTo": "📖 Last night a data storm scattered ALL of this homepage's data! Muse has 45 seconds to charge upward and gather it all back.\n🎮 Drag her (or use the arrow keys) to run anywhere in the field:\n• Golden motes are important data, +30 pts\n• Plain motes are ordinary data, +10 pts\n• Ink blobs are garbled data, −20 pts if you brush one\n• The purple spiky ones are viruses, −1 life on contact\n• The brick walls lying across are fallen firewalls: solid — hit one from below and it stops you and carries you down, so slip around the gaps at their ends or in the middle\n• Getting pushed off the screen also costs 1 life\n💪 3 lives. The farther you run and the more you gather, the higher the score. Charge — bring the homepage's data home!",
     "start": "Start",
     "again": "Play again",
     "close": "Close",
@@ -183,7 +183,7 @@
     "finalScore": "Your score",
     "newRecord": "New record!",
     "labCardTitle": "Mini game: Muse Dash",
-    "labCardDesc": "A data storm scattered the homepage's starlight! Charge upward with Muse for 45 seconds, slip around the fallen firewalls, and gather the light back.",
+    "labCardDesc": "A data storm scattered the homepage's data! Charge upward with Muse for 45 seconds, slip around the fallen firewalls, and gather it all back.",
     "labCardCta": "Play"
   },
   "PageGuide": {
