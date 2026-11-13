@@ -169,7 +169,7 @@
   },
   "MiniGame": {
     "title": "Catch the Light",
-    "howTo": "Move Ling to catch the falling light: regular motes +10, golden ones +30. Never catch an ink blob — that's −20. Drag with your mouse or finger, or use the arrow keys. 45 seconds — how many can you get?",
+    "howTo": "Move Ling to catch the falling light: regular motes +10, golden ones +30. Ink blobs cost you −20 points, and bombs are worse — catching one takes a life. You only have 3 lives; lose them all and the run ends early. Rocks also pop up on the ground: Ling can't pass through them, and motes that land on a rock shatter. Drag with your mouse or finger, or use the arrow keys. 45 seconds — how many can you get?",
     "start": "Start",
     "again": "Play again",
     "close": "Close",
@@ -178,6 +178,8 @@
     "timeLabel": "Time",
     "secondsUnit": "s",
     "gameOver": "Time's up!",
+    "gameOverLives": "Out of lives!",
+    "livesLabel": "Lives",
     "finalScore": "Your score",
     "newRecord": "New record!",
     "labCardTitle": "Mini game: Catch the Light",
