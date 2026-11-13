@@ -187,6 +187,55 @@
     "labCardDesc": "A data storm scattered the homepage's data! Charge upward with Muse for 45 seconds, slip around the fallen firewalls, and gather it all back.",
     "labCardCta": "Play"
   },
+  "PrefectureGame": {
+    "pageTitle": "Guess the Prefecture · Japan Stamp Map",
+    "pageDesc": "Zeli has visited all 47 prefectures of Japan, and his album holds the photos to prove it. Look at a photo and guess which prefecture it was taken in — get it right and you stamp that prefecture on the map. Hosted by Muse.",
+    "backLab": "Back to the Lab",
+    "labCardTitle": "Guess the Prefecture · Japan Stamp Map",
+    "labCardDesc": "Look at photos from Zeli's travel album and guess the prefecture each was taken in. Every correct answer stamps the Japan map. Hosted by Muse — 47 prefectures to collect.",
+    "labCardCta": "Start guessing",
+    "tabQuiz": "Guess the Prefecture",
+    "tabMap": "Stamp Map",
+    "question": "Which prefecture was this photo taken in?",
+    "next": "Next",
+    "again": "Play again",
+    "roundEnd": "That's the end of this round!",
+    "introLine": "I'm your host! Guess the prefecture from the photo — a correct answer earns a stamp.",
+    "correctLines": [
+      "Correct — that's the place!",
+      "Exactly right. Stamp it!",
+      "Sharp eye — that's the one!"
+    ],
+    "wrongLines": [
+      "Not quite — here's the answer.",
+      "So close! Let's reveal it.",
+      "No stamp this time — remember this place."
+    ],
+    "stampLine": "New stamp! Another prefecture lights up on the map.",
+    "scoreLine": "Question {n} · Correct {correct} · Stamps {stamps} / {total}",
+    "answerLabel": "Taken in",
+    "viewTrip": "See this trip →",
+    "legendVisited": "Visited by Zeli",
+    "legendPhoto": "Has album photos",
+    "legendStamped": "Stamped by you",
+    "mapHint": "Tap any prefecture for details. Guess it correctly in the quiz to earn its stamp.",
+    "zeliBadge": "Visited by Zeli ✓",
+    "photoBadge": "{count} album photos",
+    "noPhotoBadge": "No album photos yet",
+    "stampedBadge": "Stamped ✓",
+    "notStampedBadge": "Not stamped yet",
+    "playThisPref": "Quiz me on this one",
+    "regions": {
+      "hokkaido": "Hokkaido",
+      "tohoku": "Tohoku",
+      "kanto": "Kanto",
+      "chubu": "Chubu",
+      "kinki": "Kinki",
+      "chugoku": "Chugoku",
+      "shikoku": "Shikoku",
+      "kyushu": "Kyushu & Okinawa"
+    }
+  },
   "PageGuide": {
     "home": {
       "intro": "You made it! This is Zeli's personal homepage — I'm Muse, his little agent. Happy to show you around.",

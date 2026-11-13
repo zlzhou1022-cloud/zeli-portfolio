@@ -187,6 +187,55 @@
     "labCardDesc": "数据风暴把主页的数据吹散了！陪慕斯向上冲 45 秒，绕开倒塌的防火墙，把数据都收集回来。",
     "labCardCta": "开始游戏"
   },
+  "PrefectureGame": {
+    "pageTitle": "看图猜县 · 日本地图集章",
+    "pageDesc": "Zeli 已经走遍日本 47 个都道府县，相册里收着他一路拍下的照片。看看照片，猜猜是在哪个县拍的——猜对了，就在地图上给那个县盖一枚章。慕斯主持。",
+    "backLab": "返回实验室",
+    "labCardTitle": "看图猜县 · 日本地图集章",
+    "labCardDesc": "看 Zeli 旅行相册里的照片，猜是在哪个都道府县拍的，猜对就在日本地图上集一枚章。慕斯主持，47 个县等你来集。",
+    "labCardCta": "去猜县",
+    "tabQuiz": "看图猜县",
+    "tabMap": "集章地图",
+    "question": "这张照片是在哪个都道府县拍的？",
+    "next": "下一题",
+    "again": "再来一轮",
+    "roundEnd": "这一轮结束啦！",
+    "introLine": "我来出题！看照片猜县，猜对了就给那个县盖章。",
+    "correctLines": [
+      "答对啦，就是这里！",
+      "没错，盖章！",
+      "好眼力，就是这个县！"
+    ],
+    "wrongLines": [
+      "不对哦，看看正确答案在哪儿。",
+      "差一点点！答案揭晓。",
+      "这次没猜中，记住这个地方。"
+    ],
+    "stampLine": "新章到手！地图上又亮了一个县。",
+    "scoreLine": "第 {n} 题 · 答对 {correct} · 已集章 {stamps} / {total}",
+    "answerLabel": "拍摄地",
+    "viewTrip": "去看这趟旅行 →",
+    "legendVisited": "Zeli 已到访",
+    "legendPhoto": "相册里有照片",
+    "legendStamped": "我已盖章",
+    "mapHint": "点任意一个县，看它的详情；在「看图猜县」里猜对，就能给它盖章。",
+    "zeliBadge": "Zeli 已到访 ✓",
+    "photoBadge": "相册照片 {count} 张",
+    "noPhotoBadge": "相册暂无照片",
+    "stampedBadge": "已盖章 ✓",
+    "notStampedBadge": "还没盖章",
+    "playThisPref": "去猜这个县",
+    "regions": {
+      "hokkaido": "北海道",
+      "tohoku": "东北",
+      "kanto": "关东",
+      "chubu": "中部",
+      "kinki": "近畿",
+      "chugoku": "中国",
+      "shikoku": "四国",
+      "kyushu": "九州·冲绳"
+    }
+  },
   "PageGuide": {
     "home": {
       "intro": "到啦！这里是 Zeli 的个人主页，我是慕斯，他的小代理。想先看哪儿，我可以给你指路。",

@@ -11,6 +11,7 @@
   "dependencies": {
     "@ai-sdk/openai-compatible": "^2.0.93",
     "@supabase/supabase-js": "^2.103.3",
+    "@svg-maps/japan": "^2.0.0",
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.37.0",
     "ai": "^6.0.168",
