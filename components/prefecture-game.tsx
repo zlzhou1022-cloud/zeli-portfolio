@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import japan from "@svg-maps/japan";
 import { PREFECTURES, getPrefecture, type Prefecture } from "@/lib/prefectures";
@@ -236,12 +237,10 @@ export function PrefectureGame() {
             </div>
           ) : current ? (
             <div className="space-y-5">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={current.src}
-                alt=""
-                className="w-full aspect-[4/3] object-cover border border-stone-200 dark:border-stone-800"
-              />
+              {/* 照片走 next/image（与相册页一致：经站点域名优化下发，不直连图床） */}
+              <div className="relative w-full aspect-[4/3] border border-stone-200 dark:border-stone-800 bg-stone-100 dark:bg-stone-900">
+                <Image src={current.src} alt="" fill sizes="(max-width: 1024px) 100vw, 1024px" className="object-cover" />
+              </div>
               <p className="text-lg font-serif text-stone-900 dark:text-stone-100">{t("question")}</p>
               <div className="grid grid-cols-2 gap-3">
                 {options.map((id) => {
@@ -376,10 +375,11 @@ export function PrefectureGame() {
                 <div className="flex gap-2 flex-wrap">
                   {selectedPhotos.map((ph) => (
                     <Link key={`${ph.tripId}-${ph.n}`} href={`/${loc}/travels/${ph.tripId}?p=${ph.n}`} className="block">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
+                      <Image
                         src={ph.src}
                         alt={ph.place[loc]}
+                        width={96}
+                        height={64}
                         className="w-24 h-16 object-cover border border-stone-200 dark:border-stone-800 hover:opacity-85 transition-opacity"
                       />
                     </Link>
