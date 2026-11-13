@@ -33,6 +33,14 @@ const HEADINGS: Record<
   en: { author: "Author", career: "Career", education: "Education", projects: "Lab Projects", trips: "Travel Stories", thesis: "Thesis", photosUnit: "photos", morePhotos: "and more" },
 };
 
+// 本站技术栈（公开信息：仓库本身就是 public）。访客问技术实现时以此为准，
+// 避免模型凭印象编造（如体检 G4.5 曾误答 GitHub Pages 静态站）。
+const SITE_TECH: Record<LingLocale, string> = {
+  cn: "本站技术：Next.js + React 构建，部署于 Vercel，源码公开在 GitHub（github.com/zlzhou1022-cloud/zeli-portfolio）",
+  jp: "このサイトの技術：Next.js + React で構築し、Vercel にデプロイ。ソースコードは GitHub で公開（github.com/zlzhou1022-cloud/zeli-portfolio）",
+  en: "This site: built with Next.js + React, deployed on Vercel; source code is public on GitHub (github.com/zlzhou1022-cloud/zeli-portfolio)",
+};
+
 // 输出体积守卫：超过此长度时逐图说明降级（见 buildKnowledge）。
 const MAX_KNOWLEDGE_CHARS = 6000;
 
@@ -47,6 +55,7 @@ function buildKnowledgeInner(locale: LingLocale, fullPhotoCaptions: boolean): st
   lines.push(`- ${m.Home.bio}`);
   // 邮箱是 Profile 页公开信息，仅在事实区列出；提示词规定仅在访客明确询问联系方式时给出。
   lines.push(`- Email: zlzhou1022@gmail.com`);
+  lines.push(`- ${SITE_TECH[locale]}`);
 
   lines.push(`## ${h.career}`);
   lines.push(`- ${p.mri.name}｜${p.mri.title}｜${p.mri.date}｜${p.mri.desc}`);
