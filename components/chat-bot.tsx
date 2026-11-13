@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import dynamic from "next/dynamic";
+import { parsePage } from "@/lib/page-guide";
 
 // Markdown 渲染器懒加载，只进聊天 chunk，不拖慢首屏（规格 §8）。
 const ChatMarkdown = dynamic(() => import("./chat-markdown"), { ssr: false });
@@ -163,12 +164,16 @@ export function ChatBot({ isQuotaFull }: { isQuotaFull: boolean }) {
     abortRef.current = controller;
 
     try {
+      // 页面感知二期：带上访客当前页面（解析与桌宠共用 lib/page-guide），
+      // 服务端据此让慕斯知道「这张照片/这一页」指什么；other 页不发送。
+      const pageInfo = parsePage(window.location.pathname, window.location.search);
       const res = await fetch("/api/chat", {
         method: "POST",
         body: JSON.stringify({
           messages: newMessages.map(({ role, content, timestamp }) => ({ role, content, timestamp })),
           chatId: chatId,
           locale: locale,
+          page: pageInfo.kind === "other" ? undefined : pageInfo,
         }),
         signal: controller.signal,
       });
