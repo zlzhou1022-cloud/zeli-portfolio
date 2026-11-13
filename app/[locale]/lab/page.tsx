@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getAllProjects } from "@/lib/lab-data";
 import { useTranslations } from "next-intl";
+import { LabGameEntry } from "@/components/lab-game-entry";
 
 export default function LabPage() {
   const projects = getAllProjects();
@@ -73,6 +74,9 @@ export default function LabPage() {
           </a>
         ))}
       </div>
+
+      {/* 小游戏入口 */}
+      <LabGameEntry />
 
       {/* 底部返回按钮 */}
       <div className="pt-16 mt-16 border-t border-stone-200 dark:border-stone-800 flex justify-start">

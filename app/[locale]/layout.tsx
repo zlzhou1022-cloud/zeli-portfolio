@@ -16,6 +16,7 @@ import { Redis } from "@upstash/redis";
 import { reportInfraFailure } from "@/lib/alert";
 import { ChatBot } from "@/components/chat-bot";
 import { LingMascot } from "@/components/ling-mascot";
+import { LingGame } from "@/components/ling-game";
 import { CustomCursor } from "@/components/custom-cursor";
 import { ScrollProgress } from "@/components/scroll-progress";
 import { AnimatedBackground } from "@/components/animated-background";
@@ -109,6 +110,7 @@ export default async function LocaleLayout({
             {/* 💡 3. 将聊天机器人挂载到全局，放在 Providers 内部以支持暗黑模式等 */}
             <ChatBot isQuotaFull={isQuotaFull} />
             <LingMascot />
+            <LingGame />
 
           </NextIntlClientProvider>
         </ThemeProvider>

@@ -154,6 +154,7 @@
   "Mascot": {
     "ariaLabel": "Ling the mascot",
     "chatCta": "Chat with me",
+    "playCta": "Play a game",
     "closeBubble": "Close",
     "dismiss": "Hide me away",
     "hide": "Hide mascot",
@@ -162,7 +163,25 @@
       "Wherever your cursor goes, my eyes follow.",
       "Go ahead, poke me. Stay and play a while?",
       "Zeli has traveled to all 47 prefectures of Japan — the stories are in the travel log.",
-      "Curious about his work? Ask me in the chat, bottom right."
+      "Curious about his work? Ask me in the chat, bottom right.",
+      "Bored? Poke me for a round of Catch the Light — 45 seconds, how many can you get?"
     ]
+  },
+  "MiniGame": {
+    "title": "Catch the Light",
+    "howTo": "Move Ling to catch the falling light: regular motes +10, golden ones +30. Never catch an ink blob — that's −20. Drag with your mouse or finger, or use the arrow keys. 45 seconds — how many can you get?",
+    "start": "Start",
+    "again": "Play again",
+    "close": "Close",
+    "scoreLabel": "Score",
+    "bestLabel": "Best",
+    "timeLabel": "Time",
+    "secondsUnit": "s",
+    "gameOver": "Time's up!",
+    "finalScore": "Your score",
+    "newRecord": "New record!",
+    "labCardTitle": "Mini game: Catch the Light",
+    "labCardDesc": "Ling's 45-second mini game: catch the light, dodge the ink. Your best score lives only in your own browser.",
+    "labCardCta": "Play"
   }
 }
