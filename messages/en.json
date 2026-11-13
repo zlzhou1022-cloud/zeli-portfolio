@@ -152,19 +152,19 @@
     ]
   },
   "Mascot": {
-    "ariaLabel": "Ling the mascot",
-    "chatCta": "Chat with me",
+    "ariaLabel": "Muse the desktop pet",
+    "chatCta": "Ask Ling",
     "playCta": "Play a game",
     "closeBubble": "Close",
-    "dismiss": "Hide me away",
-    "hide": "Hide mascot",
+    "dismiss": "Hide her away",
+    "hide": "Hide pet",
     "lines": [
-      "Hi, I'm Ling — the little spirit of this site.",
-      "Wherever your cursor goes, my eyes follow.",
-      "Go ahead, poke me. Stay and play a while?",
-      "Zeli has traveled to all 47 prefectures of Japan — the stories are in the travel log.",
-      "Curious about his work? Ask me in the chat, bottom right.",
-      "Bored? Poke me for a round of Catch the Light — 45 seconds, how many can you get?"
+      "Hi, I'm Muse — visiting from Bilibili!",
+      "Over there I share new things I've learned, curious wonders, and little ideas that pop up.",
+      "Poke me and I'll make a face — poke again for another one.",
+      "Curious about the site's owner? Ling, in the bottom right, knows him best — ask her.",
+      "Drag me onto the bubble above and we can play Catch the Light.",
+      "I'll keep you company while you browse — linger on the pages you like."
     ]
   },
   "MiniGame": {
