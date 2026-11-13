@@ -132,6 +132,13 @@ export function ChatBot({ isQuotaFull }: { isQuotaFull: boolean }) {
     }
   }, [messages]);
 
+  // 吉祥物气泡里的「和我聊聊」通过自定义事件打开聊天窗
+  useEffect(() => {
+    const open = () => setIsOpen(true);
+    window.addEventListener("ling:open-chat", open);
+    return () => window.removeEventListener("ling:open-chat", open);
+  }, []);
+
   if (isQuotaFull) return null;
 
   const handleSend = async (overrideText?: string) => {
