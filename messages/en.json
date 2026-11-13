@@ -185,5 +185,55 @@
     "labCardTitle": "Mini game: Muse Dash",
     "labCardDesc": "Muse's 45-second dash: ride the bars, dodge the spikes, grab the light. Your best score lives only in your own browser.",
     "labCardCta": "Play"
+  },
+  "PageGuide": {
+    "home": {
+      "intro": "You made it! This is Zeli's personal homepage — I'm Muse, his little agent. Happy to show you around.",
+      "guide": [
+        "The cards above lead to his profile, the lab, and the travel albums; the guestbook is in the menu up top too.",
+        "Not sure where to start? Try the travel albums — the snow festivals and Morioka noodles are worth it.",
+        "You can also ask me directly from the CHAT button in the corner; I'll help you find any page."
+      ]
+    },
+    "profile": {
+      "intro": "This page is Zeli's profile — his education and career history, all in one place.",
+      "feel": [
+        "Deloitte to Mitsubishi Research Institute — a steady path. I rather admire it.",
+        "A master's from the University of Tokyo; he's this thorough about everything.",
+        "A serious page, but every line of it is real."
+      ]
+    },
+    "lab": {
+      "intro": "Welcome to the lab! Zeli's home-made tools and plugins live here — plus a little game.",
+      "feel": [
+        "All built after work, bit by bit. Quality aside, the effort is genuine.",
+        "The lab also hides a game starring me — Muse Dash. Give it a try.",
+        "What I like about him: when he gets an idea, he just builds it."
+      ]
+    },
+    "travels": {
+      "intro": "The travel albums. Zeli has visited all 47 prefectures of Japan, and these were shot on his Fujifilm X-S20.",
+      "feel": [
+        "I've been through every album many times; the snowy one is my favourite.",
+        "Every place in these photos is somewhere he actually went — all 47 prefectures.",
+        "Open any album and take your time; each photo comes with a caption."
+      ]
+    },
+    "trip": {
+      "intro": "This album is “{title}” — {count} photos. Pick a number on the left to flip through; I'll keep you company.",
+      "feel": "“{title}” is one I really like — every photo has a story. Take your time.",
+      "photoFeel": [
+        "This one is {caption} — a favourite of mine.",
+        "The one you're looking at: {caption}. Can't you just picture it?",
+        "The one I most want to show you: {caption}."
+      ]
+    },
+    "guestbook": {
+      "intro": "This is the guestbook — visitors leave a few words here. You're welcome to add yours.",
+      "guide": [
+        "Leaving a message is easy — just a name and a few words; he reads every one.",
+        "It's also fun to browse what everyone else has written first."
+      ]
+    }
   }
 }

@@ -2,6 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import { usePathname } from "next/navigation";
+import { parsePage, pageKey, type PageInfo } from "@/lib/page-guide";
+import { getTripById } from "@/lib/travel-data";
 
 // 慕斯桌宠：站长的小代理，住在页面左下角（2026-11-13 路线 A 上线，当晚按
 // 站长追加要求升级）：
@@ -22,6 +25,11 @@ import { useTranslations } from "next-intl";
 // - 待机生活：18 秒没人理 → 轮流看书/看信/闻闻/张望；75 秒 → 打盹（专用睡觉
 //   姿势——站长选定的站着打盹版生成图，绿幕键控 + 点头 + Zzz；此前拿睁眼待机
 //   图冒充被站长指出）。一碰就醒，待机计时重新开始。
+// - 页面感知（2026-11-13 站长需求 v2）：进入一个页面时她用预写台词介绍这页
+//   （同一页面一次会话只介绍一次）；点击她时按页面分工说话——首页/留言板给
+//   指引，相册/实验室/个人介绍给感想（多条随机，相册详情页结合当前照片的
+//   说明）。台词在 messages 的 PageGuide 命名空间（三语），页面解析与聊天窗
+//   共用 lib/page-guide.ts。
 // - 点 × 藏起后，再打开聊天窗她会回来（ling:chat-opened）。
 // 聊天窗里也是慕斯本人（同日晚间站长决定与小灵合并）。纯前端、无后端调用。
 // 开关：NEXT_PUBLIC_LING_MASCOT_ENABLED=0 时整体不渲染（默认开；键名沿用历史）。
@@ -29,6 +37,7 @@ const MASCOT_ENABLED = process.env.NEXT_PUBLIC_LING_MASCOT_ENABLED !== "0";
 const HIDDEN_KEY = "ling_mascot_hidden";
 const INVITED_KEY = "ling_mascot_invited";
 const POS_KEY = "muse_pet_pos";
+const SEEN_KEY = "muse_page_seen";
 
 type Pose =
   | "look"
@@ -83,12 +92,16 @@ function defaultPos() {
 export function LingMascot() {
   const t = useTranslations("Mascot");
   const lines = (t.raw("lines") as string[]) ?? [];
+  const tg = useTranslations("PageGuide");
+  const tt = useTranslations("Trips");
+  const pathname = usePathname();
 
   const [mounted, setMounted] = useState(false);
   const [hidden, setHidden] = useState(true);
   const [pos, setPos] = useState<{ x: number; y: number }>({ x: 20, y: 20 });
   const [bubbleOpen, setBubbleOpen] = useState(false);
   const [lineIdx, setLineIdx] = useState(0);
+  const [pageLine, setPageLine] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
   const [zoneHot, setZoneHot] = useState(false);
   const [sway, setSway] = useState(0);
@@ -115,6 +128,8 @@ export function LingMascot() {
   } | null>(null);
   const zoneHotRef = useRef(false);
   const suppressClickRef = useRef(0);
+  const introShownRef = useRef(false);
+  const lastPoolPickRef = useRef("");
   const reactionIdxRef = useRef(0);
   const reactionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastTouchRef = useRef(0);
@@ -136,6 +151,71 @@ export function LingMascot() {
     setReaction(pose);
     if (reactionTimerRef.current) clearTimeout(reactionTimerRef.current);
     reactionTimerRef.current = setTimeout(() => setReaction(null), 1900);
+  };
+
+  // ---- 页面感知：当前页解析 / 介绍文 / 点击台词池 ----
+  const currentInfo = (): PageInfo =>
+    parsePage(pathname ?? "", typeof window !== "undefined" ? window.location.search : "");
+
+  const tripTitle = (tripId: string): string | null => {
+    if (!getTripById(tripId)) return null;
+    const title = tt(`${tripId}.title`);
+    return title && !title.includes(".title") ? title : null;
+  };
+
+  const introText = (info: PageInfo): string | null => {
+    switch (info.kind) {
+      case "home":
+      case "profile":
+      case "lab":
+      case "travels":
+      case "guestbook":
+        return tg(`${info.kind}.intro`);
+      case "trip": {
+        const title = info.tripId ? tripTitle(info.tripId) : null;
+        const count = info.tripId ? getTripById(info.tripId)?.photos.length : 0;
+        return title ? tg("trip.intro", { title, count: count ?? 0 }) : null;
+      }
+      default:
+        return null;
+    }
+  };
+
+  const buildPool = (info: PageInfo): string[] | null => {
+    switch (info.kind) {
+      case "home":
+        return (tg.raw("home.guide") as string[]) ?? [];
+      case "guestbook":
+        return (tg.raw("guestbook.guide") as string[]) ?? [];
+      case "profile":
+      case "lab":
+      case "travels":
+        return (tg.raw(`${info.kind}.feel`) as string[]) ?? [];
+      case "trip": {
+        const title = info.tripId ? tripTitle(info.tripId) : null;
+        if (!title || !info.tripId) return null;
+        const pool = [tg("trip.feel", { title })];
+        const caption = tt(`${info.tripId}.photos.${info.photo ?? 1}`);
+        if (caption && !caption.includes(".photos.")) {
+          for (const tpl of (tg.raw("trip.photoFeel") as string[]) ?? []) {
+            pool.push(tpl.replace("{caption}", caption));
+          }
+        }
+        return pool;
+      }
+      default:
+        return null;
+    }
+  };
+
+  const pickFromPool = (pool: string[]): string => {
+    let pick = pool[Math.floor(Math.random() * pool.length)];
+    let guard = 0;
+    while (pool.length > 1 && pick === lastPoolPickRef.current && guard++ < 6) {
+      pick = pool[Math.floor(Math.random() * pool.length)];
+    }
+    lastPoolPickRef.current = pick;
+    return pick;
   };
 
   // 挂载后读 localStorage（setTimeout 写法与 chat-bot 一致，避开 lint 同步 setState 规则）。
@@ -269,18 +349,58 @@ export function LingMascot() {
     return () => cancelAnimationFrame(raf);
   }, [mounted, hidden]);
 
-  // 首次访问 6 秒后主动打一次招呼（每会话只邀一次，方便被发现），并挥手
+  // 首次访问 6 秒后主动打一次招呼（每会话只邀一次，方便被发现），并挥手；
+  // 若页面介绍已经先一步打过招呼，本邀请跳过，避免连着弹两次。
   useEffect(() => {
     if (!mounted || hidden) return;
     if (sessionStorage.getItem(INVITED_KEY)) return;
     const id = setTimeout(() => {
+      if (introShownRef.current) return;
       sessionStorage.setItem(INVITED_KEY, "1");
       setLineIdx(0);
+      setPageLine(null);
       setBubbleOpen(true);
       playReaction("wave");
     }, 6000);
     return () => clearTimeout(id);
   }, [mounted, hidden]);
+
+  // 进入新页面 → 她介绍这页（同一页面一次会话只介绍一次，sessionStorage 去重）
+  useEffect(() => {
+    if (!mounted || hidden) return;
+    const info = parsePage(pathname ?? "", window.location.search);
+    if (info.kind === "other") return;
+    const key = pageKey(info);
+    let seen: string[] = [];
+    try {
+      seen = JSON.parse(sessionStorage.getItem(SEEN_KEY) ?? "[]") as string[];
+    } catch {
+      seen = [];
+    }
+    if (seen.includes(key)) return;
+    const text = introText(info);
+    if (!text) return;
+    seen.push(key);
+    try {
+      sessionStorage.setItem(SEEN_KEY, JSON.stringify(seen));
+    } catch {
+      /* 存不下就每次都介绍 */
+    }
+    const id = setTimeout(() => {
+      introShownRef.current = true;
+      try {
+        sessionStorage.setItem(INVITED_KEY, "1");
+      } catch {
+        /* 忽略 */
+      }
+      touch();
+      setPageLine(text);
+      setBubbleOpen(true);
+      playReaction("wave");
+    }, 900);
+    return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname, mounted, hidden]);
 
   if (!MASCOT_ENABLED || !mounted || hidden) return null;
 
@@ -293,12 +413,20 @@ export function LingMascot() {
     const pose = REACTIONS[reactionIdxRef.current % REACTIONS.length];
     reactionIdxRef.current += 1;
     playReaction(pose);
-    setLineIdx((prev) => {
-      if (lines.length <= 1) return 0;
-      let next = prev;
-      while (next === prev) next = Math.floor(Math.random() * lines.length);
-      return next;
-    });
+    // 在有页面台词池的页面（首页/留言板=指引，相册/实验室/个人介绍=感想，
+    // 相册详情=结合当前照片），优先说页面台词；其它页面用通用台词轮换。
+    const pool = buildPool(currentInfo());
+    if (pool && pool.length > 0) {
+      setPageLine(pickFromPool(pool));
+    } else {
+      setPageLine(null);
+      setLineIdx((prev) => {
+        if (lines.length <= 1) return 0;
+        let next = prev;
+        while (next === prev) next = Math.floor(Math.random() * lines.length);
+        return next;
+      });
+    }
     setBubbleOpen(true);
   };
 
@@ -430,7 +558,7 @@ export function LingMascot() {
             }`}
           >
             <p className="text-sm leading-relaxed text-stone-800 dark:text-stone-100">
-              {lines[lineIdx] ?? lines[0] ?? ""}
+              {pageLine ?? lines[lineIdx] ?? lines[0] ?? ""}
             </p>
             <div className="mt-3 flex items-center gap-2">
               <button
