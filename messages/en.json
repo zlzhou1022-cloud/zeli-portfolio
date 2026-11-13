@@ -169,7 +169,7 @@
   },
   "MiniGame": {
     "title": "Muse Dash",
-    "howTo": "Muse charges ahead! The world scrolls down on its own — you only steer left and right. Land on a horizontal bar and it carries you down, so step off in time: a full row of spikes waits at the bottom and costs 1 life. Motes +10, golden +30, ink −20, bombs cost 1 life — and the farther you charge, the higher the score. Only 3 lives; lose them all and the run ends early. Mouse, finger, or arrow keys. 45 seconds!",
+    "howTo": "Muse runs toward the top of the screen while the world scrolls down. Drag with your mouse or finger (or use the arrow keys) to run anywhere in the field. The horizontal barriers are solid walls — hit one from below and it stops you and starts carrying you down, so slip around the gaps at their ends or in the middle! Get pushed off the screen and you lose 1 life. Motes +10, golden +30, ink −20, bombs cost 1 life — and the farther you run, the higher the score. 3 lives, 45 seconds!",
     "start": "Start",
     "again": "Play again",
     "close": "Close",
@@ -183,7 +183,7 @@
     "finalScore": "Your score",
     "newRecord": "New record!",
     "labCardTitle": "Mini game: Muse Dash",
-    "labCardDesc": "Muse's 45-second dash: ride the bars, dodge the spikes, grab the light. Your best score lives only in your own browser.",
+    "labCardDesc": "Muse's 45-second mini game: run upward, slip around the solid barriers, grab the light. Your best score lives only in your own browser.",
     "labCardCta": "Play"
   },
   "PageGuide": {
