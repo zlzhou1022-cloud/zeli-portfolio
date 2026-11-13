@@ -69,6 +69,8 @@ const POSES: Record<Pose, string> = {
 };
 // lifted 图里兜帽被拉长，身体只占总高约 70%——拖动态按此倍数放大回等大
 const LIFT_SCALE = 1.43;
+// 侧边停靠时露在屏幕里的宽度（探头部分）
+const PEEK = 54;
 const REACTIONS: Pose[] = ["wave", "wink", "stareyes", "scratch", "sorry"];
 const IDLE_ALT: Pose[] = ["book", "letter", "smell", "look"];
 const IDLE_AFTER_MS = 18000;
@@ -109,6 +111,10 @@ export function LingMascot() {
   const [dozing, setDozing] = useState(false);
   const [reaction, setReaction] = useState<Pose | null>(null);
   const [pressed, setPressed] = useState(false);
+  // 侧边停靠（拖到屏幕左右边缘时缩进去探头，点击才出来）与出入场动画状态
+  const [dock, setDock] = useState<"left" | "right" | null>(null);
+  const [entering, setEntering] = useState(false);
+  const [leaving, setLeaving] = useState(false);
 
   const wrapRef = useRef<HTMLDivElement>(null);
   const zoneRef = useRef<HTMLDivElement>(null);
@@ -132,6 +138,7 @@ export function LingMascot() {
   const lastPoolPickRef = useRef("");
   const reactionIdxRef = useRef(0);
   const reactionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const leaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastTouchRef = useRef(0);
 
   const shownPose: Pose = dragging ? (zoneHot ? "present" : "lifted") : reaction ?? (dozing ? "doze" : idlePose);
@@ -160,6 +167,9 @@ export function LingMascot() {
     localStorage.removeItem(HIDDEN_KEY);
     setHidden(false);
     touch();
+    // 出场动画：从下方弹入（muse-enter），动画后段再招手开气泡打招呼
+    setEntering(true);
+    setTimeout(() => setEntering(false), 750);
     setTimeout(() => {
       playReaction("wave");
       setPageLine(null);
@@ -239,6 +249,9 @@ export function LingMascot() {
     reducedRef.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     lastTouchRef.current = Date.now();
     const revive = () => {
+      // 若正在播放消失动画，取消它（别把刚回来的她又藏掉）
+      if (leaveTimerRef.current) clearTimeout(leaveTimerRef.current);
+      setLeaving(false);
       localStorage.removeItem(HIDDEN_KEY);
       setHidden(false);
     };
@@ -367,7 +380,7 @@ export function LingMascot() {
   // 首次访问 6 秒后主动打一次招呼（每会话只邀一次，方便被发现），并挥手；
   // 若页面介绍已经先一步打过招呼，本邀请跳过，避免连着弹两次。
   useEffect(() => {
-    if (!mounted || hidden) return;
+    if (!mounted || hidden || dock) return;
     if (sessionStorage.getItem(INVITED_KEY)) return;
     const id = setTimeout(() => {
       if (introShownRef.current) return;
@@ -378,11 +391,11 @@ export function LingMascot() {
       playReaction("wave");
     }, 6000);
     return () => clearTimeout(id);
-  }, [mounted, hidden]);
+  }, [mounted, hidden, dock]);
 
   // 进入新页面 → 她介绍这页（同一页面一次会话只介绍一次，sessionStorage 去重）
   useEffect(() => {
-    if (!mounted || hidden) return;
+    if (!mounted || hidden || dock) return;
     const info = parsePage(pathname ?? "", window.location.search);
     if (info.kind === "other") return;
     const key = pageKey(info);
@@ -415,7 +428,7 @@ export function LingMascot() {
     }, 900);
     return () => clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname, mounted, hidden]);
+  }, [pathname, mounted, hidden, dock]);
 
   if (!MASCOT_ENABLED || !mounted) return null;
 
@@ -469,12 +482,29 @@ export function LingMascot() {
   };
 
   const hideForNow = () => {
-    localStorage.setItem(HIDDEN_KEY, "1");
-    setHidden(true);
+    if (leaving) return;
+    // 消失动画：先缩下去淡出（muse-leave），动画完了才真正藏起来
+    setBubbleOpen(false);
+    setDock(null);
+    setLeaving(true);
+    if (leaveTimerRef.current) clearTimeout(leaveTimerRef.current);
+    leaveTimerRef.current = setTimeout(() => {
+      localStorage.setItem(HIDDEN_KEY, "1");
+      setHidden(true);
+      setLeaving(false);
+    }, 360);
   };
 
   // ---- 自由拖动：拖到哪儿放哪儿；拖进投放气泡松手 → 打开小游戏 ----
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (leaving) return;
+    // 停靠中：点一下先出来，不触发拖动也不开气泡
+    if (dock) {
+      setDock(null);
+      suppressClickRef.current = Date.now();
+      touch();
+      return;
+    }
     touch();
     dragRef.current = {
       startX: e.clientX,
@@ -540,6 +570,12 @@ export function LingMascot() {
         } catch {
           /* 存不下就算了 */
         }
+        // 拖到屏幕左右边缘松手 → 停靠：缩到边缘后面探头，点击才出来
+        const px = posRef.current.x;
+        const w = window.innerWidth >= 480 ? 144 : 128;
+        if (px <= 6) setDock("left");
+        else if (px + w >= window.innerWidth - 6) setDock("right");
+        else setDock(null);
       }
     }
     dragRef.current = null;
@@ -549,6 +585,7 @@ export function LingMascot() {
   };
 
   const onClick = () => {
+    if (leaving) return;
     if (Date.now() - suppressClickRef.current < 250) return;
     toggleBubble();
   };
@@ -560,8 +597,19 @@ export function LingMascot() {
     }
   };
 
+  const petW = typeof window !== "undefined" && window.innerWidth >= 480 ? 144 : 128;
+  const renderX =
+    dock === "left" ? -(petW - PEEK) : dock === "right" ? window.innerWidth - PEEK : pos.x;
+
   return (
-    <div className="fixed z-40 select-none" style={{ left: pos.x, top: pos.y }}>
+    <div
+      className="fixed z-40 select-none"
+      style={{
+        left: renderX,
+        top: pos.y,
+        transition: dragging ? "none" : "left .45s cubic-bezier(.34,1.25,.5,1)",
+      }}
+    >
       <style>{`
         @keyframes ling-bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
         .ling-bob { animation: ling-bob 3.4s ease-in-out infinite; }
@@ -569,11 +617,15 @@ export function LingMascot() {
         .ling-zone { animation: ling-zone 1.1s ease-in-out infinite; }
         @keyframes muse-pop { 0% { transform: scale(0.9) translateY(3px); } 55% { transform: scale(1.045) translateY(-2px); } 100% { transform: scale(1) translateY(0); } }
         .muse-pop { animation: muse-pop .38s ease-out; }
+        @keyframes muse-enter { 0% { transform: translateY(28px) scale(0.55); opacity: 0; } 55% { transform: translateY(-5px) scale(1.05); opacity: 1; } 100% { transform: translateY(0) scale(1); opacity: 1; } }
+        .muse-enter { animation: muse-enter .55s cubic-bezier(.34,1.35,.5,1); }
+        @keyframes muse-leave { 0% { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; } 100% { transform: translateY(22px) scale(0.5) rotate(-5deg); opacity: 0; } }
+        .muse-leave { animation: muse-leave .36s ease-in forwards; }
         @keyframes muse-doze { from { transform: rotate(0deg) translateY(0); } to { transform: rotate(2.8deg) translateY(3px); } }
         .muse-doze { animation: muse-doze 2.6s ease-in-out infinite alternate; transform-origin: 50% 92%; }
         @keyframes muse-zzz { 0% { opacity: 0; transform: translate(0, 6px) scale(0.7) rotate(-6deg); } 30% { opacity: 1; } 100% { opacity: 0; transform: translate(13px, -30px) scale(1.15) rotate(8deg); } }
         .muse-z { animation: muse-zzz 2.8s linear infinite; }
-        @media (prefers-reduced-motion: reduce) { .ling-bob, .ling-zone, .muse-pop, .muse-doze, .muse-z { animation: none; } }
+        @media (prefers-reduced-motion: reduce) { .ling-bob, .ling-zone, .muse-pop, .muse-enter, .muse-leave, .muse-doze, .muse-z { animation: none; } }
       `}</style>
 
       <div className="relative w-[128px] h-[152px] min-[480px]:w-[144px] min-[480px]:h-[168px]">
@@ -664,7 +716,7 @@ export function LingMascot() {
               >
                 <div
                   key={shownPose}
-                  className="muse-pop w-full h-full"
+                  className={`${leaving ? "muse-leave" : entering ? "muse-enter" : "muse-pop"} w-full h-full`}
                   style={{
                     // 拖动态的放大不能放这层：muse-pop 弹跳动画在播放期间会覆盖
                     // 行内 transform，动画一结束缩放才突然生效——表现为「拖着过
@@ -694,7 +746,7 @@ export function LingMascot() {
             </div>
           </div>
         </div>
-        {!dragging && (
+        {!dragging && !dock && (
           <button
             onClick={hideForNow}
             aria-label={t("hide")}
