@@ -69,7 +69,9 @@ const LINK_OK = /^\/(cn|jp|en)(\/(profile|lab|travels|guestbook))?(\/tohoku-feb-
 function badLinks(s) {
   const found = new Set();
   for (const m of s.matchAll(/\]\((\/[^)\s]+)\)/g)) found.add(m[1]);
-  for (const m of s.matchAll(/(?<![\w(])(\/(?:cn|jp|en)\/[^\s)）】]+)/g)) found.add(m[1]);
+  // 裸路径扫描前先摘掉 markdown 链接整体，避免把 [锚文本](url) 的锚文本误当路径
+  const stripped = s.replace(/\[[^\]]*\]\([^)]*\)/g, "");
+  for (const m of stripped.matchAll(/(?<![\w(])(\/(?:cn|jp|en)\/[^\s)）】]+)/g)) found.add(m[1]);
   return [...found].filter((p) => !LINK_OK.test(p.replace(/[#?].*$/, "").replace(/[。.]+$/, "")));
 }
 
