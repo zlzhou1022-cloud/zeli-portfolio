@@ -139,6 +139,11 @@ export function ChatBot({ isQuotaFull }: { isQuotaFull: boolean }) {
     return () => window.removeEventListener("ling:open-chat", open);
   }, []);
 
+  // 聊天窗打开时通知吉祥物回来（被 × 藏起后，点 Chat 即可复活）
+  useEffect(() => {
+    if (isOpen) window.dispatchEvent(new CustomEvent("ling:chat-opened"));
+  }, [isOpen]);
+
   if (isQuotaFull) return null;
 
   const handleSend = async (overrideText?: string) => {
