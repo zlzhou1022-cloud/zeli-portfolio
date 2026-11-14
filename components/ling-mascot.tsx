@@ -780,7 +780,7 @@ export function LingMascot() {
                       >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
-                          src={poseSrc(id, "look")}
+                          src={OUTFIT_READY.includes(id) ? poseSrc(id, "look") : `/muse-pet/${id}/preview.webp`}
                           alt=""
                           className="h-12 w-9 object-cover object-top shrink-0"
                           onError={(e) => {
