@@ -948,18 +948,36 @@ export function LingMascot() {
                         key={id}
                         className="flex items-center gap-2.5 rounded-xl border border-stone-200 dark:border-stone-700 p-2"
                       >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={OUTFIT_READY.includes(id) ? poseSrc(id, "look") : `/muse-pet/${id}/preview.webp`}
-                          alt=""
-                          className="h-12 w-9 object-cover object-top shrink-0"
-                          onError={(e) => {
-                            // 图还没上线的套装：缩略图回落默认装，别露破图
-                            const el = e.currentTarget;
-                            const fallback = poseSrc("default", "look");
-                            if (!el.src.endsWith(fallback)) el.src = fallback;
-                          }}
-                        />
+                        <span className="relative block h-12 w-9 shrink-0">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={
+                              !st.unlocked
+                                ? `/muse-pet/${id}/silhouette.webp`
+                                : ready
+                                  ? poseSrc(id, "look")
+                                  : `/muse-pet/${id}/preview.webp`
+                            }
+                            alt=""
+                            className={
+                              !st.unlocked ? "h-12 w-9 object-contain" : "h-12 w-9 object-cover object-top"
+                            }
+                            onError={(e) => {
+                              // 未解锁回落通用剪影（不剧透），已解锁回落默认装图，别露破图
+                              const el = e.currentTarget;
+                              const fallback = !st.unlocked ? "/muse-pet/silhouette.webp" : poseSrc("default", "look");
+                              if (!el.src.endsWith(fallback)) el.src = fallback;
+                            }}
+                          />
+                          {!st.unlocked && (
+                            <span
+                              className="absolute inset-0 flex items-center justify-center text-xl font-bold text-amber-300 drop-shadow-[0_1px_2px_rgba(0,0,0,0.7)]"
+                              aria-hidden
+                            >
+                              ?
+                            </span>
+                          )}
+                        </span>
                         <div className="min-w-0 flex-1">
                           <p className="text-xs font-medium text-stone-800 dark:text-stone-100">{tw(`names.${id}`)}</p>
                           <p className="text-[11px] leading-snug text-stone-500 dark:text-stone-400">
