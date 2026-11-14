@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { Link, useRouter } from "@/i18n/routing";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { markGuestbookPosted } from "@/lib/outfit";
 
 export interface Post {
   id: string;
@@ -121,6 +122,8 @@ export function GuestbookClient({
 
         <form ref={formRef} action={(formData) => {
           addPost(formData);
+          // 留言即解锁和风袴装（时装库，判定在 lib/outfit.ts）：记标记并通知桌宠报喜
+          markGuestbookPosted();
           setReplyTarget(null);
           (formRef.current as HTMLFormElement)?.reset();
         }} className="space-y-4">

@@ -5,6 +5,19 @@ import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 import { parsePage, pageKey, type PageInfo } from "@/lib/page-guide";
 import { getTripById } from "@/lib/travel-data";
+import {
+  type OutfitId,
+  POSE_FILES,
+  OUTFIT_ORDER,
+  OUTFIT_READY,
+  OUTFIT_LIFT_SCALE,
+  poseSrc,
+  getCurrentOutfit,
+  setCurrentOutfit,
+  outfitStatus,
+  wasToasted,
+  markToasted,
+} from "@/lib/outfit";
 
 // 慕斯桌宠：站长的小代理，住在页面左下角（2026-11-13 路线 A 上线，当晚按
 // 站长追加要求升级）：
@@ -34,6 +47,11 @@ import { getTripById } from "@/lib/travel-data";
 //   左/右/下边缘松手 → 她换上专用的「暗中观察」探头图贴边躲好——侧边是歪头
 //   版（只露头和扒边的手，右侧用镜像图），底边是趴边版（只露兜帽顶、眼睛和
 //   两只小手）；点一下回到原位。停靠中不轮换待机姿势、不打盹、不弹气泡。
+// - 时装库（站长 2026-11-14）：套装靠成就解锁（运动装=小游戏单局 ≥300 分、
+//   学生制服=猜县答对 1 个、和风袴装=留言板留言、旅行装=集章 47/47），判定
+//   与姿势路径都在 lib/outfit.ts；气泡里「换装」开面板换装，桌宠/小游戏/
+//   猜县头像三处共用同一穿着（muse_outfit + muse:outfit-changed 事件同步）；
+//   新解锁时她冒泡提示一次（muse:progress 事件触发检查）。
 // - 点 × 藏起后，再打开聊天窗她会回来（ling:chat-opened）。
 // 聊天窗里也是慕斯本人（同日晚间站长决定与小灵合并）。纯前端、无后端调用。
 // 开关：NEXT_PUBLIC_LING_MASCOT_ENABLED=0 时整体不渲染（默认开；键名沿用历史）。
@@ -60,25 +78,9 @@ type Pose =
   | "peekSideR"
   | "peekBottom";
 
-const POSES: Record<Pose, string> = {
-  look: "/muse-pet/look.webp",
-  book: "/muse-pet/book.webp",
-  letter: "/muse-pet/letter.webp",
-  smell: "/muse-pet/smell.webp",
-  wave: "/muse-pet/wave.webp",
-  wink: "/muse-pet/wink.webp",
-  stareyes: "/muse-pet/stareyes.webp",
-  scratch: "/muse-pet/scratch.webp",
-  sorry: "/muse-pet/sorry.webp",
-  present: "/muse-pet/present.webp",
-  lifted: "/muse-pet/lifted.webp",
-  doze: "/muse-pet/doze.webp",
-  peekSide: "/muse-pet/peek-side.webp",
-  peekSideR: "/muse-pet/peek-side-r.webp",
-  peekBottom: "/muse-pet/peek-bottom.webp",
-};
-// lifted 图里兜帽被拉长，身体只占总高约 70%——拖动态按此倍数放大回等大
-const LIFT_SCALE = 1.43;
+// 姿势图路径按当前套装解析（lib/outfit.ts 的 poseSrc）：默认装在
+// /muse-pet/ 根下，其余套装在 /muse-pet/<套装>/ 同名文件。
+// lifted 图里身体占比逐套不同，拖动态的放大倍数在 OUTFIT_LIFT_SCALE 里逐套校准。
 // 停靠探头图的宽高比：侧边图 357×560（切边在图的一侧，贴屏边时整图露完）；
 // 底边图 679×400（横宽图，切边在底部，按固定显示宽渲染）
 const PEEK_SIDE_ASPECT = 357 / 560;
@@ -106,6 +108,7 @@ function defaultPos() {
 export function LingMascot() {
   const t = useTranslations("Mascot");
   const lines = (t.raw("lines") as string[]) ?? [];
+  const tw = useTranslations("Wardrobe");
   const tg = useTranslations("PageGuide");
   const tt = useTranslations("Trips");
   const pathname = usePathname();
@@ -127,6 +130,12 @@ export function LingMascot() {
   const [dock, setDock] = useState<"left" | "right" | "bottom" | null>(null);
   const [entering, setEntering] = useState(false);
   const [leaving, setLeaving] = useState(false);
+  // 时装库：当前套装、换装面板开关、解锁提示台词（优先于页面台词显示）、
+  // 当前套装探头图的实测宽高比（停靠尺寸数学按图比例算，逐套不同）
+  const [outfit, setOutfit] = useState<OutfitId>("default");
+  const [wardrobeOpen, setWardrobeOpen] = useState(false);
+  const [toastLine, setToastLine] = useState<string | null>(null);
+  const [peekAspect, setPeekAspect] = useState({ side: PEEK_SIDE_ASPECT, bottom: PEEK_BOTTOM_ASPECT });
 
   const wrapRef = useRef<HTMLDivElement>(null);
   const zoneRef = useRef<HTMLDivElement>(null);
@@ -187,6 +196,24 @@ export function LingMascot() {
     setReaction(pose);
     if (reactionTimerRef.current) clearTimeout(reactionTimerRef.current);
     reactionTimerRef.current = setTimeout(() => setReaction(null), 1900);
+  };
+
+  // 解锁提示检查：有「图已备齐 + 刚解锁 + 还没提示过」的套装就冒泡报喜一次。
+  // 挂载时查一遍（补提示），成就变化（muse:progress）时再查。她藏着时不提示、
+  // 也不记标记，等她出来再报。
+  const checkUnlockToasts = () => {
+    if (localStorage.getItem(HIDDEN_KEY) === "1") return;
+    for (const id of OUTFIT_ORDER) {
+      if (id === "default" || !OUTFIT_READY.includes(id)) continue;
+      if (outfitStatus(id).unlocked && !wasToasted(id)) {
+        markToasted(id);
+        touch();
+        playReaction("wave");
+        setToastLine(tw(`unlockLines.${id}`));
+        setBubbleOpen(true);
+        break;
+      }
+    }
   };
 
   // 召唤（站长 2026-11-14）：她被藏起来时右下角挂「召唤慕斯」按钮（取代原
@@ -285,7 +312,13 @@ export function LingMascot() {
       setHidden(false);
     };
     window.addEventListener("ling:chat-opened", revive);
+    // 时装库同步：别处（换装面板/小游戏/猜县）改了穿着或成就进度，这里跟上
+    const onOutfitChanged = () => setOutfit(getCurrentOutfit());
+    const onProgress = () => checkUnlockToasts();
+    window.addEventListener("muse:outfit-changed", onOutfitChanged);
+    window.addEventListener("muse:progress", onProgress);
     const id = setTimeout(() => {
+      setOutfit(getCurrentOutfit());
       setHidden(localStorage.getItem(HIDDEN_KEY) === "1");
       let initial = defaultPos();
       try {
@@ -299,11 +332,17 @@ export function LingMascot() {
       }
       setPos(clampPos(initial));
       setMounted(true);
+      // 补提示：上次访问期间解锁了还没报喜的套装
+      checkUnlockToasts();
     }, 0);
     return () => {
       clearTimeout(id);
       window.removeEventListener("ling:chat-opened", revive);
+      window.removeEventListener("muse:outfit-changed", onOutfitChanged);
+      window.removeEventListener("muse:progress", onProgress);
     };
+    // checkUnlockToasts 只用 setState 与文案函数，挂载时跑一次即可
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // 窗口尺寸变化时把桌宠夹回可视范围
@@ -314,14 +353,29 @@ export function LingMascot() {
     return () => window.removeEventListener("resize", onResize);
   }, [mounted]);
 
-  // 其余姿势图在挂载后预加载，切换时不闪烁
+  // 当前套装的姿势图在挂载/换装后预加载，切换时不闪烁；顺带实测探头图
+  // 宽高比（停靠尺寸数学按当前套装的图比例算）
   useEffect(() => {
     if (!mounted) return;
-    Object.values(POSES).forEach((src) => {
+    (Object.keys(POSE_FILES) as (keyof typeof POSE_FILES)[]).forEach((pose) => {
       const img = new Image();
-      img.src = src;
+      img.src = poseSrc(outfit, pose);
     });
-  }, [mounted]);
+    const side = new Image();
+    side.onload = () => {
+      if (side.naturalHeight > 0) {
+        setPeekAspect((a) => ({ ...a, side: side.naturalWidth / side.naturalHeight }));
+      }
+    };
+    side.src = poseSrc(outfit, "peekSide");
+    const bottom = new Image();
+    bottom.onload = () => {
+      if (bottom.naturalHeight > 0) {
+        setPeekAspect((a) => ({ ...a, bottom: bottom.naturalWidth / bottom.naturalHeight }));
+      }
+    };
+    bottom.src = poseSrc(outfit, "peekBottom");
+  }, [mounted, outfit]);
 
   // 待机生活节律：每秒检查一次「多久没人理她」
   useEffect(() => {
@@ -482,6 +536,8 @@ export function LingMascot() {
     touch();
     if (bubbleOpen) {
       setBubbleOpen(false);
+      setWardrobeOpen(false);
+      setToastLine(null);
       return;
     }
     const pose = REACTIONS[reactionIdxRef.current % REACTIONS.length];
@@ -644,13 +700,13 @@ export function LingMascot() {
   // 撑满框太大）：侧图显示高 124/112（不再撑满 168/152 的框高，贴框底放），
   // 底图显示宽 100/88。与站立图并排比对定的尺寸，脑袋视觉大小基本一致。
   const sideImgH = wide ? 124 : 112;
-  const sideImgW = sideImgH * PEEK_SIDE_ASPECT;
+  const sideImgW = sideImgH * peekAspect.side;
   // 侧探头图在框内水平居中——把框往屏外推「居中留白」的量，图的有画一侧
   // 就正好贴齐屏幕边缘、整图露完。
   const sideInset = (petW - sideImgW) / 2;
   // 底探头：横宽图按固定显示宽渲染（高随之确定）
   const bottomImgW = wide ? 100 : 88;
-  const bottomImgH = bottomImgW / PEEK_BOTTOM_ASPECT;
+  const bottomImgH = bottomImgW / peekAspect.bottom;
   const renderX =
     dock === "left"
       ? -sideInset
@@ -695,39 +751,111 @@ export function LingMascot() {
       <div className="relative w-[128px] h-[152px] min-[480px]:w-[144px] min-[480px]:h-[168px]">
         {bubbleOpen && !dragging && (
           <div
-            className={`absolute left-0 z-20 w-60 max-w-[calc(100vw-3rem)] rounded-2xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 shadow-xl p-3.5 ${
+            className={`absolute left-0 z-20 ${wardrobeOpen ? "w-72" : "w-60"} max-w-[calc(100vw-3rem)] rounded-2xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 shadow-xl p-3.5 ${
               bubbleBelow ? "top-full mt-2" : "bottom-full mb-1"
             }`}
           >
-            <p className="text-sm leading-relaxed text-stone-800 dark:text-stone-100">
-              {pageLine ?? lines[lineIdx] ?? lines[0] ?? ""}
-            </p>
-            <div className="mt-3 flex items-center gap-2">
-              <button
-                onClick={openChat}
-                className="bg-stone-900 dark:bg-stone-100 text-stone-50 dark:text-stone-900 px-3 py-1.5 text-xs font-medium cursor-pointer hover:bg-stone-700 dark:hover:bg-stone-300 transition-colors"
-              >
-                {t("chatCta")}
-              </button>
-              <button
-                onClick={openGame}
-                className="border border-sky-400 text-sky-700 dark:text-sky-300 px-3 py-1.5 text-xs font-medium cursor-pointer hover:bg-sky-50 dark:hover:bg-sky-950 transition-colors"
-              >
-                {t("playCta")}
-              </button>
-              <button
-                onClick={() => setBubbleOpen(false)}
-                className="px-2 py-1.5 text-xs text-stone-500 dark:text-stone-400 cursor-pointer hover:text-stone-800 dark:hover:text-stone-200 transition-colors"
-              >
-                {t("closeBubble")}
-              </button>
-            </div>
-            <button
-              onClick={hideForNow}
-              className="mt-2 text-[11px] text-stone-400 dark:text-stone-500 underline underline-offset-2 cursor-pointer hover:text-stone-600 dark:hover:text-stone-300 transition-colors"
-            >
-              {t("dismiss")}
-            </button>
+            {wardrobeOpen ? (
+              <div>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold text-stone-900 dark:text-stone-50">{tw("title")}</p>
+                  <button
+                    onClick={() => setWardrobeOpen(false)}
+                    aria-label={t("closeBubble")}
+                    className="px-1.5 text-sm text-stone-400 cursor-pointer hover:text-stone-700 dark:hover:text-stone-200 transition-colors"
+                  >
+                    ×
+                  </button>
+                </div>
+                <p className="mt-1 text-[11px] leading-relaxed text-stone-500 dark:text-stone-400">{tw("hint")}</p>
+                <div className="mt-2.5 space-y-2">
+                  {OUTFIT_ORDER.map((id) => {
+                    const st = outfitStatus(id);
+                    const ready = OUTFIT_READY.includes(id);
+                    const wearing = outfit === id;
+                    return (
+                      <div
+                        key={id}
+                        className="flex items-center gap-2.5 rounded-xl border border-stone-200 dark:border-stone-700 p-2"
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={poseSrc(id, "look")} alt="" className="h-12 w-9 object-cover object-top shrink-0" />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-medium text-stone-800 dark:text-stone-100">{tw(`names.${id}`)}</p>
+                          <p className="text-[11px] leading-snug text-stone-500 dark:text-stone-400">
+                            {tw(`conditions.${id}`)}
+                            {!st.unlocked && st.progress.target
+                              ? ` · ${tw("progress", { value: st.progress.value ?? 0, target: st.progress.target })}`
+                              : ""}
+                          </p>
+                        </div>
+                        {wearing ? (
+                          <span className="shrink-0 rounded-full bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 px-2 py-1 text-[11px] font-medium">
+                            {tw("wearing")}
+                          </span>
+                        ) : st.unlocked && ready ? (
+                          <button
+                            onClick={() => setCurrentOutfit(id)}
+                            className="shrink-0 rounded-full bg-rose-500 text-white px-2.5 py-1 text-[11px] font-medium cursor-pointer hover:bg-rose-600 transition-colors"
+                          >
+                            {tw("wear")}
+                          </button>
+                        ) : st.unlocked ? (
+                          <span className="shrink-0 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400 px-2 py-1 text-[11px]">
+                            {tw("preparing")}
+                          </span>
+                        ) : (
+                          <span className="shrink-0 px-1 text-xs" aria-hidden>
+                            🔒
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              <>
+                <p className="text-sm leading-relaxed text-stone-800 dark:text-stone-100">
+                  {toastLine ?? pageLine ?? lines[lineIdx] ?? lines[0] ?? ""}
+                </p>
+                <div className="mt-3 flex items-center gap-2">
+                  <button
+                    onClick={openChat}
+                    className="bg-stone-900 dark:bg-stone-100 text-stone-50 dark:text-stone-900 px-3 py-1.5 text-xs font-medium cursor-pointer hover:bg-stone-700 dark:hover:bg-stone-300 transition-colors"
+                  >
+                    {t("chatCta")}
+                  </button>
+                  <button
+                    onClick={openGame}
+                    className="border border-sky-400 text-sky-700 dark:text-sky-300 px-3 py-1.5 text-xs font-medium cursor-pointer hover:bg-sky-50 dark:hover:bg-sky-950 transition-colors"
+                  >
+                    {t("playCta")}
+                  </button>
+                  <button
+                    onClick={() => setWardrobeOpen(true)}
+                    className="border border-rose-300 text-rose-600 dark:text-rose-300 px-3 py-1.5 text-xs font-medium cursor-pointer hover:bg-rose-50 dark:hover:bg-rose-950 transition-colors"
+                  >
+                    {t("wardrobeCta")}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setBubbleOpen(false);
+                      setToastLine(null);
+                    }}
+                    className="px-2 py-1.5 text-xs text-stone-500 dark:text-stone-400 cursor-pointer hover:text-stone-800 dark:hover:text-stone-200 transition-colors"
+                  >
+                    {t("closeBubble")}
+                  </button>
+                </div>
+                <button
+                  onClick={hideForNow}
+                  className="mt-2 text-[11px] text-stone-400 dark:text-stone-500 underline underline-offset-2 cursor-pointer hover:text-stone-600 dark:hover:text-stone-300 transition-colors"
+                >
+                  {t("dismiss")}
+                </button>
+              </>
+            )}
           </div>
         )}
 
@@ -779,7 +907,7 @@ export function LingMascot() {
                 style={{ touchAction: "none" }}
               >
                 <div
-                  key={shownPose}
+                  key={`${outfit}-${shownPose}`}
                   className={`${leaving ? "muse-leave" : entering ? "muse-enter" : "muse-pop"} w-full h-full`}
                   style={{
                     // 拖动态的放大不能放这层：muse-pop 弹跳动画在播放期间会覆盖
@@ -795,7 +923,13 @@ export function LingMascot() {
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={POSES[shownPose]}
+                    src={poseSrc(outfit, shownPose)}
+                    onError={(e) => {
+                      // 当前套装缺这张图时回落默认装同名姿势，不留空图
+                      const el = e.currentTarget;
+                      const fallback = poseSrc("default", shownPose);
+                      if (!el.src.endsWith(fallback)) el.src = fallback;
+                    }}
                     alt=""
                     draggable={false}
                     className="block h-full w-auto max-w-none mx-auto pointer-events-none"
@@ -806,7 +940,7 @@ export function LingMascot() {
                       height:
                         dock === "bottom" ? bottomImgH : dock === "left" || dock === "right" ? sideImgH : undefined,
                       marginTop: dock === "left" || dock === "right" ? petH - sideImgH : undefined,
-                      transform: dragging ? (zoneHot ? "scale(1.04)" : `scale(${LIFT_SCALE})`) : undefined,
+                      transform: dragging ? (zoneHot ? "scale(1.04)" : `scale(${OUTFIT_LIFT_SCALE[outfit]})`) : undefined,
                       transformOrigin: "50% 100%",
                       transition: "transform .15s ease-out",
                     }}

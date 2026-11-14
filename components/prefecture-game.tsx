@@ -7,6 +7,7 @@ import { useLocale, useTranslations } from "next-intl";
 import japan from "@svg-maps/japan";
 import { PREFECTURES, getPrefecture, type Prefecture } from "@/lib/prefectures";
 import { getAllTrips } from "@/lib/travel-data";
+import { getCurrentOutfit, poseSrc, markQuizCorrect, notifyProgress } from "@/lib/outfit";
 
 // 看图猜县 + 日本地图集章（2026-11-14，站长定方向、慕斯主持）：
 // - 猜县：从旅行相册的照片里随机出题（照片的拍摄县在 lib/travel-data.ts 里
@@ -15,6 +16,8 @@ import { getAllTrips } from "@/lib/travel-data";
 //   ②访客自己的章存 localStorage（muse_stamps），答对一县亮一县。
 // - 地图用 @svg-maps/japan 的真实县界 SVG，location id 与主数据 slug 一一对应。
 // - 台词全是 messages 的预写文案（PrefectureGame 命名空间），不耗 LLM 额度。
+// - 时装库联动：主持头像穿访客当前套装；第一次答对时记 muse_quiz_correct
+//   （学生制服的解锁条件），章数变化通知桌宠检查解锁提示（旅行装 47 章）。
 const STAMPS_KEY = "muse_stamps";
 
 type Loc = "cn" | "jp" | "en";
@@ -83,6 +86,8 @@ export function PrefectureGame() {
   }, [allPhotos]);
 
   const [tab, setTab] = useState<"quiz" | "map">("quiz");
+  // 主持头像穿访客的当前套装（时装库），挂载/换装时同步
+  const [avatarSrc, setAvatarSrc] = useState("/muse-pet/look.webp");
   const [ready, setReady] = useState(false);
   const [stamps, setStamps] = useState<string[]>([]);
   const stampsLoadedRef = useRef(false);
@@ -130,12 +135,24 @@ export function PrefectureGame() {
   }, []);
 
   useEffect(() => {
+    const sync = () => setAvatarSrc(poseSrc(getCurrentOutfit(), "look"));
+    const id = setTimeout(sync, 0);
+    window.addEventListener("muse:outfit-changed", sync);
+    return () => {
+      clearTimeout(id);
+      window.removeEventListener("muse:outfit-changed", sync);
+    };
+  }, []);
+
+  useEffect(() => {
     if (!stampsLoadedRef.current) return;
     try {
       localStorage.setItem(STAMPS_KEY, JSON.stringify(stamps));
     } catch {
       /* 存不下就算了 */
     }
+    // 章数关系到学生制服/旅行装解锁，通知桌宠检查报喜
+    notifyProgress();
   }, [stamps]);
 
   const current = queue[qi] as FlatPhoto | undefined;
@@ -146,6 +163,8 @@ export function PrefectureGame() {
     setPicked(id);
     if (id === current.pref) {
       setCorrect((c) => c + 1);
+      // 第一次答对即解锁学生制服（lib/outfit.ts 的判定读这个标记）
+      markQuizCorrect();
       if (!stamps.includes(current.pref)) {
         setStamps((s) => [...s, current.pref]);
         setLine(t("stampLine"));
@@ -185,7 +204,7 @@ export function PrefectureGame() {
       {/* 慕斯主持席 */}
       <div className="flex items-start gap-4">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/muse-pet/look.webp" alt="" className="w-14 h-14 object-cover object-top shrink-0" />
+        <img src={avatarSrc} alt="" className="w-14 h-14 object-cover object-top shrink-0" />
         <div className="relative rounded-2xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 shadow-sm px-4 py-3">
           <p className="text-sm leading-relaxed text-stone-800 dark:text-stone-100">
             {tab === "quiz" ? line || t("introLine") : t("mapHint")}
