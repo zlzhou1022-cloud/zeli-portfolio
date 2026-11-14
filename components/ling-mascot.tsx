@@ -61,6 +61,30 @@ const INVITED_KEY = "ling_mascot_invited";
 const POS_KEY = "muse_pet_pos";
 const SEEN_KEY = "muse_page_seen";
 
+// 解锁庆祝彩带（站长 2026-11-14）：达成解锁条件时全屏飘彩带 + 顶部横幅。
+// 纯 DOM/CSS 实现，不引库；碎片参数在模块层生成（避开组件内随机数 lint 规则）。
+type ConfettiPiece = {
+  left: number;
+  delay: number;
+  duration: number;
+  size: number;
+  color: string;
+  round: boolean;
+  drift: number;
+};
+const CONFETTI_COLORS = ["#f43f5e", "#f59e0b", "#10b981", "#0ea5e9", "#8b5cf6", "#ec4899"];
+function makeConfettiPieces(count = 72): ConfettiPiece[] {
+  return Array.from({ length: count }, () => ({
+    left: Math.random() * 100,
+    delay: Math.random() * 0.9,
+    duration: 2.8 + Math.random() * 1.8,
+    size: 6 + Math.random() * 7,
+    color: CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)],
+    round: Math.random() < 0.3,
+    drift: Math.round((Math.random() - 0.5) * 160),
+  }));
+}
+
 type Pose =
   | "look"
   | "book"
@@ -135,6 +159,9 @@ export function LingMascot() {
   const [outfit, setOutfit] = useState<OutfitId>("default");
   const [wardrobeOpen, setWardrobeOpen] = useState(false);
   const [toastLine, setToastLine] = useState<string | null>(null);
+  // 解锁庆祝：彩带碎片 + 顶部横幅（与气泡报喜同时触发，6.5 秒后自动散场）
+  const [celebration, setCelebration] = useState<{ id: OutfitId; pieces: ConfettiPiece[] } | null>(null);
+  const celebrateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [peekAspect, setPeekAspect] = useState({ side: PEEK_SIDE_ASPECT, bottom: PEEK_BOTTOM_ASPECT });
 
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -211,6 +238,10 @@ export function LingMascot() {
         playReaction("wave");
         setToastLine(tw(`unlockLines.${id}`));
         setBubbleOpen(true);
+        // 同步全屏庆祝：彩带 + 顶部横幅（减少动效时只出横幅不出彩带）
+        setCelebration({ id, pieces: reducedRef.current ? [] : makeConfettiPieces() });
+        if (celebrateTimerRef.current) clearTimeout(celebrateTimerRef.current);
+        celebrateTimerRef.current = setTimeout(() => setCelebration(null), 6500);
         break;
       }
     }
@@ -721,7 +752,67 @@ export function LingMascot() {
   // 底探头图是顶对齐渲染的：框顶 = 屏高 − 图高，图的下切边正好落在屏幕底边
   const renderY = dock === "bottom" ? window.innerHeight - bottomImgH : pos.y;
 
+  const dismissCelebration = () => {
+    if (celebrateTimerRef.current) clearTimeout(celebrateTimerRef.current);
+    setCelebration(null);
+  };
+  const goWardrobe = () => {
+    dismissCelebration();
+    touch();
+    setBubbleOpen(true);
+    setWardrobeOpen(true);
+  };
+
   return (
+    <>
+      {celebration && (
+        <>
+          <div className="pointer-events-none fixed inset-0 z-[80] overflow-hidden" aria-hidden>
+            {celebration.pieces.map((p, i) => (
+              <span
+                key={i}
+                className="muse-confetti-piece"
+                style={
+                  {
+                    left: `${p.left}%`,
+                    width: p.size,
+                    height: p.round ? p.size : p.size * 0.45,
+                    backgroundColor: p.color,
+                    borderRadius: p.round ? "50%" : "1px",
+                    animationDuration: `${p.duration}s`,
+                    animationDelay: `${p.delay}s`,
+                    "--dx": `${p.drift}px`,
+                  } as React.CSSProperties
+                }
+              />
+            ))}
+          </div>
+          <div className="muse-celebrate fixed left-1/2 top-4 z-[81] flex w-[min(92vw,26rem)] items-center gap-3 rounded-2xl border border-rose-200 dark:border-rose-800 bg-white/95 dark:bg-stone-900/95 p-3 shadow-2xl">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={OUTFIT_READY.includes(celebration.id) ? poseSrc(celebration.id, "look") : `/muse-pet/${celebration.id}/preview.webp`}
+              alt=""
+              className="h-14 w-11 shrink-0 object-cover object-top"
+            />
+            <p className="min-w-0 flex-1 text-[13px] leading-snug text-stone-800 dark:text-stone-100">
+              🎉 {tw(`unlockLines.${celebration.id}`)}
+            </p>
+            <button
+              onClick={goWardrobe}
+              className="shrink-0 cursor-pointer rounded-full bg-rose-500 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-rose-600"
+            >
+              {t("wardrobeCta")}
+            </button>
+            <button
+              onClick={dismissCelebration}
+              aria-label={t("closeBubble")}
+              className="shrink-0 cursor-pointer px-1 text-base leading-none text-stone-400 hover:text-stone-700 dark:hover:text-stone-200"
+            >
+              ×
+            </button>
+          </div>
+        </>
+      )}
     <div
       className="fixed z-40 select-none"
       style={{
@@ -745,7 +836,11 @@ export function LingMascot() {
         .muse-doze { animation: muse-doze 2.6s ease-in-out infinite alternate; transform-origin: 50% 92%; }
         @keyframes muse-zzz { 0% { opacity: 0; transform: translate(0, 6px) scale(0.7) rotate(-6deg); } 30% { opacity: 1; } 100% { opacity: 0; transform: translate(13px, -30px) scale(1.15) rotate(8deg); } }
         .muse-z { animation: muse-zzz 2.8s linear infinite; }
-        @media (prefers-reduced-motion: reduce) { .ling-bob, .ling-zone, .muse-pop, .muse-enter, .muse-leave, .muse-doze, .muse-z { animation: none; } }
+        @keyframes muse-confetti-fall { 0% { transform: translate3d(0, -6vh, 0) rotate(0deg); opacity: 1; } 88% { opacity: 1; } 100% { transform: translate3d(var(--dx, 0px), 106vh, 0) rotate(660deg); opacity: 0.5; } }
+        .muse-confetti-piece { position: absolute; top: 0; display: block; transform: translateY(-6vh); animation-name: muse-confetti-fall; animation-timing-function: linear; animation-fill-mode: forwards; }
+        @keyframes muse-celebrate-in { 0% { transform: translate(-50%, -140%); } 62% { transform: translate(-50%, 8%); } 100% { transform: translate(-50%, 0); } }
+        .muse-celebrate { animation: muse-celebrate-in .55s cubic-bezier(.3,1.3,.5,1) both; }
+        @media (prefers-reduced-motion: reduce) { .ling-bob, .ling-zone, .muse-pop, .muse-enter, .muse-leave, .muse-doze, .muse-z, .muse-confetti-piece, .muse-celebrate { animation: none; } }
       `}</style>
 
       <div className="relative w-[128px] h-[152px] min-[480px]:w-[144px] min-[480px]:h-[168px]">
@@ -972,5 +1067,6 @@ export function LingMascot() {
         )}
       </div>
     </div>
+    </>
   );
 }
