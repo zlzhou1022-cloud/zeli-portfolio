@@ -887,8 +887,13 @@ export function LingMascot() {
       <div className="relative w-[128px] h-[152px] min-[480px]:w-[144px] min-[480px]:h-[168px]">
         {bubbleOpen && !dragging && (
           <div
-            style={{ left: bubbleLeft }}
-            className={`absolute z-20 ${wardrobeOpen ? "w-72" : "w-60"} max-w-[calc(100vw-3rem)] rounded-2xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 shadow-xl p-3.5 ${
+            style={{
+              left: bubbleLeft,
+              // 换装面板很高：上下都放不下时按较宽一侧限高、面板内滚动，
+              // 保证整个对话框始终在屏内（站长 2026-11-14 深夜要求）
+              maxHeight: wardrobeOpen ? Math.max(roomAbove, roomBelow) - 16 : undefined,
+            }}
+            className={`absolute z-20 overflow-y-auto ${wardrobeOpen ? "w-72" : "w-60"} max-w-[calc(100vw-3rem)] rounded-2xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 shadow-xl p-3.5 ${
               bubbleBelow ? "top-full mt-2" : "bottom-full mb-1"
             }`}
           >
