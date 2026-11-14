@@ -26,9 +26,33 @@ function formatTs(ts?: string): string {
   return `${mm}/${dd} ${HH}:${min}:${ss}`;
 }
 
+// 开场白时段（站长 2026-11-15）：按访客本地时间分五档，慕斯的问候随时间变。
+function timeBandOf(d: Date): "morning" | "noon" | "afternoon" | "evening" | "night" {
+  const h = d.getHours();
+  if (h < 5) return "night";
+  if (h < 11) return "morning";
+  if (h < 14) return "noon";
+  if (h < 18) return "afternoon";
+  if (h < 23) return "evening";
+  return "night";
+}
+
+function pickTimedGreeting(raw: unknown, fallback: string): string {
+  const g = raw as Record<string, string[]> | undefined;
+  const now = new Date();
+  const arr = g?.[timeBandOf(now)];
+  if (arr && arr.length > 0) {
+    // 同一天内固定一句（开场白槽位会被反复本地化，不能每次打开都换），按日期轮换
+    const dayIdx = Math.floor(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) / 86400000);
+    return arr[dayIdx % arr.length];
+  }
+  return fallback;
+}
+
 export function ChatBot({ isQuotaFull }: { isQuotaFull: boolean }) {
   const locale = useLocale();
   const t = useTranslations("ChatBot");
+  const greetingText = pickTimedGreeting(t.raw("greetings"), t("greeting"));
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [chatId, setChatId] = useState<string | null>(null);
@@ -49,7 +73,7 @@ export function ChatBot({ isQuotaFull }: { isQuotaFull: boolean }) {
 
   const makeGreeting = (): Message => ({
     role: "assistant",
-    content: t("greeting"),
+    content: greetingText,
     timestamp: new Date().toISOString(),
   });
 
@@ -80,7 +104,6 @@ export function ChatBot({ isQuotaFull }: { isQuotaFull: boolean }) {
   // localStorage 的历史跨语言共用，若不处理，访客在中文站留下的开场白会被带到日/英站
   // （旧版三语堆叠开场白同理）。加载与语言切换时都把开场白槽位换成当前语言版本；
   // 真实问答历史不改动。
-  const greetingText = t("greeting");
   const localizeGreeting = (list: Message[]): Message[] => {
     if (list.length === 0 || list[0].role !== "assistant" || list[0].content === greetingText) {
       return list;
