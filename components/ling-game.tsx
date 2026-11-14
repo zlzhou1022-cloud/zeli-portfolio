@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import { getCurrentOutfit, poseSrc, notifyProgress } from "@/lib/outfit";
 
 // 慕斯向前冲：45 秒一局的竖版跑酷小游戏。玩法由站长 2026-11-14 亲自定稿
 // （上一版「踩横杆躲地刺」被他否决：难懂）：慕斯向画面上方奔跑，画面自动
@@ -16,8 +17,9 @@ import { useTranslations } from "next-intl";
 // 贴图、向右跑用向右贴图（同一张侧面图的镜像），停下/被拦住用站立帧。
 // 纯前端 canvas，最高分存 localStorage，无后端、不吃聊天配额。
 // 打开方式：window 事件 "ling:open-game"（桌宠气泡、Lab 页卡片派发）。
-// 主角形象：桌宠同款慕斯抠图 /muse-pet/run-left.webp、run-right.webp、
-// look.webp，加载失败时回退白团子。
+// 主角形象：桌宠同款慕斯抠图（按时装库当前套装取 run-left/run-right/look，
+// 见 lib/outfit.ts），加载失败时回退白团子。最高分 ≥300 解锁运动装：结算
+// 写完最高分后发 muse:progress，桌宠那边会冒泡报喜。
 const W = 400;
 const H = 460;
 const DURATION = 45;
@@ -78,8 +80,9 @@ export function LingGame() {
     lastTickSecond: DURATION,
   });
 
-  // 主角图预加载（组件全局挂载，页面打开时就拉好，进游戏不等待）
-  useEffect(() => {
+  // 主角图按当前套装加载（挂载时先拉一遍，进游戏时再按最新穿着拉一次）
+  const loadSprites = useCallback(() => {
+    const outfit = getCurrentOutfit();
     const load = (key: "left" | "right" | "look", src: string) => {
       const img = new Image();
       img.src = src;
@@ -87,14 +90,19 @@ export function LingGame() {
         imgRef.current[key] = img;
       };
     };
-    load("left", "/muse-pet/run-left.webp");
-    load("right", "/muse-pet/run-right.webp");
-    load("look", "/muse-pet/look.webp");
+    load("left", poseSrc(outfit, "runLeft"));
+    load("right", poseSrc(outfit, "runRight"));
+    load("look", poseSrc(outfit, "look"));
   }, []);
+
+  useEffect(() => {
+    loadSprites();
+  }, [loadSprites]);
 
   // 打开事件
   useEffect(() => {
     const open = () => {
+      loadSprites();
       setBest(Number(localStorage.getItem(BEST_KEY) ?? 0) || 0);
       setScore(0);
       setLives(3);
@@ -104,7 +112,7 @@ export function LingGame() {
     };
     window.addEventListener("ling:open-game", open);
     return () => window.removeEventListener("ling:open-game", open);
-  }, []);
+  }, [loadSprites]);
 
   // Esc 关闭
   useEffect(() => {
@@ -222,6 +230,8 @@ export function LingGame() {
         if (s.score > prev) {
           localStorage.setItem(BEST_KEY, String(s.score));
           setIsNewRecord(true);
+          // 最高分关系到运动装解锁，通知桌宠检查报喜
+          notifyProgress();
           return s.score;
         }
         return prev;

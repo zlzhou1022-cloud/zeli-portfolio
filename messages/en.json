@@ -166,7 +166,8 @@
       "Curious about Zeli? Tap me, then hit “Ask Muse” — I remember it all.",
       "Drag me onto the bubble above and we can play Muse Dash.",
       "You can also drag me anywhere and leave me there. I don't mind."
-    ]
+    ],
+    "wardrobeCta": "Wardrobe"
   },
   "MiniGame": {
     "title": "Muse Dash",
@@ -284,6 +285,34 @@
         "Leaving a message is easy — just a name and a few words; he reads every one.",
         "It's also fun to browse what everyone else has written first."
       ]
+    }
+  },
+  "Wardrobe": {
+    "title": "Muse's Wardrobe",
+    "hint": "Complete little achievements to unlock new outfits. Tap an unlocked outfit to wear it.",
+    "wear": "Wear",
+    "wearing": "Wearing",
+    "preparing": "Coming soon",
+    "progress": "{value} / {target}",
+    "names": {
+      "default": "Default Outfit",
+      "sport": "Sportswear",
+      "school": "School Uniform",
+      "hakama": "Hakama Style",
+      "travel": "Traveler Outfit"
+    },
+    "conditions": {
+      "default": "The outfit she starts with",
+      "sport": "Score 300 in a single run of Muse Dash",
+      "school": "Answer one prefecture correctly in the quiz",
+      "hakama": "Leave a message on the guestbook",
+      "travel": "Collect all 47 prefecture stamps"
+    },
+    "unlockLines": {
+      "sport": "New outfit unlocked: Sportswear! Tap me and use “Wardrobe” in the bubble to try it on!",
+      "school": "New outfit unlocked: School Uniform! Tap me and use “Wardrobe” in the bubble to try it on!",
+      "hakama": "New outfit unlocked: Hakama Style! Tap me and use “Wardrobe” in the bubble to try it on!",
+      "travel": "New outfit unlocked: Traveler Outfit! Tap me and use “Wardrobe” in the bubble to try it on!"
     }
   }
 }
