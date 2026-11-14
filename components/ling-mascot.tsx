@@ -125,12 +125,23 @@ const IDLE_ALT: Pose[] = ["book", "letter", "smell", "look"];
 const IDLE_AFTER_MS = 18000;
 const DOZE_AFTER_MS = 75000;
 
+// 可见区域矩形（站长 2026-11-15 报障：手机浏览器放大后，停靠判定与可拖
+// 区域错位）。指针 clientX/Y 与 fixed 定位都活在布局视口坐标系里，但
+// innerWidth/innerHeight 给的是布局视口全尺寸——双指放大后用户实际看到的
+// 只是其中一块，即 visualViewport 的 offset+size（同一坐标系）。所有
+// 「屏幕边缘」判定都以这块可见矩形为准；未缩放时它与布局视口重合，
+// 桌面端行为不变。
+function viewRect() {
+  const vv = window.visualViewport;
+  if (vv) return { x: vv.offsetLeft, y: vv.offsetTop, w: vv.width, h: vv.height };
+  return { x: 0, y: 0, w: window.innerWidth, h: window.innerHeight };
+}
+
 function clampPos(p: { x: number; y: number }) {
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
+  const v = viewRect();
   return {
-    x: Math.max(-24, Math.min(vw - 96, p.x)),
-    y: Math.max(0, Math.min(vh - 96, p.y)),
+    x: Math.max(v.x - 24, Math.min(v.x + v.w - 96, p.x)),
+    y: Math.max(v.y, Math.min(v.y + v.h - 96, p.y)),
   };
 }
 
@@ -138,8 +149,9 @@ function defaultPos() {
   const wide = window.innerWidth >= 480;
   const w = wide ? 144 : 128;
   const h = wide ? 168 : 152;
-  // 初始位置 = 页面右下角（站长 2026-11-15 指定，原为左下角）
-  return { x: window.innerWidth - w - (wide ? 32 : 20), y: window.innerHeight - h - (wide ? 32 : 20) };
+  // 初始位置 = 可见区域右下角（站长 2026-11-15 指定，原为左下角）
+  const v = viewRect();
+  return { x: v.x + v.w - w - (wide ? 32 : 20), y: v.y + v.h - h - (wide ? 32 : 20) };
 }
 
 export function LingMascot() {
@@ -153,6 +165,9 @@ export function LingMascot() {
   const locale = useLocale();
 
   const [mounted, setMounted] = useState(false);
+  // 缩放后平移（visualViewport scroll）时只重渲染、不改位置：停靠中的渲染
+  // 坐标由可见矩形现算，她会继续贴在用户看得见的那条边上
+  const [, setVpTick] = useState(0);
   const [hidden, setHidden] = useState(true);
   const [pos, setPos] = useState<{ x: number; y: number }>({ x: 20, y: 20 });
   const [bubbleOpen, setBubbleOpen] = useState(false);
@@ -416,12 +431,21 @@ export function LingMascot() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 窗口尺寸变化时把桌宠夹回可视范围
+  // 窗口尺寸/缩放变化时把桌宠夹回可见范围：双指缩放只触发 visualViewport
+  // 的 resize（不一定有 window resize），两个都听；clamp 用的是可见矩形，
+  // 缩放后她会被拉回用户实际看得见的区域，并触发重渲染刷新停靠/气泡数学
   useEffect(() => {
     if (!mounted) return;
     const onResize = () => setPos((p) => clampPos(p));
+    const onVpScroll = () => setVpTick((n) => n + 1);
     window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
+    window.visualViewport?.addEventListener("resize", onResize);
+    window.visualViewport?.addEventListener("scroll", onVpScroll);
+    return () => {
+      window.removeEventListener("resize", onResize);
+      window.visualViewport?.removeEventListener("resize", onResize);
+      window.visualViewport?.removeEventListener("scroll", onVpScroll);
+    };
   }, [mounted]);
 
   // 当前套装的姿势图在挂载/换装后预加载，切换时不闪烁；顺带实测探头图
@@ -753,9 +777,10 @@ export function LingMascot() {
         const wide = window.innerWidth >= 480;
         const w = wide ? 144 : 128;
         const h = wide ? 168 : 152;
-        if (px <= 6) setDock("left");
-        else if (px + w >= window.innerWidth - 6) setDock("right");
-        else if (py + h >= window.innerHeight - 6) setDock("bottom");
+        const v = viewRect();
+        if (px <= v.x + 6) setDock("left");
+        else if (px + w >= v.x + v.w - 6) setDock("right");
+        else if (py + h >= v.y + v.h - 6) setDock("bottom");
         else setDock(null);
       }
     }
@@ -792,29 +817,30 @@ export function LingMascot() {
   // 底探头：横宽图按固定显示宽渲染（高随之确定）
   const bottomImgW = wide ? 100 : 88;
   const bottomImgH = bottomImgW / peekAspect.bottom;
+  const vis = viewRect();
   const renderX =
     dock === "left"
-      ? -sideInset
+      ? vis.x - sideInset
       : dock === "right"
-        ? window.innerWidth - petW + sideInset
+        ? vis.x + vis.w - petW + sideInset
         : dock === "bottom"
           ? Math.max(
-              (bottomImgW - petW) / 2,
-              Math.min(window.innerWidth - petW - (bottomImgW - petW) / 2, pos.x),
+              vis.x + (bottomImgW - petW) / 2,
+              Math.min(vis.x + vis.w - petW - (bottomImgW - petW) / 2, pos.x),
             )
           : pos.x;
-  // 底探头图是顶对齐渲染的：框顶 = 屏高 − 图高，图的下切边正好落在屏幕底边
-  const renderY = dock === "bottom" ? window.innerHeight - bottomImgH : pos.y;
+  // 底探头图是顶对齐渲染的：框顶 = 可见区底边 − 图高，图的下切边正好落在可见区底边
+  const renderY = dock === "bottom" ? vis.y + vis.h - bottomImgH : pos.y;
 
   // 气泡防溢出（站长 2026-11-14 深夜验收：她在页面边缘时点开气泡会被切掉，
   // 必须拖到中间才能看全）：横向右溢出时整体左移钳回屏内（两侧留 8px）；
   // 纵向按内容估高决定朝上/朝下开（普通台词约 200，换装面板约 500），
   // 上方放不下且下方更宽敞就朝下开，不再用写死的 330 一刀切。
-  const bubbleW = Math.min(wardrobeOpen ? 288 : 240, window.innerWidth - 48);
-  const bubbleLeft = Math.max(8 - renderX, Math.min(0, window.innerWidth - 8 - bubbleW - renderX));
+  const bubbleW = Math.min(wardrobeOpen ? 288 : 240, vis.w - 48);
+  const bubbleLeft = Math.max(vis.x + 8 - renderX, Math.min(0, vis.x + vis.w - 8 - bubbleW - renderX));
   const estBubbleH = wardrobeOpen ? 500 : 200;
-  const roomAbove = renderY;
-  const roomBelow = window.innerHeight - (renderY + petH);
+  const roomAbove = renderY - vis.y;
+  const roomBelow = vis.y + vis.h - (renderY + petH);
   const bubbleBelow = roomAbove < estBubbleH + 12 && roomBelow > roomAbove;
 
   const dismissCelebration = () => {
