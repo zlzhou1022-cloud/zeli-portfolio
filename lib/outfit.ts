@@ -54,8 +54,8 @@ export const POSE_FILES: Record<PoseName, string> = {
 
 export const OUTFIT_ORDER: OutfitId[] = ["default", "sport", "school", "hakama", "travel"];
 
-// 已备齐全套姿势图、可以真正穿上的套装（图齐一套加一套）
-export const OUTFIT_READY: OutfitId[] = ["default", "sport", "school"];
+// 已备齐全套姿势图、可以真正穿上的套装（五套已全齐，2026-11-14）
+export const OUTFIT_READY: OutfitId[] = ["default", "sport", "school", "hakama", "travel"];
 
 const OUTFIT_KEY = "muse_outfit";
 const BEST_KEY = "ling_game_best";
@@ -209,6 +209,6 @@ export const OUTFIT_LIFT_SCALE: Record<OutfitId, number> = {
   default: 1.43,
   sport: 1.0,
   school: 1.09,
-  hakama: 1.0,
-  travel: 1.0,
+  hakama: 1.07,
+  travel: 1.05,
 };
