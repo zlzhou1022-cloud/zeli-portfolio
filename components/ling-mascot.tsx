@@ -1097,16 +1097,6 @@ export function LingMascot() {
             </div>
           </div>
         </div>
-        {!dragging && !dock && (
-          <button
-            onClick={hideForNow}
-            aria-label={t("hide")}
-            title={t("hide")}
-            className="absolute top-0 -right-2 z-20 w-5 h-5 rounded-full bg-stone-900/60 dark:bg-stone-100/70 text-stone-50 dark:text-stone-900 text-[11px] leading-none flex items-center justify-center opacity-40 hover:opacity-100 focus:opacity-100 cursor-pointer transition-opacity"
-          >
-            ×
-          </button>
-        )}
       </div>
     </div>
     </>
