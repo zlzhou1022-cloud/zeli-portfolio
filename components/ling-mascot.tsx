@@ -779,7 +779,17 @@ export function LingMascot() {
                         className="flex items-center gap-2.5 rounded-xl border border-stone-200 dark:border-stone-700 p-2"
                       >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={poseSrc(id, "look")} alt="" className="h-12 w-9 object-cover object-top shrink-0" />
+                        <img
+                          src={poseSrc(id, "look")}
+                          alt=""
+                          className="h-12 w-9 object-cover object-top shrink-0"
+                          onError={(e) => {
+                            // 图还没上线的套装：缩略图回落默认装，别露破图
+                            const el = e.currentTarget;
+                            const fallback = poseSrc("default", "look");
+                            if (!el.src.endsWith(fallback)) el.src = fallback;
+                          }}
+                        />
                         <div className="min-w-0 flex-1">
                           <p className="text-xs font-medium text-stone-800 dark:text-stone-100">{tw(`names.${id}`)}</p>
                           <p className="text-[11px] leading-snug text-stone-500 dark:text-stone-400">
