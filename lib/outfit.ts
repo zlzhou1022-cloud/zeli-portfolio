@@ -55,7 +55,7 @@ export const POSE_FILES: Record<PoseName, string> = {
 export const OUTFIT_ORDER: OutfitId[] = ["default", "sport", "school", "hakama", "travel"];
 
 // 已备齐全套姿势图、可以真正穿上的套装（图齐一套加一套）
-export const OUTFIT_READY: OutfitId[] = ["default", "sport"];
+export const OUTFIT_READY: OutfitId[] = ["default", "sport", "school"];
 
 const OUTFIT_KEY = "muse_outfit";
 const BEST_KEY = "ling_game_best";
@@ -208,7 +208,7 @@ export function markToasted(id: OutfitId) {
 export const OUTFIT_LIFT_SCALE: Record<OutfitId, number> = {
   default: 1.43,
   sport: 1.0,
-  school: 1.0,
+  school: 1.09,
   hakama: 1.0,
   travel: 1.0,
 };

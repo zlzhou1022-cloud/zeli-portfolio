@@ -313,6 +313,7 @@
       "school": "New outfit unlocked: School Uniform! Tap me and use “Wardrobe” in the bubble to try it on!",
       "hakama": "New outfit unlocked: Hakama Style! Tap me and use “Wardrobe” in the bubble to try it on!",
       "travel": "New outfit unlocked: Traveler Outfit! Tap me and use “Wardrobe” in the bubble to try it on!"
-    }
+    },
+    "unlockPendingLine": "New outfit unlocked: {name}! Its artwork is still in the works — you'll be able to wear it as soon as it's ready!"
   }
 }
