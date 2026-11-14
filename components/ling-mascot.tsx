@@ -951,21 +951,14 @@ export function LingMascot() {
                         <span className="relative block h-12 w-9 shrink-0">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
-                            src={
-                              !st.unlocked
-                                ? `/muse-pet/${id}/silhouette.webp`
-                                : ready
-                                  ? poseSrc(id, "look")
-                                  : `/muse-pet/${id}/preview.webp`
-                            }
+                            src={ready ? poseSrc(id, "look") : `/muse-pet/${id}/preview.webp`}
                             alt=""
-                            className={
-                              !st.unlocked ? "h-12 w-9 object-contain" : "h-12 w-9 object-cover object-top"
-                            }
+                            className="h-12 w-9 object-cover object-top"
+                            style={!st.unlocked ? { filter: "brightness(0)" } : undefined}
                             onError={(e) => {
-                              // 未解锁回落通用剪影（不剧透），已解锁回落默认装图，别露破图
+                              // 图还没上线的套装：缩略图回落默认装，别露破图（未解锁时滤镜会把它一并涂黑）
                               const el = e.currentTarget;
-                              const fallback = !st.unlocked ? "/muse-pet/silhouette.webp" : poseSrc("default", "look");
+                              const fallback = poseSrc("default", "look");
                               if (!el.src.endsWith(fallback)) el.src = fallback;
                             }}
                           />
