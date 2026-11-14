@@ -107,6 +107,16 @@ type Pose =
 // lifted 图里身体占比逐套不同，拖动态的放大倍数在 OUTFIT_LIFT_SCALE 里逐套校准。
 // 停靠探头图的宽高比：侧边图 357×560（切边在图的一侧，贴屏边时整图露完）；
 // 底边图 679×400（横宽图，切边在底部，按固定显示宽渲染）
+// 首次招呼按访客本地时段选（站长 2026-11-15）：五档问候与聊天开场白同一套时段划分。
+function pickTimedInvite(raw: unknown): string | null {
+  const g = raw as Record<string, string[]> | undefined;
+  const h = new Date().getHours();
+  const band = h < 5 ? "night" : h < 11 ? "morning" : h < 14 ? "noon" : h < 18 ? "afternoon" : h < 23 ? "evening" : "night";
+  const arr = g?.[band];
+  if (arr && arr.length > 0) return arr[Math.floor(Math.random() * arr.length)];
+  return null;
+}
+
 const PEEK_SIDE_ASPECT = 357 / 560;
 const PEEK_BOTTOM_ASPECT = 679 / 400;
 const REACTIONS: Pose[] = ["wave", "wink", "stareyes", "scratch", "sorry"];
@@ -529,8 +539,14 @@ export function LingMascot() {
     const id = setTimeout(() => {
       if (introShownRef.current) return;
       sessionStorage.setItem(INVITED_KEY, "1");
-      setLineIdx(0);
-      setPageLine(null);
+      // 第一句招呼按时段变（早上好/中午好/…/深夜版），无配置时回退固定台词第一句
+      const inviteLine = pickTimedInvite(t.raw("timeGreetings"));
+      if (inviteLine) {
+        setPageLine(inviteLine);
+      } else {
+        setLineIdx(0);
+        setPageLine(null);
+      }
       setBubbleOpen(true);
       playReaction("wave");
     }, 6000);

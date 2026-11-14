@@ -214,5 +214,34 @@ allowed: ["/", "/profile", "/lab", "/games", "/travels", "/travels/<tripId>", "/
 return { ok: true, path: normalized};
 },
 }),
+
+get_current_time: tool({
+description:
+"Get the current date and time in Tokyo, Japan (JST, UTC+9), including the weekday and which part of the day it is. Use this whenever the visitor asks what time it is, today's date, the day of the week, or anything else that depends on the current time. You have no other way to know the time — always answer time questions from this result, never guess.",
+inputSchema: z.object({}),
+execute: async () => {
+const parts = new Intl.DateTimeFormat("en-US", {
+timeZone: "Asia/Tokyo",
+year: "numeric",
+month: "2-digit",
+day: "2-digit",
+hour: "2-digit",
+minute: "2-digit",
+hourCycle: "h23",
+weekday: "long",
+}).formatToParts(new Date());
+const get = (type: string) => parts.find((p) => p.type === type)?.value ?? "";
+const hour = Number(get("hour"));
+const dayPeriod =
+hour < 5 ? "late night" : hour < 11 ? "morning" : hour < 14 ? "midday" : hour < 18 ? "afternoon" : hour < 23 ? "evening" : "late night";
+return {
+timezone: "Asia/Tokyo (JST, UTC+9)",
+date: `${get("year")}-${get("month")}-${get("day")}`,
+time: `${get("hour")}:${get("minute")}`,
+weekday: get("weekday"),
+dayPeriod,
+};
+},
+}),
 };
 }

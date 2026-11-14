@@ -154,7 +154,34 @@
       "Where does he work now?",
       "Which travel stories does he have?",
       "Where should I go to see snow in winter?"
-    ]
+    ],
+    "greetings": {
+      "morning": [
+        "Good morning! I'm Muse, Zeli's little agent. A brand-new day — ask me anything about Zeli's background, travel stories, or projects!",
+        "Morning! I'm Muse, Zeli's little agent. Where shall we start today — his travel stories, his projects, or a question for me?",
+        "Good morning! I'm Muse, Zeli's little agent. While your mind is fresh, let's explore this site together."
+      ],
+      "noon": [
+        "Hello, good noon! I'm Muse, Zeli's little agent. Perfect lunch-break browsing — Zeli's snowy Tohoku story or his projects first?",
+        "Hi there! I'm Muse, Zeli's little agent. Had lunch yet? Relax a while and let me tell you about Zeli.",
+        "Good day! I'm Muse, Zeli's little agent. The noon sun is out — ask me anything you'd like to know."
+      ],
+      "afternoon": [
+        "Good afternoon! I'm Muse, Zeli's little agent. Tea time — let me walk you through Zeli's travels and projects.",
+        "Good afternoon! I'm Muse, Zeli's little agent. Feeling the afternoon slump? A prefecture quiz in the games corner will wake you right up.",
+        "Good afternoon! I'm Muse, Zeli's little agent. Curious about Zeli's career, or his photo albums first? Just ask."
+      ],
+      "evening": [
+        "Good evening! I'm Muse, Zeli's little agent. Long day done — take it slow here. Travel stories, or a couple of games with me?",
+        "Good evening! I'm Muse, Zeli's little agent. Zeli's snow-country photos look especially nice in the evening light.",
+        "Good evening! I'm Muse, Zeli's little agent. How was your day? Either way, unwind here for a bit."
+      ],
+      "night": [
+        "Still up? I'm Muse, Zeli's little agent. Late-night visitors are the rarest kind — between us, the travel stories read best at night.",
+        "It's late — I'm Muse, Zeli's little agent. Don't stay up too long, but a little chat before bed is lovely. What would you like to know?",
+        "Shh — good evening, night owl. I'm Muse, Zeli's little agent. Everyone's asleep but us. Tell me softly what you'd like to see."
+      ]
+    }
   },
   "Mascot": {
     "ariaLabel": "Muse the desktop pet",
@@ -172,7 +199,29 @@
       "Drag me onto the bubble above and we can play a game together.",
       "You can also drag me anywhere and leave me there. I don't mind."
     ],
-    "wardrobeCta": "Wardrobe"
+    "wardrobeCta": "Wardrobe",
+    "timeGreetings": {
+      "morning": [
+        "Good morning! I'm Muse — let's explore together today.",
+        "Morning! I'm Muse. Slept well? I'm here all day."
+      ],
+      "noon": [
+        "Good noon! I'm Muse. Lunch break? Spend a little of it here.",
+        "Hi! I'm Muse. All fed? Come play a while."
+      ],
+      "afternoon": [
+        "Good afternoon! I'm Muse. Sleepy? Drag me to the games to wake up.",
+        "Good afternoon, I'm Muse. Grab some tea and we'll look around."
+      ],
+      "evening": [
+        "Good evening! I'm Muse. Long day — take it slow here.",
+        "Evening! I'm Muse. This site feels different at night, in a good way."
+      ],
+      "night": [
+        "Still awake? I'm Muse. Keep it down — don't wake the website.",
+        "It's late, I'm Muse. I'll keep you company a little — then off to bed, okay?"
+      ]
+    }
   },
   "MiniGame": {
     "title": "Muse Dash",
