@@ -3,14 +3,14 @@
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 
-// Lab 页的「看图猜县 · 集章」入口卡片：跳到独立游戏页 /lab/prefecture-game
+// 小游戏专区的「看图猜县 · 集章」入口卡片：跳到独立游戏页 /games/prefecture-game
 // （地图需要整页空间，不像慕斯向前冲那样用弹窗）。
-export function LabStampEntry() {
+export function GamesStampEntry() {
   const t = useTranslations("PrefectureGame");
   const locale = useLocale();
   return (
     <Link
-      href={`/${locale}/lab/prefecture-game`}
+      href={`/${locale}/games/prefecture-game`}
       className="group block w-full text-left border border-stone-200 dark:border-stone-800 py-8 px-6 -mx-6 hover:bg-sky-50 dark:hover:bg-stone-900/50 transition-all"
     >
       <div className="flex items-start justify-between gap-8 mb-2">

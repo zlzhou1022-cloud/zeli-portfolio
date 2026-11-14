@@ -23,6 +23,11 @@
         "title": "Guestbook",
         "desc": "Leave your mark here~",
         "link": "Sign Guestbook"
+      },
+      "games": {
+        "title": "Mini Games",
+        "desc": "A corner of games to play with Muse: the dash and the prefecture quiz.",
+        "link": "Play games"
       }
     }
   },
@@ -154,7 +159,7 @@
   "Mascot": {
     "ariaLabel": "Muse the desktop pet",
     "chatCta": "Ask Muse",
-    "playCta": "Play a game",
+    "playCta": "Play together",
     "closeBubble": "Close",
     "dismiss": "Hide her away",
     "hide": "Hide pet",
@@ -164,7 +169,7 @@
       "I look after this site. Let me keep you company while you browse.",
       "Poke me and I'll make a face — poke again for another one.",
       "Curious about Zeli? Tap me, then hit “Ask Muse” — I remember it all.",
-      "Drag me onto the bubble above and we can play Muse Dash.",
+      "Drag me onto the bubble above and we can play a game together.",
       "You can also drag me anywhere and leave me there. I don't mind."
     ],
     "wardrobeCta": "Wardrobe"
@@ -235,13 +240,14 @@
       "chugoku": "Chugoku",
       "shikoku": "Shikoku",
       "kyushu": "Kyushu & Okinawa"
-    }
+    },
+    "backGames": "Back to the games corner"
   },
   "PageGuide": {
     "home": {
       "intro": "You made it! This is Zeli's personal homepage — I'm Muse, his little agent. Happy to show you around.",
       "guide": [
-        "The cards above lead to his profile, the lab, and the travel albums; the guestbook is in the menu up top too.",
+        "The cards above lead to his profile, the lab, the travel albums, and the games corner; the guestbook card is down there too.",
         "Not sure where to start? Try the travel albums — the snow festivals and Morioka noodles are worth it.",
         "Tap me and choose “Ask Muse” to ask me directly; I'll help you find any page."
       ]
@@ -255,10 +261,10 @@
       ]
     },
     "lab": {
-      "intro": "Welcome to the lab! Zeli's home-made tools and plugins live here — plus a little game.",
+      "intro": "Welcome to the lab! Zeli's home-made tools and plugins live here.",
       "feel": [
         "All built after work, bit by bit. Quality aside, the effort is genuine.",
-        "The lab also hides a game starring me — Muse Dash. Give it a try.",
+        "The games you play with me live in the games corner now — stop by there when you're done here.",
         "What I like about him: when he gets an idea, he just builds it."
       ]
     },
@@ -284,6 +290,14 @@
       "guide": [
         "Leaving a message is easy — just a name and a few words; he reads every one.",
         "It's also fun to browse what everyone else has written first."
+      ]
+    },
+    "games": {
+      "intro": "Welcome to the games corner! Every game here is one you play together with me.",
+      "guide": [
+        "The top card is the 45-second dash game — tap it and we'll play a round together. Score 300 in one run to unlock my sportswear.",
+        "The bottom card is the prefecture quiz: guess where Zeli's travel photos were taken, and correct answers earn stamps on your map.",
+        "You can skip the cards too: drag me onto the bubble at the top of the screen and let go to start a dash round right away."
       ]
     }
   },
@@ -315,5 +329,10 @@
       "travel": "New outfit unlocked: Traveler Outfit! Tap me and use “Wardrobe” in the bubble to try it on!"
     },
     "unlockPendingLine": "New outfit unlocked: {name}! Its artwork is still in the works — you'll be able to wear it as soon as it's ready!"
+  },
+  "GamesPage": {
+    "title": "Mini Games",
+    "description": "A corner of games to play with Muse: a 45-second dash, and a guess-the-prefecture quiz over travel photos. She hosts both.",
+    "backHome": "Back to home"
   }
 }

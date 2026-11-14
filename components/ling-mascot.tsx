@@ -298,6 +298,7 @@ export function LingMascot() {
       case "home":
       case "profile":
       case "lab":
+      case "games":
       case "travels":
       case "guestbook":
         return tg(`${info.kind}.intro`);
@@ -315,6 +316,8 @@ export function LingMascot() {
     switch (info.kind) {
       case "home":
         return (tg.raw("home.guide") as string[]) ?? [];
+      case "games":
+        return (tg.raw("games.guide") as string[]) ?? [];
       case "guestbook":
         return (tg.raw("guestbook.guide") as string[]) ?? [];
       case "profile":

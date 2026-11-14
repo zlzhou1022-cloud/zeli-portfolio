@@ -2,9 +2,9 @@
 
 import { useTranslations } from "next-intl";
 
-// Lab 页的小游戏入口卡片：点击派发 ling:open-game 事件，由全局挂载的
-// LingGame 组件打开游戏弹窗（与吉祥物气泡里的入口共用同一事件）。
-export function LabGameEntry() {
+// 小游戏专区的「慕斯向前冲」入口卡片：点击派发 ling:open-game 事件，由全局
+// 挂载的 LingGame 组件打开游戏弹窗（与吉祥物气泡里的入口共用同一事件）。
+export function GamesDashEntry() {
   const t = useTranslations("MiniGame");
   return (
     <button

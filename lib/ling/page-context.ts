@@ -27,6 +27,7 @@ const TEXT: Record<
     home: string;
     profile: string;
     lab: string;
+    games: string;
     guestbook: string;
     travels: (tripsList: string) => string;
     trip: (title: string, date: string, total: number) => string;
@@ -36,9 +37,10 @@ const TEXT: Record<
 > = {
   cn: {
     heading: "## 访客当前页面",
-    home: "访客此刻正在看：首页（有通往履历、实验室、旅行相册和留言板的卡片与菜单）。",
+    home: "访客此刻正在看：首页（有通往履历、实验室、旅行相册、小游戏专区和留言板的卡片与菜单）。",
     profile: "访客此刻正在看：个人主页（履历）页面。",
     lab: "访客此刻正在看：实验室与插件页面。",
+    games: "访客此刻正在看：小游戏专区页面（有和慕斯一起玩的两个小游戏：45 秒向上冲、看图猜县集章）。",
     guestbook: "访客此刻正在看：留言板页面。",
     travels: (list) => `访客此刻正在看：旅行相册列表页。本站的游记有：${list}。`,
     trip: (title, date, total) =>
@@ -48,9 +50,10 @@ const TEXT: Record<
   },
   jp: {
     heading: "## 訪問者が今見ているページ",
-    home: "訪問者は今、ホームページを見ています（プロフィール・ラボ・旅行アルバム・ゲストブックへのカードとメニューがあります）。",
+    home: "訪問者は今、ホームページを見ています（プロフィール・ラボ・旅行アルバム・ゲームコーナー・ゲストブックへのカードとメニューがあります）。",
     profile: "訪問者は今、プロフィール（経歴）のページを見ています。",
     lab: "訪問者は今、ラボ（実験とプラグイン）のページを見ています。",
+    games: "訪問者は今、ゲームコーナーのページを見ています（ムースと遊ぶ45秒ダッシュと県当てクイズがあります）。",
     guestbook: "訪問者は今、ゲストブックのページを見ています。",
     travels: (list) => `訪問者は今、旅行アルバムの一覧ページを見ています。このサイトの旅行記：${list}。`,
     trip: (title, date, total) =>
@@ -60,9 +63,10 @@ const TEXT: Record<
   },
   en: {
     heading: "## Page the visitor is currently viewing",
-    home: "The visitor is currently on the home page (with cards and menu links to the profile, lab, travel albums, and guestbook).",
+    home: "The visitor is currently on the home page (with cards and menu links to the profile, lab, travel albums, games corner, and guestbook).",
     profile: "The visitor is currently on the profile (resume) page.",
     lab: "The visitor is currently on the Lab & Plugins page.",
+    games: "The visitor is currently on the Mini Games page (two games played with Muse: the 45-second dash and the prefecture quiz).",
     guestbook: "The visitor is currently on the guestbook page.",
     travels: (list) => `The visitor is currently on the travel album list page. The site's travel stories are: ${list}.`,
     trip: (title, date, total) =>
@@ -72,7 +76,7 @@ const TEXT: Record<
   },
 };
 
-const KINDS = ["home", "profile", "lab", "travels", "trip", "guestbook"] as const;
+const KINDS = ["home", "profile", "lab", "games", "travels", "trip", "guestbook"] as const;
 
 export function buildPageContext(locale: LingLocale, raw: unknown): string {
   if (!raw || typeof raw !== "object") return "";
@@ -91,6 +95,9 @@ export function buildPageContext(locale: LingLocale, raw: unknown): string {
       break;
     case "lab":
       lines.push(tx.lab);
+      break;
+    case "games":
+      lines.push(tx.games);
       break;
     case "guestbook":
       lines.push(tx.guestbook);
