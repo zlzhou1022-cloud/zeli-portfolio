@@ -640,12 +640,16 @@ export function LingMascot() {
   const wide = typeof window !== "undefined" && window.innerWidth >= 480;
   const petW = wide ? 144 : 128;
   const petH = wide ? 168 : 152;
-  // 侧探头：图片按高度驱动渲染（宽 = 高 × 宽高比），在框内水平居中——把框
-  // 往屏外推「居中留白」的量，图的有画一侧就正好贴齐屏幕边缘、整图露完。
-  const sideImgW = petH * PEEK_SIDE_ASPECT;
+  // 停靠探头的大小按站长要求对齐「站立时脑袋的大小」（2026-11-14 反馈初版
+  // 撑满框太大）：侧图显示高 124/112（不再撑满 168/152 的框高，贴框底放），
+  // 底图显示宽 100/88。与站立图并排比对定的尺寸，脑袋视觉大小基本一致。
+  const sideImgH = wide ? 124 : 112;
+  const sideImgW = sideImgH * PEEK_SIDE_ASPECT;
+  // 侧探头图在框内水平居中——把框往屏外推「居中留白」的量，图的有画一侧
+  // 就正好贴齐屏幕边缘、整图露完。
   const sideInset = (petW - sideImgW) / 2;
-  // 底探头：横宽图按固定显示宽渲染（宽 200/170，高随之确定）
-  const bottomImgW = wide ? 200 : 170;
+  // 底探头：横宽图按固定显示宽渲染（高随之确定）
+  const bottomImgW = wide ? 100 : 88;
   const bottomImgH = bottomImgW / PEEK_BOTTOM_ASPECT;
   const renderX =
     dock === "left"
@@ -796,9 +800,12 @@ export function LingMascot() {
                     draggable={false}
                     className="block h-full w-auto max-w-none mx-auto pointer-events-none"
                     style={{
-                      // 底探头是横宽图，不能按框高撑满：固定图高（行内样式压
-                      // 过 h-full），图宽按比例，居中溢出框外两侧
-                      height: dock === "bottom" ? bottomImgH : undefined,
+                      // 停靠探头按脑袋大小定尺寸（行内样式压过 h-full）：底图
+                      // 固定图高、宽按比例居中；侧图固定图高并用 marginTop
+                      // 贴到框底（人小了之后贴着框底探头更自然）
+                      height:
+                        dock === "bottom" ? bottomImgH : dock === "left" || dock === "right" ? sideImgH : undefined,
+                      marginTop: dock === "left" || dock === "right" ? petH - sideImgH : undefined,
                       transform: dragging ? (zoneHot ? "scale(1.04)" : `scale(${LIFT_SCALE})`) : undefined,
                       transformOrigin: "50% 100%",
                       transition: "transform .15s ease-out",
