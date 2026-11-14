@@ -200,6 +200,7 @@
       "You can also drag me anywhere and leave me there. I don't mind."
     ],
     "wardrobeCta": "Wardrobe",
+    "roomCta": "Her room",
     "timeGreetings": {
       "morning": [
         "Good morning! I'm Muse — let's explore together today.",
@@ -341,12 +342,21 @@
         "It's also fun to browse what everyone else has written first."
       ]
     },
+    "room": {
+          "intro": "This is Muse's room — where you earn stars and buy her furniture. She lives here.",
+          "guide": [
+                "Check in daily for stars and a snack; when you've saved enough, the shop below sells her furniture.",
+                "She walks over and uses what you buy: reaching for books, writing at her desk, reading on the rug.",
+                "Her status shows when she's hungry, tired or bored — snacks, play and rest all help."
+          ]
+    },
     "games": {
       "intro": "Welcome to the games corner! Every game here is one you play together with me.",
       "guide": [
         "The top card is the 45-second dash game — tap it and we'll play a round together. Score 300 in one run to unlock my sportswear.",
         "The bottom card is the prefecture quiz: guess where Zeli's travel photos were taken, and correct answers earn stamps on your map.",
-        "From any other page, drag me onto the bubble at the top of the screen and let go — it brings you straight here. I'll be waiting back where I was."
+        "From any other page, drag me onto the bubble at the top of the screen and let go — it brings you straight here. I'll be waiting back where I was.",
+        "At the bottom is my little room — earn stars and buy me furniture there. Come visit often."
       ]
     }
   },
@@ -381,7 +391,117 @@
   },
   "GamesPage": {
     "title": "Mini Games",
-    "description": "A corner of games to play with Muse: a 45-second dash, and a guess-the-prefecture quiz over travel photos. She hosts both.",
+    "description": "A corner of games to play with Muse: a 45-second dash, a guess-the-prefecture quiz over travel photos, and a little room where you earn stars to buy her furniture. She hosts them all.",
     "backHome": "Back to home"
+  },
+  "Room": {
+    "pageTitle": "Muse's Room",
+    "pageDesc": "A little room where Muse lives. Earn stars from the mini games and daily check-ins to buy her furniture — she'll wander over and use it herself. Come back often; she remembers you.",
+    "backGames": "Back to Mini Games",
+    "starsLabel": "Stars",
+    "snackLabel": "Snacks",
+    "intimacyLabel": "Intimacy",
+    "status": {
+      "satiety": "Fullness",
+      "mood": "Mood",
+      "energy": "Energy"
+    },
+    "checkin": "Daily check-in",
+    "checkedIn": "Checked in today",
+    "checkinDone": "Checked in! +10 stars, and a snack, too.",
+    "welcomeLine": "A welcome gift — 20 stars, just for you. Let's get her room something nice first?",
+    "welcomeGift": "Welcome gift +20 stars",
+    "feed": "Give a snack",
+    "feedDone": "Yummy! Thank you.",
+    "noSnack": "No snacks left — tomorrow's check-in brings another.",
+    "play": "Play together",
+    "playDone": "Hehe — stay a little longer?",
+    "playLimit": "That's plenty of play for today; let her rest a bit.",
+    "rest": "Let her rest",
+    "restDone": "Zzz… just a tiny nap.",
+    "restLimit": "She already rested today.",
+    "shopTitle": "Furniture shop",
+    "shopHint": "Buying places it in the room — she'll walk over and use it herself.",
+    "buy": "Buy",
+    "ownedLabel": "In the room",
+    "notEnough": "Not enough stars yet — earn some in the mini games, or check in tomorrow.",
+    "boughtLine": "New furniture! Let me go try it.",
+    "dashNote": "In Muse Dash, a run scoring 150 earns +3 stars and 300 earns +8 — up to 3 runs settled per day.",
+    "quizNote": "In the prefecture quiz, the first correct answer each day earns +5 stars.",
+    "discoveryTitle": "Today's little discovery",
+    "nextLevel": "{xp} XP to Lv.{next}",
+    "furnitureNames": {
+      "rug": "Woven rug",
+      "plant": "Leafy plant",
+      "bookshelf": "Little bookshelf",
+      "desk": "Wooden desk"
+    },
+    "lines": {
+      "idleHappy": [
+        "Wandering the room, in a great mood.",
+        "Humming while she waits for you."
+      ],
+      "idleOk": [
+        "Spacing out, thinking about dinner."
+      ],
+      "idleHungry": [
+        "Her tummy's a bit empty… got anything?"
+      ],
+      "idleTired": [
+        "Eyelids getting heavy… but she can stay up a bit more."
+      ],
+      "idleLowMood": [
+        "A little low today. Stay with her a while?"
+      ],
+      "walk": [
+        "I'll go look!",
+        "Off to check it out."
+      ],
+      "shelf": [
+        "This book's unfinished… found it, right here.",
+        "On tiptoes… got it!"
+      ],
+      "desk": [
+        "Writing down today's thoughts.",
+        "Scratch scratch… writing is the calmest part of the day."
+      ],
+      "rug": [
+        "Reading on the rug. So soft.",
+        "Best seat in the house: the rug."
+      ],
+      "rest": [
+        "Just a tiny nap… a very tiny one…",
+        "All recharged — let's play again."
+      ],
+      "reunion": [
+        "You're back! She's been waiting.",
+        "She ate properly these past days… probably. Come in, come in!"
+      ]
+    },
+    "discovery": {
+      "general1": "A tiny ladybug landed on the windowsill. She counted its spots.",
+      "general2": "She turned the cup on the desk around, saying it looks better this way.",
+      "general3": "Today's clouds look like cotton candy. She stared out the window for a long while.",
+      "general4": "She drew a star in her notebook and said it was saved for you.",
+      "shelf1": "The top-shelf book needed full tiptoes — she nearly wobbled off balance.",
+      "desk1": "She wrote half a page of diary at the desk. It starts with “Another fine day today.”",
+      "rug1": "The rug is so soft she nearly dozed off mid-chapter.",
+      "plant1": "The plant grew a tiny bit taller. She measured it against her hand.",
+      "hungry1": "Her tummy just growled. She pretended it was a bird outside.",
+      "happy1": "She's in an especially good mood today — little skips in her steps.",
+      "close1": "She says this room feels more like a home because you visit.",
+      "close2": "She saved half of her favourite snack, saying you'd share it when you came."
+    },
+    "rulesTitle": "How it works",
+    "rules": [
+      "Check in daily for +10 stars and a snack; keep the streak going.",
+      "Stars buy furniture. Buying places it in the room, and she'll walk over and use it herself.",
+      "Fullness, mood and energy drift down over time. Snacks, playing and rest bring them back — they never hit zero, she just gets a little needy.",
+      "Intimacy grows from check-ins, care and time spent in the room, and never decreases. A special outfit is in the works for Lv.7.",
+      "Progress lives only in this browser on this device — clearing browser data resets it. Think of it as a tiny room in your pocket."
+    ],
+    "entryTitle": "Muse's Room",
+    "entryDesc": "A little room of her own — earn stars, buy furniture, and watch her wander, read and sit on her rug. Visit often; she remembers you.",
+    "entryCta": "Visit her"
   }
 }

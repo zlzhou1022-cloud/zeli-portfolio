@@ -347,6 +347,8 @@ export function LingMascot() {
         return (tg.raw("home.guide") as string[]) ?? [];
       case "games":
         return (tg.raw("games.guide") as string[]) ?? [];
+      case "room":
+        return (tg.raw("room.guide") as string[]) ?? [];
       case "guestbook":
         return (tg.raw("guestbook.guide") as string[]) ?? [];
       case "profile":
@@ -679,6 +681,13 @@ export function LingMascot() {
     touch();
     setBubbleOpen(false);
     if (pathname !== `/${locale}/games`) router.push(`/${locale}/games`);
+  };
+
+  // 「去她的小屋」：直达养成页 /games/room（站长 2026-11-15 小屋一期）
+  const goRoom = () => {
+    touch();
+    setBubbleOpen(false);
+    if (pathname !== `/${locale}/games/room`) router.push(`/${locale}/games/room`);
   };
 
   const hideForNow = () => {
@@ -1036,7 +1045,7 @@ export function LingMascot() {
                 <p className="text-sm leading-relaxed text-stone-800 dark:text-stone-100">
                   {toastLine ?? pageLine ?? lines[lineIdx] ?? lines[0] ?? ""}
                 </p>
-                <div className="mt-3 flex items-center gap-2">
+                <div className="mt-3 flex items-center gap-2 flex-wrap">
                   <button
                     onClick={openChat}
                     className="bg-stone-900 dark:bg-stone-100 text-stone-50 dark:text-stone-900 px-3 py-1.5 text-xs font-medium cursor-pointer hover:bg-stone-700 dark:hover:bg-stone-300 transition-colors"
@@ -1048,6 +1057,12 @@ export function LingMascot() {
                     className="border border-sky-400 text-sky-700 dark:text-sky-300 px-3 py-1.5 text-xs font-medium cursor-pointer hover:bg-sky-50 dark:hover:bg-sky-950 transition-colors"
                   >
                     {t("playCta")}
+                  </button>
+                  <button
+                    onClick={goRoom}
+                    className="border border-amber-400 text-amber-700 dark:text-amber-300 px-3 py-1.5 text-xs font-medium cursor-pointer hover:bg-amber-50 dark:hover:bg-amber-950 transition-colors"
+                  >
+                    {t("roomCta")}
                   </button>
                   <button
                     onClick={() => setWardrobeOpen(true)}

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { GamesDashEntry } from "@/components/lab-game-entry";
 import { GamesStampEntry } from "@/components/lab-stamp-entry";
+import { GamesRoomEntry } from "@/components/room-entry";
 
 // 小游戏专区（站长 2026-11-14 改版）：原来挂在 Lab 页的两个游戏入口搬到这里
 // 独立成页，首页有专门的模块卡片通向本页。
@@ -32,6 +33,9 @@ export default function GamesPage() {
 
         {/* 看图猜县 · 集章入口 */}
         <GamesStampEntry />
+
+        {/* 慕斯的小屋入口 */}
+        <GamesRoomEntry />
       </div>
 
       {/* 底部返回按钮 */}
