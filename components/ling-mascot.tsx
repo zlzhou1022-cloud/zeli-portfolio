@@ -566,8 +566,14 @@ export function LingMascot() {
       seen = [];
     }
     if (seen.includes(key)) return;
-    const text = introText(info);
+    let text = introText(info);
     if (!text) return;
+    // 主页的第一句招呼带上时段问候（站长 2026-11-15）：主页介绍会被页面介绍
+    // 抢先触发、6 秒邀请在主页几乎不出现，所以时段问候拼在主页介绍前面。
+    if (info.kind === "home") {
+      const timed = pickTimedInvite(t.raw("timeGreetings"));
+      if (timed) text = `${timed} ${text}`;
+    }
     seen.push(key);
     try {
       sessionStorage.setItem(SEEN_KEY, JSON.stringify(seen));
