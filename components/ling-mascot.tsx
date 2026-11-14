@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
-import { usePathname } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
+import { usePathname, useRouter } from "next/navigation";
 import { parsePage, pageKey, type PageInfo } from "@/lib/page-guide";
 import { getTripById } from "@/lib/travel-data";
 import {
@@ -136,6 +136,8 @@ export function LingMascot() {
   const tg = useTranslations("PageGuide");
   const tt = useTranslations("Trips");
   const pathname = usePathname();
+  const router = useRouter();
+  const locale = useLocale();
 
   const [mounted, setMounted] = useState(false);
   const [hidden, setHidden] = useState(true);
@@ -205,7 +207,6 @@ export function LingMascot() {
           ? "present"
           : "lifted"
         : (reaction ?? (dozing ? "doze" : idlePose));
-  const bubbleBelow = pos.y < 330;
 
   useEffect(() => {
     posRef.current = pos;
@@ -620,10 +621,12 @@ export function LingMascot() {
     window.dispatchEvent(new CustomEvent("ling:open-chat"));
   };
 
-  const openGame = () => {
+  // 「一起玩游戏」（站长 2026-11-14 深夜改版）：气泡按钮与拖放投放都不再直达
+  // 向前冲弹窗，统一跳到小游戏专区页 /games，让访客自己挑玩哪个。
+  const goGames = () => {
     touch();
     setBubbleOpen(false);
-    window.dispatchEvent(new CustomEvent("ling:open-game"));
+    if (pathname !== `/${locale}/games`) router.push(`/${locale}/games`);
   };
 
   const hideForNow = () => {
@@ -700,7 +703,7 @@ export function LingMascot() {
       suppressClickRef.current = Date.now();
       touch();
       if (zoneHotRef.current) {
-        // 投进游戏气泡：游戏打开的同时她回到被拖起前的位置（不留在投放点）
+        // 投进游戏气泡：跳去小游戏专区的同时她回到被拖起前的位置（不留在投放点）
         const origin = { x: d.originX, y: d.originY };
         setPos(origin);
         try {
@@ -708,7 +711,7 @@ export function LingMascot() {
         } catch {
           /* 存不下就算了 */
         }
-        openGame();
+        goGames();
       } else {
         try {
           localStorage.setItem(POS_KEY, JSON.stringify(posRef.current));
@@ -774,6 +777,17 @@ export function LingMascot() {
           : pos.x;
   // 底探头图是顶对齐渲染的：框顶 = 屏高 − 图高，图的下切边正好落在屏幕底边
   const renderY = dock === "bottom" ? window.innerHeight - bottomImgH : pos.y;
+
+  // 气泡防溢出（站长 2026-11-14 深夜验收：她在页面边缘时点开气泡会被切掉，
+  // 必须拖到中间才能看全）：横向右溢出时整体左移钳回屏内（两侧留 8px）；
+  // 纵向按内容估高决定朝上/朝下开（普通台词约 200，换装面板约 500），
+  // 上方放不下且下方更宽敞就朝下开，不再用写死的 330 一刀切。
+  const bubbleW = Math.min(wardrobeOpen ? 288 : 240, window.innerWidth - 48);
+  const bubbleLeft = Math.max(8 - renderX, Math.min(0, window.innerWidth - 8 - bubbleW - renderX));
+  const estBubbleH = wardrobeOpen ? 500 : 200;
+  const roomAbove = renderY;
+  const roomBelow = window.innerHeight - (renderY + petH);
+  const bubbleBelow = roomAbove < estBubbleH + 12 && roomBelow > roomAbove;
 
   const dismissCelebration = () => {
     if (celebrateTimerRef.current) clearTimeout(celebrateTimerRef.current);
@@ -873,7 +887,8 @@ export function LingMascot() {
       <div className="relative w-[128px] h-[152px] min-[480px]:w-[144px] min-[480px]:h-[168px]">
         {bubbleOpen && !dragging && (
           <div
-            className={`absolute left-0 z-20 ${wardrobeOpen ? "w-72" : "w-60"} max-w-[calc(100vw-3rem)] rounded-2xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 shadow-xl p-3.5 ${
+            style={{ left: bubbleLeft }}
+            className={`absolute z-20 ${wardrobeOpen ? "w-72" : "w-60"} max-w-[calc(100vw-3rem)] rounded-2xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 shadow-xl p-3.5 ${
               bubbleBelow ? "top-full mt-2" : "bottom-full mb-1"
             }`}
           >
@@ -959,7 +974,7 @@ export function LingMascot() {
                     {t("chatCta")}
                   </button>
                   <button
-                    onClick={openGame}
+                    onClick={goGames}
                     className="border border-sky-400 text-sky-700 dark:text-sky-300 px-3 py-1.5 text-xs font-medium cursor-pointer hover:bg-sky-50 dark:hover:bg-sky-950 transition-colors"
                   >
                     {t("playCta")}
