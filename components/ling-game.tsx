@@ -16,7 +16,7 @@ import { getCurrentOutfit, poseSrc, notifyProgress } from "@/lib/outfit";
 // 倍墙速下落，两者错速避免「躲墙必撞弹」。形象按移动方向切：向左跑用向左
 // 贴图、向右跑用向右贴图（同一张侧面图的镜像），停下/被拦住用站立帧。
 // 纯前端 canvas，最高分存 localStorage，无后端、不吃聊天配额。
-// 打开方式：window 事件 "ling:open-game"（桌宠气泡、Lab 页卡片派发）。
+// 打开方式：window 事件 "ling:open-game"（桌宠气泡、小游戏专区卡片派发）。
 // 主角形象：桌宠同款慕斯抠图（按时装库当前套装取 run-left/run-right/look，
 // 见 lib/outfit.ts），加载失败时回退白团子。最高分 ≥300 解锁运动装：结算
 // 写完最高分后发 muse:progress，桌宠那边会冒泡报喜。

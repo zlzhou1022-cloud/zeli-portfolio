@@ -107,6 +107,25 @@ export default function Home() {
           </Link>
         </TextReveal>
 
+        {/* Games - 与留言板同排的小块（小游戏专区，2026-11-14 新增） */}
+        <TextReveal delay={500} className="md:col-span-5">
+          <Link href="/games" className="group relative overflow-hidden border border-stone-200 dark:border-stone-800 transition-all hover:border-stone-400 dark:hover:border-stone-600 cursor-pointer block bg-white dark:bg-stone-950 hover-lift h-full">
+            <div className="p-6 md:p-8 h-full flex flex-col justify-between min-h-[180px]">
+              <div>
+                <div className="text-xs tracking-[0.2em] uppercase text-stone-400 dark:text-stone-500 mb-3 font-medium">05</div>
+                <h3 className="text-2xl font-serif mb-3 text-stone-900 dark:text-stone-100 transition-colors">{t("modules.games.title")}</h3>
+                <p className="text-xs text-stone-600 dark:text-stone-400 leading-relaxed transition-colors font-light">
+                  {t("modules.games.desc")}
+                </p>
+              </div>
+              <div className="text-xs font-medium text-stone-900 dark:text-stone-100 flex items-center gap-2 transition-colors mt-4">
+                <span className="group-hover:translate-x-1 transition-transform">→</span>
+                {t("modules.games.link")}
+              </div>
+            </div>
+          </Link>
+        </TextReveal>
+
       </section>
     </div>
   );

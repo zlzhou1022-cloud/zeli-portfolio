@@ -52,7 +52,7 @@ winter: [12, 1, 2],
 };
 
 // navigate_to 白名单：只允许这些站内页面（单篇游记单独校验 id 存在）。
-const STATIC_PATHS = ["", "/profile", "/lab", "/travels", "/guestbook"];
+const STATIC_PATHS = ["", "/profile", "/lab", "/games", "/travels", "/guestbook"];
 
 function normalizeNavPath(locale: LingLocale, raw: string): string | null {
 let p = raw.trim();
@@ -208,7 +208,7 @@ if (!normalized) {
 return {
 ok: false,
 note: "That path is not an allowed internal page. Use a plain Markdown link instead.",
-allowed: ["/", "/profile", "/lab", "/travels", "/travels/<tripId>", "/guestbook"],
+allowed: ["/", "/profile", "/lab", "/games", "/travels", "/travels/<tripId>", "/guestbook"],
 };
 }
 return { ok: true, path: normalized};
