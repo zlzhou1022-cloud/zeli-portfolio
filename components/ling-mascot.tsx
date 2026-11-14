@@ -59,6 +59,7 @@ const MASCOT_ENABLED = process.env.NEXT_PUBLIC_LING_MASCOT_ENABLED !== "0";
 const HIDDEN_KEY = "ling_mascot_hidden";
 const INVITED_KEY = "ling_mascot_invited";
 const POS_KEY = "muse_pet_pos";
+const POS_VER_KEY = "muse_pet_pos_ver";
 const SEEN_KEY = "muse_page_seen";
 
 // 解锁庆祝彩带（站长 2026-11-14）：达成解锁条件时全屏飘彩带 + 顶部横幅。
@@ -135,8 +136,10 @@ function clampPos(p: { x: number; y: number }) {
 
 function defaultPos() {
   const wide = window.innerWidth >= 480;
+  const w = wide ? 144 : 128;
   const h = wide ? 168 : 152;
-  return { x: wide ? 32 : 20, y: window.innerHeight - h - (wide ? 32 : 20) };
+  // 初始位置 = 页面右下角（站长 2026-11-15 指定，原为左下角）
+  return { x: window.innerWidth - w - (wide ? 32 : 20), y: window.innerHeight - h - (wide ? 32 : 20) };
 }
 
 export function LingMascot() {
@@ -387,11 +390,14 @@ export function LingMascot() {
       setHidden(localStorage.getItem(HIDDEN_KEY) === "1");
       let initial = defaultPos();
       try {
+        // 位置版本 <2 的旧记录作废一次：初始位置改右下角后，老访客（含站长
+        // 本人）存量位置也要落到新默认，否则改了看不见（2026-11-15）
         const raw = localStorage.getItem(POS_KEY);
-        if (raw) {
+        if (raw && localStorage.getItem(POS_VER_KEY) === "2") {
           const parsed = JSON.parse(raw) as { x: number; y: number };
           if (typeof parsed.x === "number" && typeof parsed.y === "number") initial = parsed;
         }
+        localStorage.setItem(POS_VER_KEY, "2");
       } catch {
         /* 位置记录坏了就用默认角落 */
       }
