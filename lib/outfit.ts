@@ -5,11 +5,14 @@
 // - 运动装：「慕斯向前冲」单局最高分（ling_game_best）≥ 300
 // - 学生制服：猜县游戏答对过 ≥1 个县（muse_quiz_correct 标记，或已有 ≥1 枚章）
 // - 和风袴装：在留言板成功留言一次（muse_guestbook_posted 标记）
-// - 旅行装：集章（muse_stamps）满 47/47
+// - 旅行装：相册里有照片的县全部答对盖章（站长 2026-11-14 晚改版，原为 47/47；
+//   目标县由 lib/travel-data 现算，新游记上架后自动增加）
 // 当前穿着存 muse_outfit；失效（未解锁/数据被清）时自动回落默认装。
 // 姿势图按套装分目录：默认装在 /muse-pet/ 根下，其余在 /muse-pet/<套装>/
 // 同名文件。某套图还没做完时 OUTFIT_READY 不含它——面板里显示「准备中」，
 // 即使已解锁也不能选（避免选了个空壳）。图齐一套、READY 加一套。
+
+import { getAllTrips } from "./travel-data";
 
 export type OutfitId = "default" | "sport" | "school" | "hakama" | "travel";
 
@@ -65,7 +68,13 @@ const GUESTBOOK_KEY = "muse_guestbook_posted";
 const TOASTED_PREFIX = "muse_toasted_";
 
 export const SPORT_UNLOCK_SCORE = 300;
-export const TRAVEL_UNLOCK_STAMPS = 47;
+
+/** 相册里有照片的县（旅行装的解锁目标集）：由游记数据现算，新游记自动加入 */
+export function photoPrefectures(): string[] {
+  const set = new Set<string>();
+  for (const trip of getAllTrips()) for (const photo of trip.photos) set.add(photo.prefecture);
+  return [...set];
+}
 
 export function poseSrc(outfit: OutfitId, pose: PoseName): string {
   const file = POSE_FILES[pose];
@@ -125,8 +134,10 @@ export function outfitStatus(id: OutfitId): { unlocked: boolean; progress: Outfi
     case "hakama":
       return { unlocked: readFlag(GUESTBOOK_KEY), progress: { value: null, target: null } };
     case "travel": {
-      const stamps = readStamps().length;
-      return { unlocked: stamps >= TRAVEL_UNLOCK_STAMPS, progress: { value: stamps, target: TRAVEL_UNLOCK_STAMPS } };
+      const targets = photoPrefectures();
+      const stamped = new Set(readStamps());
+      const value = targets.filter((p) => stamped.has(p)).length;
+      return { unlocked: targets.length > 0 && value >= targets.length, progress: { value, target: targets.length } };
     }
   }
 }
