@@ -16,6 +16,7 @@ import {
   doCheckin,
   feed,
   intimacyLevel,
+  ROOM_KEY,
   loadSave,
   persistSave,
   pickAutoTarget,
@@ -261,6 +262,17 @@ export function MuseRoom() {
       clearTimers();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // 其他标签页写入存档时同步过来（双开标签时不互相覆盖进度显示）
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== ROOM_KEY || !e.newValue) return;
+      const now = Date.now();
+      setSave(settle(loadSave(now), now));
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
   }, []);
 
   // ---------------- 访客操作 ----------------

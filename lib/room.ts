@@ -245,6 +245,9 @@ export interface FurnitureDef {
   price: number;
   /** 是否有互动（绿植一期为纯装饰） */
   interactive: boolean;
+  /** 资产来源（可追溯）：composite=合体图拆层；independent-base=单体独立生成（仅地毯特例：
+      她坐姿遮挡的毯心无法从合体图还原，故按同一设计单独生成单体，人物层仍拆自合体图） */
+  assetMode: "composite" | "independent-base";
   /** 互动持续 ms */
   duration: number;
   /** 互动一次的亲密度经验（完成时结算） */
@@ -261,6 +264,7 @@ const R = "/muse-room";
 export const FURNITURE: Record<FurnitureId, FurnitureDef> = {
   rug: {
     id: "rug",
+    assetMode: "independent-base",
     slot: "rug",
     price: 20,
     interactive: true,
@@ -275,6 +279,7 @@ export const FURNITURE: Record<FurnitureId, FurnitureDef> = {
   },
   bookshelf: {
     id: "bookshelf",
+    assetMode: "composite",
     slot: "shelf",
     price: 40,
     interactive: true,
@@ -289,6 +294,7 @@ export const FURNITURE: Record<FurnitureId, FurnitureDef> = {
   },
   desk: {
     id: "desk",
+    assetMode: "composite",
     slot: "desk",
     price: 60,
     interactive: true,
@@ -303,6 +309,7 @@ export const FURNITURE: Record<FurnitureId, FurnitureDef> = {
   },
   plant: {
     id: "plant",
+    assetMode: "composite",
     slot: "corner",
     price: 30,
     interactive: false,
