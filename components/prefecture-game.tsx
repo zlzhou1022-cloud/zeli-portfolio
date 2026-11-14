@@ -8,6 +8,7 @@ import japan from "@svg-maps/japan";
 import { PREFECTURES, getPrefecture, type Prefecture } from "@/lib/prefectures";
 import { getAllTrips } from "@/lib/travel-data";
 import { getCurrentOutfit, poseSrc, markQuizCorrect, notifyProgress } from "@/lib/outfit";
+import { mutateSave, claimQuizStar } from "@/lib/room";
 
 // 看图猜县 + 日本地图集章（2026-11-14，站长定方向、慕斯主持）：
 // - 猜县：从旅行相册的照片里随机出题（照片的拍摄县在 lib/travel-data.ts 里
@@ -19,6 +20,18 @@ import { getCurrentOutfit, poseSrc, markQuizCorrect, notifyProgress } from "@/li
 // - 时装库联动：主持头像穿访客当前套装；第一次答对时记 muse_quiz_correct
 //   （学生制服的解锁条件），章数变化通知桌宠检查解锁提示（旅行装 47 章）。
 const STAMPS_KEY = "muse_stamps";
+
+/** 小屋星星：每日首次答对 +5（lib/room.ts 内按日期去重）；异常不挡答题 */
+function awardQuizStar() {
+  try {
+    const now = Date.now();
+    mutateSave(now, (save) => {
+      claimQuizStar(save, now);
+    });
+  } catch {
+    /* 小屋存档异常不挡答题 */
+  }
+}
 
 type Loc = "cn" | "jp" | "en";
 
@@ -165,6 +178,7 @@ export function PrefectureGame() {
       setCorrect((c) => c + 1);
       // 第一次答对即解锁学生制服（lib/outfit.ts 的判定读这个标记）
       markQuizCorrect();
+      awardQuizStar();
       if (!stamps.includes(current.pref)) {
         setStamps((s) => [...s, current.pref]);
         setLine(t("stampLine"));

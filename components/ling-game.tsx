@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { getCurrentOutfit, poseSrc, notifyProgress } from "@/lib/outfit";
+import { mutateSave, settleDash } from "@/lib/room";
 
 // 慕斯向前冲：45 秒一局的竖版跑酷小游戏。玩法由站长 2026-11-14 亲自定稿
 // （上一版「踩横杆躲地刺」被他否决：难懂）：慕斯向画面上方奔跑，画面自动
@@ -223,6 +224,14 @@ export function LingGame() {
 
     const finish = (reason: "time" | "lives") => {
       cancelAnimationFrame(raf);
+      // 小屋星星结算（评审定版：每局占一次日结算名额，150→3 星 / 300→8 星，日限 3 局）
+      try {
+        mutateSave(Date.now(), (save) => {
+          settleDash(save, s.score, Date.now());
+        });
+      } catch {
+        /* 小屋存档异常不挡游戏结算 */
+      }
       setScore(s.score);
       setLives(s.lives);
       setOverReason(reason);

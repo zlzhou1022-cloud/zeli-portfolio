@@ -52,7 +52,7 @@ winter: [12, 1, 2],
 };
 
 // navigate_to 白名单：只允许这些站内页面（单篇游记单独校验 id 存在）。
-const STATIC_PATHS = ["", "/profile", "/lab", "/games", "/travels", "/guestbook"];
+const STATIC_PATHS = ["", "/profile", "/lab", "/games", "/games/prefecture-game", "/games/room", "/travels", "/guestbook"];
 
 function normalizeNavPath(locale: LingLocale, raw: string): string | null {
 let p = raw.trim();
@@ -198,7 +198,7 @@ matched.length > 0
 
 navigate_to: tool({
 description:
-"Offer the visitor a navigation card to an internal page. Call this when you recommend a specific page: the visitor sees an 'open page' card and clicks it themselves (no automatic redirect). Valid targets: home, /profile, /lab, /travels, /travels/<tripId>, /guestbook (with or without locale prefix). After calling it, still write a normal sentence telling the visitor what the page is.",
+"Offer the visitor a navigation card to an internal page. Call this when you recommend a specific page: the visitor sees an 'open page' card and clicks it themselves (no automatic redirect). Valid targets: home, /profile, /lab, /games, /games/prefecture-game, /games/room (Muse's Room, the care page), /travels, /travels/<tripId>, /guestbook (with or without locale prefix). After calling it, still write a normal sentence telling the visitor what the page is.",
 inputSchema: z.object({
 path: z.string().describe("Internal path such as /travels/tohoku-feb-2026 or /profile"),
 }),
@@ -208,7 +208,7 @@ if (!normalized) {
 return {
 ok: false,
 note: "That path is not an allowed internal page. Use a plain Markdown link instead.",
-allowed: ["/", "/profile", "/lab", "/games", "/travels", "/travels/<tripId>", "/guestbook"],
+allowed: ["/", "/profile", "/lab", "/games", "/games/prefecture-game", "/games/room", "/travels", "/travels/<tripId>", "/guestbook"],
 };
 }
 return { ok: true, path: normalized};
