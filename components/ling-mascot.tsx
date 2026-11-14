@@ -162,6 +162,8 @@ export function LingMascot() {
   // 解锁庆祝：彩带碎片 + 顶部横幅（与气泡报喜同时触发，6.5 秒后自动散场）
   const [celebration, setCelebration] = useState<{ id: OutfitId; pieces: ConfettiPiece[] } | null>(null);
   const celebrateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // 庆祝进行中标记：期间新的解锁先排队，散场后由 dismissCelebration 接龙补报
+  const celebratingRef = useRef(false);
   const [peekAspect, setPeekAspect] = useState({ side: PEEK_SIDE_ASPECT, bottom: PEEK_BOTTOM_ASPECT });
 
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -230,10 +232,13 @@ export function LingMascot() {
   // 也不记标记，等她出来再报。
   const checkUnlockToasts = () => {
     if (localStorage.getItem(HIDDEN_KEY) === "1") return;
+    // 已有一场庆祝在进行：新解锁的先别抢场，散场接龙时会轮到它
+    if (celebratingRef.current) return;
     for (const id of OUTFIT_ORDER) {
       if (id === "default") continue;
       if (outfitStatus(id).unlocked && !wasToasted(id)) {
         markToasted(id);
+        celebratingRef.current = true;
         touch();
         playReaction("wave");
         // 图还没齐的套装也庆祝，只是文案说明还在赶制中，不许诺能立刻换上
@@ -246,7 +251,13 @@ export function LingMascot() {
         // 同步全屏庆祝：彩带 + 顶部横幅（减少动效时只出横幅不出彩带）
         setCelebration({ id, pieces: reducedRef.current ? [] : makeConfettiPieces() });
         if (celebrateTimerRef.current) clearTimeout(celebrateTimerRef.current);
-        celebrateTimerRef.current = setTimeout(() => setCelebration(null), 6500);
+        celebrateTimerRef.current = setTimeout(() => {
+          // 散场后接龙补报下一套待报喜的（经 muse:progress 通道回到检查函数，
+          // 避免在此处前向引用渲染后段才声明的 dismissCelebration）
+          celebratingRef.current = false;
+          setCelebration(null);
+          setTimeout(() => window.dispatchEvent(new Event("muse:progress")), 400);
+        }, 6500);
         break;
       }
     }
@@ -268,6 +279,8 @@ export function LingMascot() {
       setLineIdx(0);
       setBubbleOpen(true);
     }, 380);
+    // 藏着期间解锁的套装没报过喜，她站稳后补查（有待报的会盖过问候气泡）
+    setTimeout(() => checkUnlockToasts(), 950);
   };
 
   // ---- 页面感知：当前页解析 / 介绍文 / 点击台词池 ----
@@ -346,6 +359,8 @@ export function LingMascot() {
       setLeaving(false);
       localStorage.removeItem(HIDDEN_KEY);
       setHidden(false);
+      // 她藏着时解锁的套装没报喜（检查会跳过隐藏状态），回来后补查一遍
+      setTimeout(() => checkUnlockToasts(), 900);
     };
     window.addEventListener("ling:chat-opened", revive);
     // 时装库同步：别处（换装面板/小游戏/猜县）改了穿着或成就进度，这里跟上
@@ -759,7 +774,11 @@ export function LingMascot() {
 
   const dismissCelebration = () => {
     if (celebrateTimerRef.current) clearTimeout(celebrateTimerRef.current);
+    celebratingRef.current = false;
     setCelebration(null);
+    // 接龙：还有别的套装解锁没报喜，散场后紧接着报下一套（站长 2026-11-14 验收：
+    // 制服+袴装同时待报时，旧逻辑只报一套、另一套被无声吞掉）
+    setTimeout(() => checkUnlockToasts(), 400);
   };
   const goWardrobe = () => {
     dismissCelebration();
