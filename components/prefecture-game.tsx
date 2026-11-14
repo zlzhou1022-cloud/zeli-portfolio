@@ -257,8 +257,10 @@ export function PrefectureGame() {
           ) : current ? (
             <div className="space-y-5">
               {/* 照片走 next/image（与相册页一致：经站点域名优化下发，不直连图床） */}
-              <div className="relative w-full aspect-[4/3] border border-stone-200 dark:border-stone-800 bg-stone-100 dark:bg-stone-900">
-                <Image src={current.src} alt="" fill sizes="(max-width: 1024px) 100vw, 1024px" className="object-cover" />
+              {/* 照片按原比例完整显示（站长 2026-11-15 验收）：舞台固定高度，
+                  object-contain 不裁剪、不变形，竖图左右留舞台底色 */}
+              <div className="relative w-full h-[min(62vh,540px)] border border-stone-200 dark:border-stone-800 bg-stone-100 dark:bg-stone-900">
+                <Image src={current.src} alt="" fill sizes="(max-width: 1024px) 100vw, 1024px" className="object-contain" />
               </div>
               <p className="text-lg font-serif text-stone-900 dark:text-stone-100">{t("question")}</p>
               <div className="grid grid-cols-2 gap-3">
@@ -399,7 +401,7 @@ export function PrefectureGame() {
                         alt={ph.place[loc]}
                         width={96}
                         height={64}
-                        className="w-24 h-16 object-cover border border-stone-200 dark:border-stone-800 hover:opacity-85 transition-opacity"
+                        className="w-24 h-16 object-contain bg-stone-100 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 hover:opacity-85 transition-opacity"
                       />
                     </Link>
                   ))}
