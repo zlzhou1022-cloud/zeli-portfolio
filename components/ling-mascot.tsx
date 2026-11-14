@@ -231,12 +231,17 @@ export function LingMascot() {
   const checkUnlockToasts = () => {
     if (localStorage.getItem(HIDDEN_KEY) === "1") return;
     for (const id of OUTFIT_ORDER) {
-      if (id === "default" || !OUTFIT_READY.includes(id)) continue;
+      if (id === "default") continue;
       if (outfitStatus(id).unlocked && !wasToasted(id)) {
         markToasted(id);
         touch();
         playReaction("wave");
-        setToastLine(tw(`unlockLines.${id}`));
+        // 图还没齐的套装也庆祝，只是文案说明还在赶制中，不许诺能立刻换上
+        setToastLine(
+          OUTFIT_READY.includes(id)
+            ? tw(`unlockLines.${id}`)
+            : tw("unlockPendingLine", { name: tw(`names.${id}`) }),
+        );
         setBubbleOpen(true);
         // 同步全屏庆祝：彩带 + 顶部横幅（减少动效时只出横幅不出彩带）
         setCelebration({ id, pieces: reducedRef.current ? [] : makeConfettiPieces() });
