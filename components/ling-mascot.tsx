@@ -328,6 +328,7 @@ export function LingMascot() {
       case "profile":
       case "lab":
       case "games":
+      case "garden":
       case "travels":
       case "guestbook":
         return tg(`${info.kind}.intro`);
@@ -349,6 +350,8 @@ export function LingMascot() {
         return (tg.raw("games.guide") as string[]) ?? [];
       case "room":
         return (tg.raw("room.guide") as string[]) ?? [];
+      case "garden":
+        return (tg.raw("garden.guide") as string[]) ?? [];
       case "guestbook":
         return (tg.raw("guestbook.guide") as string[]) ?? [];
       case "profile":
