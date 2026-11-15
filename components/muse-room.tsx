@@ -15,6 +15,7 @@ import {
   claimWelcome,
   doCheckin,
   feed,
+  hasRoomCharLayer,
   intimacyLevel,
   ROOM_KEY,
   loadSave,
@@ -23,6 +24,7 @@ import {
   pickDiscovery,
   playWith,
   restHer,
+  roomWithHerLayers,
   settle,
   todayStr,
 } from "@/lib/room";
@@ -165,8 +167,8 @@ export function MuseRoom() {
     const s = saveRef.current;
     if (!s) return;
     const def = FURNITURE[fid];
-    // 非默认装没有互动图层：只散步过去看看，不切换图层（不穿帮）
-    const canLayer = outfitRef.current === "default";
+    // 没有互动人物层的时装：只散步过去看看，不切换图层（不穿帮）
+    const canLayer = hasRoomCharLayer(outfitRef.current, fid);
     setActBoth({ mode: "walk", target: fid, resting: rest });
     setLine(pick(linesOf("walk")));
     const to = def.anchor.x;
@@ -363,7 +365,7 @@ export function MuseRoom() {
   const checkedIn = today !== "" && save.lastCheckin === today;
 
   const interactingWith = (fid: FurnitureId) =>
-    (act.mode === "interact" || act.mode === "rest") && act.target === fid && outfit === "default";
+    (act.mode === "interact" || act.mode === "rest") && act.target === fid && hasRoomCharLayer(outfit, fid);
   const herInLayer = FURNITURE_ORDER.some((fid) => interactingWith(fid));
   const walking = act.mode === "walk";
 
@@ -417,7 +419,7 @@ export function MuseRoom() {
           const def = FURNITURE[fid];
           if (!save.owned.includes(fid)) return null;
           const withHer = interactingWith(fid);
-          const layers = withHer ? (def.layers?.withHer ?? []) : (def.layers?.alone ?? []);
+          const layers = withHer ? roomWithHerLayers(def, outfit) : (def.layers?.alone ?? []);
           const main = layers[0];
           const rest = layers.slice(1);
           return (
