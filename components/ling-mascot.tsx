@@ -630,6 +630,11 @@ export function LingMascot() {
 
   if (!MASCOT_ENABLED || !mounted) return null;
 
+  // 小屋页只留屋里的她：全站桌宠（含召唤钮）在小屋页不出现（站长 2026-11-15 拍板；
+  // 起因是评审第三轮 P1——桌宠蹲在小屋页右下角，访客容易以为屋里屋外有两个她）。
+  // 只拦渲染：隐藏状态与记住的位置都不动，离开小屋页一切如常。
+  if (pathname && parsePage(pathname, "").kind === "room") return null;
+
   if (hidden) {
     return (
       <button
