@@ -380,20 +380,23 @@
       "sport": "Sportswear",
       "school": "School Uniform",
       "hakama": "Hakama Style",
-      "travel": "Traveler Outfit"
+      "travel": "Traveler Outfit",
+      "gardener": "Gardener Outfit"
     },
     "conditions": {
       "default": "The outfit she starts with",
       "sport": "Score 300 in a single run of Muse Dash",
       "school": "Answer one prefecture correctly in the quiz",
       "hakama": "Leave a message on the guestbook",
-      "travel": "Answer every prefecture that has album photos"
+      "travel": "Answer every prefecture that has album photos",
+      "gardener": "Harvest 6 flowers in total in the indoor garden"
     },
     "unlockLines": {
       "sport": "New outfit unlocked: Sportswear! Tap me and use “Wardrobe” in the bubble to try it on!",
       "school": "New outfit unlocked: School Uniform! Tap me and use “Wardrobe” in the bubble to try it on!",
       "hakama": "New outfit unlocked: Hakama Style! Tap me and use “Wardrobe” in the bubble to try it on!",
-      "travel": "New outfit unlocked: Traveler Outfit! Tap me and use “Wardrobe” in the bubble to try it on!"
+      "travel": "New outfit unlocked: Traveler Outfit! Tap me and use “Wardrobe” in the bubble to try it on!",
+      "gardener": "New outfit unlocked: Gardener Outfit — a keepsake for growing 6 flowers of your own! Tap me and use “Wardrobe” in the bubble to try it on!"
     },
     "unlockPendingLine": "New outfit unlocked: {name}! Its artwork is still in the works — you'll be able to wear it as soon as it's ready!"
   },

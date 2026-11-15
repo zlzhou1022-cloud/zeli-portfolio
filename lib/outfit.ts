@@ -7,6 +7,8 @@
 // - 和风袴装：在留言板成功留言一次（muse_guestbook_posted 标记）
 // - 旅行装：相册里有照片的县全部答对盖章（站长 2026-11-14 晚改版，原为 47/47；
 //   目标县由 lib/travel-data 现算，新游记上架后自动增加）
+// - 园丁装：室内花园累计收获 ≥6 朵花（站长 2026-11-16 改绑花园机制，原方案为亲密度 Lv.7；
+//   读 muse_garden_v1 的 totalHarvests 现算）
 // 当前穿着存 muse_outfit；失效（未解锁/数据被清）时自动回落默认装。
 // 姿势图按套装分目录：默认装在 /muse-pet/ 根下，其余在 /muse-pet/<套装>/
 // 同名文件。某套图还没做完时 OUTFIT_READY 不含它——面板里显示「准备中」，
@@ -14,7 +16,7 @@
 
 import { getAllTrips } from "./travel-data";
 
-export type OutfitId = "default" | "sport" | "school" | "hakama" | "travel";
+export type OutfitId = "default" | "sport" | "school" | "hakama" | "travel" | "gardener";
 
 export type PoseName =
   | "look"
@@ -55,16 +57,20 @@ export const POSE_FILES: Record<PoseName, string> = {
   runRight: "run-right.webp",
 };
 
-export const OUTFIT_ORDER: OutfitId[] = ["default", "sport", "school", "hakama", "travel"];
+export const OUTFIT_ORDER: OutfitId[] = ["default", "sport", "school", "hakama", "travel", "gardener"];
 
-// 已备齐全套姿势图、可以真正穿上的套装（五套已全齐，2026-11-14）
-export const OUTFIT_READY: OutfitId[] = ["default", "sport", "school", "hakama", "travel"];
+// 已备齐全套姿势图、可以真正穿上的套装（六套已全齐，2026-11-16 园丁装补齐）
+export const OUTFIT_READY: OutfitId[] = ["default", "sport", "school", "hakama", "travel", "gardener"];
 
 const OUTFIT_KEY = "muse_outfit";
 const BEST_KEY = "ling_game_best";
 const STAMPS_KEY = "muse_stamps";
 const QUIZ_CORRECT_KEY = "muse_quiz_correct";
 const GUESTBOOK_KEY = "muse_guestbook_posted";
+// 园丁装读花园存档的累计收获数（key 与 lib/garden.ts 的 GARDEN_KEY 相同；
+// garden.ts 反向 import 本文件的 notifyProgress，这里不能 import garden.ts 防循环）
+const GARDEN_KEY = "muse_garden_v1";
+export const GARDENER_UNLOCK_HARVESTS = 6;
 const TOASTED_PREFIX = "muse_toasted_";
 
 export const SPORT_UNLOCK_SCORE = 300;
@@ -107,6 +113,20 @@ function readFlag(key: string): boolean {
   }
 }
 
+function readGardenHarvests(): number {
+  try {
+    const raw = localStorage.getItem(GARDEN_KEY);
+    const parsed: unknown = raw ? JSON.parse(raw) : null;
+    if (parsed && typeof parsed === "object") {
+      const n = (parsed as { totalHarvests?: unknown }).totalHarvests;
+      return typeof n === "number" && Number.isFinite(n) ? n : 0;
+    }
+  } catch {
+    /* 读不到按 0 算 */
+  }
+  return 0;
+}
+
 export interface OutfitProgress {
   /** 当前进度数值（分数/章数），无进度概念的套装为 null */
   value: number | null;
@@ -138,6 +158,13 @@ export function outfitStatus(id: OutfitId): { unlocked: boolean; progress: Outfi
       const stamped = new Set(readStamps());
       const value = targets.filter((p) => stamped.has(p)).length;
       return { unlocked: targets.length > 0 && value >= targets.length, progress: { value, target: targets.length } };
+    }
+    case "gardener": {
+      const harvests = readGardenHarvests();
+      return {
+        unlocked: harvests >= GARDENER_UNLOCK_HARVESTS,
+        progress: { value: Math.min(harvests, GARDENER_UNLOCK_HARVESTS), target: GARDENER_UNLOCK_HARVESTS },
+      };
     }
   }
 }
@@ -222,4 +249,5 @@ export const OUTFIT_LIFT_SCALE: Record<OutfitId, number> = {
   school: 1.09,
   hakama: 1.07,
   travel: 1.05,
+  gardener: 1.2,
 };

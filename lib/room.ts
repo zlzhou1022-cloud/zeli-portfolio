@@ -338,6 +338,7 @@ const OUTFITS_WITH_ROOM_CHAR: ReadonlySet<string> = new Set([
   "school",
   "hakama",
   "travel",
+  "gardener",
 ]);
 
 /** 这套时装有没有这件家具的互动人物层（默认装用 FURNITURE 自带图层，恒有） */
