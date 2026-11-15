@@ -34,7 +34,7 @@ import {
 // 她穿访客当前套装：自由身用时装库姿势图；行走默认装用小屋专用步行帧，
 // 其他套装用向前冲的奔跑帧代步；互动图层只有默认装——非默认装时她只散步不互动。
 
-const SCENE_RATIO = 5 / 8; // 场景容器高/宽（aspect 8/5），百分比换算用
+const SCENE_RATIO = 9 / 16; // 场景容器高/宽（aspect 16/9），百分比换算用
 
 function pick<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
@@ -56,16 +56,16 @@ const INTERACT_LINE_KEY: Record<string, string> = {
   rug: "rug",
 };
 
-// 地毯互动人物层（合体图画布）与单体地毯（另一画布）的对位参数
-const RUG_CHAR_PLACE = { cx: 60, bottom: 99.5, h: 42 };
-
 // 家具图层画布的宽高比（left 居中换算用）
 const FURNITURE_ASPECT: Record<FurnitureId, number> = {
   bookshelf: 1207 / 1088,
   desk: 816 / 802,
-  plant: 769 / 1025,
-  rug: 1792 / 1566,
+  plant: 659 / 924,
+  rug: 1764 / 1293,
 };
+
+// 场景绘制顺序（后画的在上层）：靠墙的先画，前景的地毯最后
+const SCENE_ORDER: FurnitureId[] = ["bookshelf", "desk", "plant", "rug"];
 
 export function MuseRoom() {
   const t = useTranslations("Room");
@@ -353,7 +353,7 @@ export function MuseRoom() {
   // ---------------- 渲染 ----------------
 
   if (!save) {
-    return <div className="w-full rounded-xl border border-stone-200 dark:border-stone-800 bg-[#f7f1e5] dark:bg-stone-900 aspect-[8/5] animate-pulse" />;
+    return <div className="w-full rounded-xl border border-stone-200 dark:border-stone-800 bg-[#f7f1e5] dark:bg-stone-900 aspect-[16/9] animate-pulse" />;
   }
 
   const level = intimacyLevel(save.intimacyXp);
@@ -382,11 +382,11 @@ export function MuseRoom() {
   const bubbleAnchorX = herInLayer && act.target ? FURNITURE[act.target].anchor.x : herX;
   const bubbleBottom =
     act.mode === "interact" && act.target === "bookshelf"
-      ? 56
+      ? 67
       : act.mode === "interact" && act.target === "desk"
-        ? 60
+        ? 53
         : act.mode === "interact" || act.mode === "rest"
-          ? 56
+          ? 40
           : 46;
 
   const bar = (label: string, value: number, color: string) => (
@@ -408,12 +408,12 @@ export function MuseRoom() {
       `}</style>
 
       {/* 场景 */}
-      <div className="relative w-full overflow-hidden rounded-xl border border-stone-200 dark:border-stone-800 select-none" style={{ aspectRatio: "8/5" }}>
+      <div className="relative w-full overflow-hidden rounded-xl border border-stone-200 dark:border-stone-800 select-none" style={{ aspectRatio: "16/9" }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/muse-room/backdrop.webp" alt="" className="absolute inset-0 w-full h-full object-cover" draggable={false} />
 
         {/* 家具（固定槽位；拥有后出现，她互动时切换图层组） */}
-        {FURNITURE_ORDER.map((fid) => {
+        {SCENE_ORDER.map((fid) => {
           const def = FURNITURE[fid];
           if (!save.owned.includes(fid)) return null;
           const withHer = interactingWith(fid);
@@ -458,19 +458,11 @@ export function MuseRoom() {
                     alt=""
                     className="absolute max-w-none"
                     draggable={false}
-                    style={
-                      fid === "rug"
-                        ? {
-                            left: `${RUG_CHAR_PLACE.cx - (RUG_CHAR_PLACE.h * 0.728 * SCENE_RATIO) / 2}%`,
-                            bottom: `${100 - RUG_CHAR_PLACE.bottom}%`,
-                            height: `${RUG_CHAR_PLACE.h}%`,
-                          }
-                        : {
-                            left: `${def.place.cx - (def.place.h * FURNITURE_ASPECT[fid] * SCENE_RATIO) / 2}%`,
-                            bottom: `${100 - def.place.bottom}%`,
-                            height: `${def.place.h}%`,
-                          }
-                    }
+                    style={{
+                      left: `${def.place.cx - (def.place.h * FURNITURE_ASPECT[fid] * SCENE_RATIO) / 2}%`,
+                      bottom: `${100 - def.place.bottom}%`,
+                      height: `${def.place.h}%`,
+                    }}
                   />
                 ))}
             </div>
@@ -580,7 +572,7 @@ export function MuseRoom() {
           <p className="text-sm text-stone-500 dark:text-stone-400 font-light">{t("shopHint")}</p>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {FURNITURE_ORDER.map((fid) => {
+          {SCENE_ORDER.map((fid) => {
             const def = FURNITURE[fid];
             const owned = save.owned.includes(fid);
             const thumb = def.layers?.alone[0];
