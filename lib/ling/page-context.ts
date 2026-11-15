@@ -29,6 +29,7 @@ const TEXT: Record<
     lab: string;
     games: string;
     room: string;
+    garden: string;
     guestbook: string;
     travels: (tripsList: string) => string;
     trip: (title: string, date: string, total: number) => string;
@@ -43,6 +44,7 @@ const TEXT: Record<
     lab: "访客此刻正在看：实验室与插件页面。",
     games: "访客此刻正在看：小游戏专区页面（有和慕斯一起玩的两个小游戏：45 秒向上冲、看图猜县集章，还有慕斯的小屋）。",
     room: "访客此刻正在看：慕斯的小屋页面（用星星给她买家具的养成页：每日签到、照顾她的饱食/心情/精力、看她在房间里散步和用家具；星星来自签到和两个小游戏）。",
+    garden: "访客此刻正在看：慕斯的室内花园页面（从小屋花架点进来的种花页：买种子、种下、每天浇水推进生长、开花后收获换星星并收进图鉴；累计收获 6 朵可解锁园丁装）。",
     guestbook: "访客此刻正在看：留言板页面。",
     travels: (list) => `访客此刻正在看：旅行相册列表页。本站的游记有：${list}。`,
     trip: (title, date, total) =>
@@ -57,6 +59,7 @@ const TEXT: Record<
     lab: "訪問者は今、ラボ（実験とプラグイン）のページを見ています。",
     games: "訪問者は今、ゲームコーナーのページを見ています（ムースと遊ぶ45秒ダッシュと県当てクイズ、ムースの小屋があります）。",
     room: "訪問者は今、ムースの小屋のページを見ています（星で家具を買う育成ページ：毎日のチェックイン、おなか・ごきげん・元気のお世話、部屋を歩き回る彼女の様子。星はチェックインと2つのミニゲームで集めます）。",
+    garden: "訪問者は今、ムースの室内ガーデンのページを見ています（小屋の花台から入る種まきページ：種を買って植え、毎日の水やりで育て、咲いたら収穫して星と図鑑に。累計6株の収穫でガーデナー衣装が解放されます）。",
     guestbook: "訪問者は今、ゲストブックのページを見ています。",
     travels: (list) => `訪問者は今、旅行アルバムの一覧ページを見ています。このサイトの旅行記：${list}。`,
     trip: (title, date, total) =>
@@ -71,6 +74,7 @@ const TEXT: Record<
     lab: "The visitor is currently on the Lab & Plugins page.",
     games: "The visitor is currently on the Mini Games page (games played with Muse: the 45-second dash, the prefecture quiz, and Muse's Room).",
     room: "The visitor is currently on Muse's Room page (a care page where stars buy her furniture: daily check-ins, looking after her fullness/mood/energy, and watching her wander and use the furniture; stars come from check-ins and the two mini games).",
+    garden: "The visitor is currently on Muse's Indoor Garden page (reached from the flower stand in her room: buy seeds, plant them, water daily to grow, harvest blooms for stars and the album; 6 lifetime harvests unlock the gardener outfit).",
     guestbook: "The visitor is currently on the guestbook page.",
     travels: (list) => `The visitor is currently on the travel album list page. The site's travel stories are: ${list}.`,
     trip: (title, date, total) =>
@@ -80,7 +84,7 @@ const TEXT: Record<
   },
 };
 
-const KINDS = ["home", "profile", "lab", "games", "room", "travels", "trip", "guestbook"] as const;
+const KINDS = ["home", "profile", "lab", "games", "room", "garden", "travels", "trip", "guestbook"] as const;
 
 export function buildPageContext(locale: LingLocale, raw: unknown): string {
   if (!raw || typeof raw !== "object") return "";
@@ -105,6 +109,9 @@ export function buildPageContext(locale: LingLocale, raw: unknown): string {
       break;
     case "room":
       lines.push(tx.room);
+      break;
+    case "garden":
+      lines.push(tx.garden);
       break;
     case "guestbook":
       lines.push(tx.guestbook);

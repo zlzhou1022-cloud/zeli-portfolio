@@ -7,6 +7,7 @@ export type PageKind =
   | "lab"
   | "games"
   | "room"
+  | "garden"
   | "travels"
   | "trip"
   | "guestbook"
@@ -28,6 +29,7 @@ export function parsePage(pathname: string, search: string): PageInfo {
   if (segs[0] === "lab") return { kind: "lab" };
   if (segs[0] === "games") {
     if (segs[1] === "room") return { kind: "room" };
+    if (segs[1] === "garden") return { kind: "garden" };
     return { kind: "games" };
   }
   if (segs[0] === "guestbook") return { kind: "guestbook" };

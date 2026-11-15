@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
+import { useRouter } from "next/navigation";
 import { getCurrentOutfit, poseSrc, type OutfitId, type PoseName } from "@/lib/outfit";
 import {
   FURNITURE,
@@ -71,6 +72,9 @@ const SCENE_ORDER: FurnitureId[] = ["bookshelf", "desk", "rug"];
 
 export function MuseRoom() {
   const t = useTranslations("Room");
+  const tg = useTranslations("Garden");
+  const router = useRouter();
+  const locale = useLocale();
   const tm = useTranslations("Mascot");
   const [save, setSave] = useState<RoomSave | null>(null);
   const [outfit, setOutfit] = useState<OutfitId>("default");
@@ -413,6 +417,25 @@ export function MuseRoom() {
       <div className="relative w-full overflow-hidden rounded-xl border border-stone-200 dark:border-stone-800 select-none" style={{ aspectRatio: "16/9" }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/muse-room/backdrop.webp" alt="" className="absolute inset-0 w-full h-full object-cover" draggable={false} />
+
+        {/* 花架（室内花园入口，二期）：固定在窗边角落，点它进花园页 */}
+        <div
+          className="absolute rounded-[50%] bg-stone-900/15 blur-[3px]"
+          style={{ left: "62.8%", width: "7.4%", bottom: "22.2%", height: "1.8%" }}
+        />
+        <button
+          type="button"
+          aria-label={tg("standLabel")}
+          onClick={() => router.push(`/${locale}/games/garden`)}
+          className="absolute cursor-pointer group"
+          style={{ left: "61.6%", bottom: "23%", height: "30%", aspectRatio: "899/963" }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/muse-room/garden-stand.webp" alt="" className="h-full w-auto max-w-none mx-auto block transition-transform group-hover:scale-[1.03]" draggable={false} />
+          <span className="absolute left-1/2 -translate-x-1/2 -bottom-1 whitespace-nowrap rounded-full bg-emerald-600/90 text-white text-[11px] px-2 py-0.5 shadow">
+            🌱 {tg("standLabel")}
+          </span>
+        </button>
 
         {/* 家具（固定槽位；拥有后出现，她互动时切换图层组） */}
         {SCENE_ORDER.map((fid) => {
