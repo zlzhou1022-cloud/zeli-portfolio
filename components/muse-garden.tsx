@@ -31,7 +31,7 @@ import {
 const POT_H = 13.5;
 
 function nowMs(): number {
-  return nowMs();
+  return Date.now();
 } // 盆高占场景高 %（各阶段按 scale 放大，盆大小恒定）
 
 function pick<T>(arr: T[]): T {
