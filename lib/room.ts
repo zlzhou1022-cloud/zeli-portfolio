@@ -8,6 +8,8 @@
 // 访客存档只记家具 ID（owned），不存任何图片路径。
 // 原则：状态只让他更想回来、永不惩罚；亲密度永不衰减；衰减下限 15 不见底。
 
+import type { OutfitId } from "@/lib/outfit";
+
 // ---------------------------------------------------------------- State
 
 export const ROOM_KEY = "muse_room_v1";
@@ -322,6 +324,38 @@ export const FURNITURE: Record<FurnitureId, FurnitureDef> = {
 };
 
 export const FURNITURE_ORDER: FurnitureId[] = ["rug", "bookshelf", "desk"];
+
+// ------------------------------------------- 分时装互动人物层（2026-11-16 补齐）
+// 其他时装的互动图：以默认装合体图为底只换装、只拆人物层，家具层与默认装共用
+// 同一批文件——家具的外观与位置不随时装改变。文件：/muse-room/<时装>/<stem>-char.webp。
+const CHAR_STEM: Partial<Record<FurnitureId, string>> = {
+  rug: "rug",
+  bookshelf: "shelf",
+  desk: "desk",
+};
+const OUTFITS_WITH_ROOM_CHAR: ReadonlySet<string> = new Set([
+  "sport",
+  "school",
+  "hakama",
+  "travel",
+]);
+
+/** 这套时装有没有这件家具的互动人物层（默认装用 FURNITURE 自带图层，恒有） */
+export function hasRoomCharLayer(outfit: OutfitId, fid: FurnitureId): boolean {
+  if (outfit === "default") return true;
+  return OUTFITS_WITH_ROOM_CHAR.has(outfit) && CHAR_STEM[fid] !== undefined;
+}
+
+/** 她互动时的图层组：默认组合里以 -char.webp 结尾的就是人物层，按时装替换它，
+    其余条目（家具层）原样共用——家具不动。 */
+export function roomWithHerLayers(def: FurnitureDef, outfit: OutfitId): string[] {
+  const base = def.layers?.withHer ?? [];
+  if (outfit === "default" || !OUTFITS_WITH_ROOM_CHAR.has(outfit)) return base;
+  const stem = CHAR_STEM[def.id];
+  if (!stem) return base;
+  const charPath = `${R}/${outfit}/${stem}-char.webp`;
+  return base.map((p) => (p.endsWith("-char.webp") ? charPath : p));
+}
 
 // ------------------------------------------------------------- Activity
 
