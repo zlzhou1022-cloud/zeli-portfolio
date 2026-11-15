@@ -61,10 +61,10 @@ const RUG_CHAR_PLACE = { cx: 60, bottom: 99.5, h: 42 };
 
 // 家具图层画布的宽高比（left 居中换算用）
 const FURNITURE_ASPECT: Record<FurnitureId, number> = {
-  bookshelf: 1104 / 1974,
-  desk: 1169 / 1885,
-  plant: 1076 / 1545,
-  rug: 1165 / 628,
+  bookshelf: 1207 / 1088,
+  desk: 816 / 802,
+  plant: 769 / 1025,
+  rug: 1792 / 1566,
 };
 
 export function MuseRoom() {
@@ -382,9 +382,9 @@ export function MuseRoom() {
   const bubbleAnchorX = herInLayer && act.target ? FURNITURE[act.target].anchor.x : herX;
   const bubbleBottom =
     act.mode === "interact" && act.target === "bookshelf"
-      ? 78
+      ? 56
       : act.mode === "interact" && act.target === "desk"
-        ? 64
+        ? 60
         : act.mode === "interact" || act.mode === "rest"
           ? 56
           : 46;
