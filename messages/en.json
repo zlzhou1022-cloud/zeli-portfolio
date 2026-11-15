@@ -343,12 +343,12 @@
       ]
     },
     "room": {
-          "intro": "This is Muse's room — where you earn stars and buy her furniture. She lives here.",
-          "guide": [
-                "Check in daily for stars and a snack; when you've saved enough, the shop below sells her furniture.",
-                "She walks over and uses what you buy: reaching for books, writing at her desk, reading on the rug.",
-                "Her status shows when she's hungry, tired or bored — snacks, play and rest all help."
-          ]
+      "intro": "This is Muse's room — where you earn stars and buy her furniture. She lives here.",
+      "guide": [
+        "Check in daily for stars and a snack; when you've saved enough, the shop below sells her furniture.",
+        "She walks over and uses what you buy: reaching for books, writing at her desk, reading on the rug.",
+        "Her status shows when she's hungry, tired or bored — snacks, play and rest all help."
+      ]
     },
     "games": {
       "intro": "Welcome to the games corner! Every game here is one you play together with me.",
@@ -357,6 +357,14 @@
         "The bottom card is the prefecture quiz: guess where Zeli's travel photos were taken, and correct answers earn stamps on your map.",
         "From any other page, drag me onto the bubble at the top of the screen and let go — it brings you straight here. I'll be waiting back where I was.",
         "At the bottom is my little room — earn stars and buy me furniture there. Come visit often."
+      ]
+    },
+    "garden": {
+      "intro": "This is Muse's indoor garden — you came in through the flower stand in her room. Planting, watering, blooming: everything here takes its time.",
+      "guide": [
+        "Tap a pot to water it — once a day moves it one day forward, and it blooms on day ten.",
+        "Harvesting blooms earns stars, and six lifetime harvests unlock her gardener outfit.",
+        "Flowers never wilt here; missing a day just pauses them, so no pressure."
       ]
     }
   },
@@ -503,5 +511,86 @@
     "entryTitle": "Muse's Room",
     "entryDesc": "A little room of her own — earn stars, buy furniture, and watch her wander, read and sit on her rug. Visit often; she remembers you.",
     "entryCta": "Visit her"
+  },
+  "Garden": {
+    "pageTitle": "Muse's Indoor Garden",
+    "pageDesc": "Step in from the flower stand by the window in Muse's room. Buy a few seeds, plant them, and come by each day to water — watch them sprout, leaf out, bud, and bloom. A harvested bloom earns stars and a place in the album. Flowers never wilt, so just drop by whenever you remember.",
+    "backRoom": "Back to the Room",
+    "standLabel": "Indoor Garden",
+    "starsLabel": "stars",
+    "emptyPot": "Empty pot",
+    "harvestCount": "{count} harvested so far",
+    "gardenerProgress": "Gardener outfit: {count} / {target} harvests",
+    "gardenerDone": "The gardener outfit is unlocked! Check the pet's wardrobe panel",
+    "tapHint": "Tap a pot to water it, plant a seed, or harvest a bloom.",
+    "chooseSeed": "What should grow in this empty pot?",
+    "seedOwned": "seeds ×{count}",
+    "noSeedHint": "Out of seeds? Buy a few in the seed shop below.",
+    "water": "Water",
+    "wateredToday": "This pot already had its water today — see you tomorrow.",
+    "harvest": "Harvest",
+    "keep": "Keep it on display",
+    "growthDays": "Watered {days} / {total} days",
+    "buySeed": "Buy seeds",
+    "notEnough": "Not enough stars — earn some from room check-ins or the mini games.",
+    "shopTitle": "Seed Shop",
+    "seasonal": "Seasonal",
+    "albumTitle": "Harvest Album",
+    "albumEmpty": "Not harvested yet",
+    "albumCount": "{count} harvested · first on {first}",
+    "potsProgress": "{have} pots (one more at 5 and 12 lifetime harvests — currently {count})",
+    "giftLine": "Welcome to my little garden! Here are three seeds to start with — pick an empty pot and plant one.",
+    "rulesTitle": "Garden rules",
+    "rules": [
+      "Water a pot once a day and it grows one day: sprout (day 1), leaves (day 3), bud (day 6), bloom (day 10).",
+      "Forgot to water? No harm done — the flower simply waits for you and never wilts.",
+      "A bloom can be harvested (+6 stars, saved in the album) or left in its pot to enjoy.",
+      "At 5 and 12 lifetime harvests you gain an extra pot; at 6 you unlock the gardener outfit.",
+      "Progress is stored in this browser on this device; clearing site data erases it."
+    ],
+    "speciesNames": {
+      "tulip": "Tulip",
+      "daisy": "Daisy",
+      "pansy": "Pansy",
+      "chrys": "Chrysanthemum"
+    },
+    "stageNames": {
+      "0": "Just planted",
+      "1": "Sprout",
+      "2": "Leaves",
+      "3": "Bud",
+      "4": "In bloom"
+    },
+    "lines": {
+      "welcome": [
+        "This is my little garden — the light is just right.",
+        "You're here! Let's see how the flowers are doing today.",
+        "The flowers have been waiting for you."
+      ],
+      "plant": [
+        "Planted! Now it just needs a little water each day.",
+        "Tucked into the soil — I wonder what it will become.",
+        "The first seed! I'll remember this day."
+      ],
+      "water": [
+        "Glug glug… all topped up.",
+        "Thank you — it grew a little more today.",
+        "Watered, and the leaves perk right up."
+      ],
+      "bloom": [
+        "It bloomed! Look — a whole flower!",
+        "It finally bloomed — worth every day of waiting.",
+        "It's open, and it smells lovely."
+      ],
+      "harvest": [
+        "Harvested — the album gains another flower.",
+        "This one stays in the album forever.",
+        "Thank you for growing it with me."
+      ],
+      "keep": [
+        "Let's leave it on display, then — it's at its best.",
+        "Mm, in its pot, where everyone passing by can see it."
+      ]
+    }
   }
 }
