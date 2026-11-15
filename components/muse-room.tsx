@@ -65,7 +65,7 @@ const FURNITURE_ASPECT: Record<FurnitureId, number> = {
 };
 
 // 场景绘制顺序（后画的在上层）：靠墙的先画，前景的地毯最后
-const SCENE_ORDER: FurnitureId[] = ["bookshelf", "desk", "plant", "rug"];
+const SCENE_ORDER: FurnitureId[] = ["bookshelf", "desk", "rug"];
 
 export function MuseRoom() {
   const t = useTranslations("Room");
