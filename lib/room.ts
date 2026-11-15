@@ -270,12 +270,12 @@ export const FURNITURE: Record<FurnitureId, FurnitureDef> = {
     interactive: true,
     duration: 9000,
     intimacyXp: 1,
-    place: { cx: 60, bottom: 99.5, h: 30 },
+    place: { cx: 60, bottom: 99.7, h: 50.7 },
     layers: {
       alone: [`${R}/rug-solo.webp`],
       withHer: [`${R}/rug-solo.webp`, `${R}/rug-char.webp`],
     },
-    anchor: { x: 60, feet: 96 },
+    anchor: { x: 60, feet: 84.8 },
   },
   bookshelf: {
     id: "bookshelf",
@@ -285,12 +285,12 @@ export const FURNITURE: Record<FurnitureId, FurnitureDef> = {
     interactive: true,
     duration: 8000,
     intimacyXp: 1,
-    place: { cx: 15.5, bottom: 94, h: 68 },
+    place: { cx: 23.6, bottom: 95.3, h: 51.5 },
     layers: {
       alone: [`${R}/shelf-back.webp`],
       withHer: [`${R}/shelf-back.webp`, `${R}/shelf-char.webp`],
     },
-    anchor: { x: 15.5, feet: 93 },
+    anchor: { x: 33.2, feet: 95 },
   },
   desk: {
     id: "desk",
@@ -300,12 +300,12 @@ export const FURNITURE: Record<FurnitureId, FurnitureDef> = {
     interactive: true,
     duration: 9000,
     intimacyXp: 1,
-    place: { cx: 40, bottom: 94, h: 56 },
+    place: { cx: 40, bottom: 94.4, h: 49.4 },
     layers: {
       alone: [`${R}/desk-front.webp`],
       withHer: [`${R}/desk-char.webp`, `${R}/desk-front.webp`],
     },
-    anchor: { x: 40, feet: 93 },
+    anchor: { x: 39.7, feet: 91.3 },
   },
   plant: {
     id: "plant",
@@ -315,7 +315,7 @@ export const FURNITURE: Record<FurnitureId, FurnitureDef> = {
     interactive: false,
     duration: 0,
     intimacyXp: 0,
-    place: { cx: 87, bottom: 95, h: 37 },
+    place: { cx: 87, bottom: 95.2, h: 35.4 },
     layers: { alone: [`${R}/plant.webp`], withHer: [`${R}/plant.webp`] },
     anchor: { x: 87, feet: 94 },
   },
