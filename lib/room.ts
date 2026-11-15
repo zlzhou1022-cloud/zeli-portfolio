@@ -321,7 +321,7 @@ export const FURNITURE: Record<FurnitureId, FurnitureDef> = {
   },
 };
 
-export const FURNITURE_ORDER: FurnitureId[] = ["rug", "plant", "bookshelf", "desk"];
+export const FURNITURE_ORDER: FurnitureId[] = ["rug", "bookshelf", "desk"];
 
 // ------------------------------------------------------------- Activity
 
