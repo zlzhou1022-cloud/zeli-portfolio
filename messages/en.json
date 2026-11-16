@@ -588,7 +588,8 @@
       "Fullness, mood and energy drift down over time. Snacks, playing and rest bring them back — they never hit zero, she just gets a little needy.",
       "Intimacy grows from check-ins, care and time spent in the room, and never decreases. The gardener outfit unlocks by harvesting 6 flowers in total in the indoor garden.",
       "Tap her and she'll react — you can chat with her or change her outfit. Tap the floor and she'll run over to that spot.",
-      "Progress lives only in this browser on this device — clearing browser data resets it. Think of it as a tiny room in your pocket."
+      "Progress lives only in this browser on this device — clearing browser data resets it. Think of it as a tiny room in your pocket.",
+      "Each week she has one little wish. Help her with it slowly and you can claim a small gift — and if it does not happen, that is fine too; there is always next week."
     ],
     "entryTitle": "Muse's Room",
     "entryDesc": "A little room of her own — earn stars, buy furniture, and watch her wander, read and sit on her rug. Visit often; she remembers you.",
@@ -668,6 +669,40 @@
         "first_bloom": "Look! Our flower finally bloomed. I have been waiting for this day!",
         "first_harvest": "This is the first flower we grew together. I will remember it well.",
         "outfit": "Another outfit for our collection!"
+      }
+    },
+    "wish": {
+      "title": "This Week's Little Wish",
+      "hint": "No rush — it is just a little wish of hers. It is fine if it does not happen.",
+      "progressDone": "Done",
+      "doneLine": "Hehe, we did it together! Another happy little moment for this week.",
+      "giftLabel": "Mousse prepared a little gift — pick one:",
+      "claimStars": "15 stars",
+      "claimSnack": "Snack ×1",
+      "claimed": "Gift claimed",
+      "texts": {
+        "play": "Play with Mousse for a while",
+        "water": "Take care of the garden",
+        "furniture": "Spend time with the furniture",
+        "visit": "Come visit Mousse in the room",
+        "feed": "Feed Mousse a snack",
+        "harvest": "Harvest a flower"
+      },
+      "descs": {
+        "play": "Play together {target} times",
+        "water": "Water the flowers on {target} days (once per day counts)",
+        "furniture": "Tap furniture to interact {target} times",
+        "visit": "Visit the room on {target} days this week",
+        "feed": "Feed her {target} times",
+        "harvest": "Harvest {target} bloomed flower"
+      },
+      "units": {
+        "play": "",
+        "water": "",
+        "furniture": "",
+        "visit": "",
+        "feed": "",
+        "harvest": ""
       }
     }
   },
