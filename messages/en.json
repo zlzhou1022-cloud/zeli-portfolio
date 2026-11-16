@@ -627,6 +627,48 @@
       "8": "Um... from now on, some little secrets are only for you.",
       "9": "We really are in sync now — it grew bit by bit.",
       "10": "Old partners now. Thank you, for always being here."
+    },
+    "memories": {
+      "title": "Mousse's Memory Book",
+      "count": "{count} little moments recorded",
+      "latest": "Latest",
+      "expand": "See all memories",
+      "collapse": "Collapse",
+      "empty": "Nothing recorded yet — your story is just beginning.",
+      "backfillGroup": "Earlier memories",
+      "dateUnknown": "Before the memory book",
+      "titlesTitle": "Title collection",
+      "titleLocked": "Unlocks at Lv.{level}",
+      "card": {
+        "kicker": "Companionship Card",
+        "title": "Old Partner Memorial Card",
+        "line": "Thank you for sharing so many ordinary, happy days with me. From here on, let us keep turning everyday moments into memories worth keeping.",
+        "dateLabel": "Reached on {date}",
+        "backfillNote": "Already reached when the memory book began",
+        "no": "Card No. MOUSSE-010"
+      },
+      "titles": {
+        "first_visit": "First meeting",
+        "furniture": "New furniture: {name}",
+        "garden_visit": "First visit to the garden",
+        "first_bloom": "First bloom in the garden",
+        "first_harvest": "First harvest in the garden",
+        "outfit": "New outfit: {name}",
+        "level": "Intimacy up: Lv.{level}"
+      },
+      "lines": {
+        "first_visit": "Oh, you are here! Welcome to my little room!",
+        "furniture": {
+          "rug": "The rug is down — the room feels warmer already.",
+          "bookshelf": "The bookshelf is finally here! We can collect so many stories together.",
+          "desk": "The desk moved in — for writing, reading, and daydreaming.",
+          "plant": "A plant by the window — even the air feels better."
+        },
+        "garden_visit": "This is my little garden. The sunlight is just right.",
+        "first_bloom": "Look! Our flower finally bloomed. I have been waiting for this day!",
+        "first_harvest": "This is the first flower we grew together. I will remember it well.",
+        "outfit": "Another outfit for our collection!"
+      }
     }
   },
   "Garden": {

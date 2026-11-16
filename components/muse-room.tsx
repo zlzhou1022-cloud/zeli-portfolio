@@ -39,6 +39,13 @@ import {
   settle,
   todayStr,
 } from "@/lib/room";
+import {
+  backfillMemories,
+  loadMemories,
+  recordMemory,
+  syncOutfitMemories,
+  type MemoryEvent,
+} from "@/lib/memories";
 
 // 慕斯的小屋（站长 2026-11-15 一期）：场景 + 她本人（单实体，活动状态机驱动）。
 // 状态与规则全在 lib/room.ts，本组件只做：挂载结算、行为调度、渲染、访客操作。
@@ -114,6 +121,8 @@ export function MuseRoom() {
   const [today, setToday] = useState<string>("");
   // 点击她 / 点地板（2026-11-17）：功能气泡、换装面板、落点光标、点按反馈
   const [levelUpFx, setLevelUpFx] = useState<string | null>(null);
+  const [memOpen, setMemOpen] = useState(false);
+  const [memTick, setMemTick] = useState(0);
   const [panel, setPanel] = useState<null | "main" | "wardrobe">(null);
   const [marker, setMarker] = useState<{ x: number; feet: number; id: number } | null>(null);
   const [tapFx, setTapFx] = useState(false);
@@ -193,6 +202,8 @@ export function MuseRoom() {
         }),
       );
       later(() => setLevelUpFx(null), 5000);
+      recordMemory("level", String(leveledTo));
+      setMemTick((n) => n + 1);
       const up = upLines[String(leveledTo)];
       if (up) later(() => setLine(up), 400);
     }
@@ -327,6 +338,11 @@ export function MuseRoom() {
       outfitRef.current = getCurrentOutfit();
       setOutfit(outfitRef.current);
       setDiscoveryId(disc);
+      // 回忆册（W4）：老存档先一次性回填（不伪造日期），新访客记真实的初次相遇
+      backfillMemories(first ? null : s, now);
+      if (first) recordMemory("first_visit", "room", now);
+      syncOutfitMemories(now);
+      setMemTick((n) => n + 1);
       if (first) {
         setLine(t("welcomeLine"));
         flashNotice(t("welcomeGift"));
@@ -453,6 +469,8 @@ export function MuseRoom() {
     if (ok) {
       flashNotice(t("boughtLine"));
       setLine(t("boughtLine"));
+      recordMemory("furniture", fid);
+      setMemTick((n) => n + 1);
       if (FURNITURE[fid].interactive) later(() => interruptTo(fid, false), 800);
     } else {
       flashNotice(t("notEnough"));
@@ -997,6 +1015,122 @@ export function MuseRoom() {
           {t("dashNote")} {t("quizNote")}
         </p>
       </div>
+
+      {/* 回忆册（W4）：默认收起，展开是时间线 + 称号收藏 + Lv10 纪念卡 */}
+      {(() => {
+        const mem = loadMemories();
+        const live = mem.events
+          .filter((e) => e.source === "live")
+          .slice()
+          .sort((a, b) => (a.date === b.date ? 0 : (a.date ?? "") < (b.date ?? "") ? -1 : 1))
+          .reverse();
+        const back = mem.events.filter((e) => e.source === "backfill");
+        const latest = live[0] ?? mem.events[mem.events.length - 1];
+        const titles = (t.raw("levelTitles") as string[] | undefined) ?? [];
+        const lv10 = mem.events.find((e) => e.id === "level:10");
+        const fmtDate = (d: string): string => {
+          const [y, m, dd] = d.split("-").map(Number);
+          return locale === "en" ? `${m}/${dd}/${y}` : `${m}月${dd}日`;
+        };
+        const memTitle = (e: MemoryEvent): string => {
+          switch (e.type) {
+            case "first_visit": return t("memories.titles.first_visit");
+            case "furniture": return t("memories.titles.furniture", { name: t(`furnitureNames.${e.key}`) });
+            case "garden_visit": return t("memories.titles.garden_visit");
+            case "first_bloom": return t("memories.titles.first_bloom");
+            case "first_harvest": return t("memories.titles.first_harvest");
+            case "outfit": return t("memories.titles.outfit", { name: tw(`names.${e.key}`) });
+            case "level": return t("memories.titles.level", { level: e.key });
+          }
+        };
+        const memLine = (e: MemoryEvent): string => {
+          switch (e.type) {
+            case "first_visit": return t("memories.lines.first_visit");
+            case "furniture": return t(`memories.lines.furniture.${e.key}`);
+            case "garden_visit": return t("memories.lines.garden_visit");
+            case "first_bloom": return t("memories.lines.first_bloom");
+            case "first_harvest": return t("memories.lines.first_harvest");
+            case "outfit": return t("memories.lines.outfit");
+            case "level": return ((t.raw("levelUp") as Record<string, string> | undefined) ?? {})[e.key] ?? "";
+          }
+        };
+        const row = (e: MemoryEvent) => (
+          <li key={e.id} className="relative pl-5">
+            <span className="absolute left-0 top-[7px] h-2 w-2 rounded-full bg-rose-300 dark:bg-rose-500" />
+            <p className="text-xs text-stone-400">
+              {e.date ? fmtDate(e.date) : t("memories.dateUnknown")} · {memTitle(e)}
+            </p>
+            <p className="text-sm text-stone-700 dark:text-stone-200 leading-relaxed">{memLine(e)}</p>
+          </li>
+        );
+        return (
+          <div className="rounded-xl border border-stone-200 dark:border-stone-800 p-4 bg-white/60 dark:bg-stone-900/40" data-tick={memTick}>
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <h3 className="text-sm font-medium text-stone-800 dark:text-stone-100">📖 {t("memories.title")}</h3>
+              <span className="text-xs text-stone-400">{t("memories.count", { count: mem.events.length })}</span>
+              <button
+                type="button"
+                onClick={() => setMemOpen((o) => !o)}
+                className="ml-auto text-xs text-rose-500 dark:text-rose-400 hover:underline"
+              >
+                {memOpen ? t("memories.collapse") : t("memories.expand")}
+              </button>
+            </div>
+            {!memOpen && latest && (
+              <p className="mt-2 text-sm text-stone-500 dark:text-stone-400">
+                {t("memories.latest")}：{memTitle(latest)} — {memLine(latest)}
+              </p>
+            )}
+            {!memOpen && !latest && (
+              <p className="mt-2 text-sm text-stone-500 dark:text-stone-400">{t("memories.empty")}</p>
+            )}
+            {memOpen && (
+              <div className="mt-3 space-y-5">
+                {level >= 10 && (
+                  <div className="rounded-xl border-2 border-amber-300 dark:border-amber-700 bg-gradient-to-br from-amber-50 to-rose-50 dark:from-amber-950/40 dark:to-rose-950/40 p-4 text-center space-y-1.5">
+                    <p className="text-xs tracking-[0.2em] text-amber-600 dark:text-amber-400">{t("memories.card.kicker")}</p>
+                    <p className="font-serif text-lg text-stone-800 dark:text-stone-100">{t("memories.card.title")}</p>
+                    <p className="text-sm text-rose-500 dark:text-rose-400 font-medium">Lv.10 · {titles[9] ?? ""}</p>
+                    <p className="text-sm text-stone-600 dark:text-stone-300 leading-relaxed">{t("memories.card.line")}</p>
+                    <p className="text-xs text-stone-400">
+                      {lv10?.date
+                        ? t("memories.card.dateLabel", { date: fmtDate(lv10.date) })
+                        : t("memories.card.backfillNote")}
+                      {" · "}{t("memories.card.no")}
+                    </p>
+                  </div>
+                )}
+                <div>
+                  <p className="text-xs font-medium text-stone-500 dark:text-stone-400 mb-2">{t("memories.titlesTitle")}</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {titles.map((title, i) =>
+                      level > i ? (
+                        <span key={i} className="rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-300 px-2.5 py-1 text-xs">
+                          Lv.{i + 1} {title}
+                        </span>
+                      ) : (
+                        <span key={i} className="rounded-full bg-stone-100 dark:bg-stone-800 text-stone-400 px-2.5 py-1 text-xs">
+                          {t("memories.titleLocked", { level: i + 1 })}
+                        </span>
+                      ),
+                    )}
+                  </div>
+                </div>
+                {live.length > 0 && <ul className="space-y-3.5">{live.map(row)}</ul>}
+                {back.length > 0 && (
+                  <div>
+                    <p className="text-xs font-medium text-stone-500 dark:text-stone-400 mb-2">{t("memories.backfillGroup")}</p>
+                    <ul className="space-y-3.5">{back.map(row)}</ul>
+                  </div>
+                )}
+                {mem.events.length === 0 && (
+                  <p className="text-sm text-stone-500 dark:text-stone-400">{t("memories.empty")}</p>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* 玩法说明 */}
       <div className="rounded-xl border border-stone-200 dark:border-stone-800 p-4 bg-white/60 dark:bg-stone-900/40">
