@@ -627,6 +627,48 @@
       "8": "那个……以后有些小秘密，只告诉你哦。",
       "9": "我们的默契，是慢慢攒出来的呢。",
       "10": "老搭档啦。谢谢你，一直都在。"
+    },
+    "memories": {
+      "title": "慕斯的回忆册",
+      "count": "已记录 {count} 件小事",
+      "latest": "最近的一件",
+      "expand": "查看全部回忆",
+      "collapse": "收起",
+      "empty": "还没有记录——你们的故事，才刚刚开始。",
+      "backfillGroup": "更早的回忆",
+      "dateUnknown": "回忆册上线前",
+      "titlesTitle": "称号收藏",
+      "titleLocked": "Lv.{level} 解锁",
+      "card": {
+        "kicker": "相处纪念卡",
+        "title": "老搭档纪念卡",
+        "line": "谢谢你，陪我走过这么多平凡又开心的日子。以后也一起，把普通的每一天变成值得收藏的回忆吧！",
+        "dateLabel": "达成日期：{date}",
+        "backfillNote": "回忆册上线时已达成",
+        "no": "纪念编号 MOUSSE-010"
+      },
+      "titles": {
+        "first_visit": "初次相遇",
+        "furniture": "新家具：{name}",
+        "garden_visit": "第一次走进花园",
+        "first_bloom": "花园初次开花",
+        "first_harvest": "花园初收获",
+        "outfit": "新时装：{name}",
+        "level": "亲密度升级：Lv.{level}"
+      },
+      "lines": {
+        "first_visit": "呀，你来啦！欢迎来到我的小屋！",
+        "furniture": {
+          "rug": "地毯铺好啦，房间一下子暖和起来了。",
+          "bookshelf": "书架终于来啦！以后我们可以一起收藏好多故事了。",
+          "desk": "书桌搬进来啦——写字、看书、发呆，都有地方了。",
+          "plant": "窗边多了盆绿植，空气都变好了。"
+        },
+        "garden_visit": "这里就是我的小花园，阳光刚好。",
+        "first_bloom": "你看！我们种的花终于开啦，我等这一天好久了！",
+        "first_harvest": "这是我们一起种出的第一朵花，我会好好记着它。",
+        "outfit": "这套衣服，我们一起收藏起来啦！"
+      }
     }
   },
   "Garden": {

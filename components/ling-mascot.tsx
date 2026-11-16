@@ -18,6 +18,7 @@ import {
   wasToasted,
   markToasted,
 } from "@/lib/outfit";
+import { recordMemory } from "@/lib/memories";
 
 // 慕斯桌宠：站长的小代理，住在页面左下角（2026-11-13 路线 A 上线，当晚按
 // 站长追加要求升级）：
@@ -267,6 +268,7 @@ export function LingMascot() {
       if (id === "default") continue;
       if (outfitStatus(id).unlocked && !wasToasted(id)) {
         markToasted(id);
+        recordMemory("outfit", id);
         celebratingRef.current = true;
         touch();
         playReaction("wave");

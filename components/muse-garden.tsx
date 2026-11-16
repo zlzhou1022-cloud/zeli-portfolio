@@ -24,6 +24,7 @@ import {
   water,
   waterAll,
 } from "@/lib/garden";
+import { backfillMemories, hasMemory, loadMemories, recordMemory } from "@/lib/memories";
 
 // 室内花园（小屋二期）：花架点进来。种花靠浇水日推进、漏浇只暂停、开花可收可留。
 // 状态在 lib/garden.ts（localStorage），星星与小屋共用钱包（lib/room）。
@@ -56,6 +57,12 @@ export function MuseGarden() {
 
   useEffect(() => {
     const id = setTimeout(() => {
+      // 回忆册（W4）：花园存档在本页打开前就存在 = 老访客，首次记录按回填（无日期）处理
+      const gardenExisted = !!localStorage.getItem("muse_garden_v1");
+      backfillMemories(loadSave(nowMs()), nowMs());
+      if (!hasMemory(loadMemories(), "garden_visit", "garden")) {
+        recordMemory("garden_visit", "garden", nowMs(), gardenExisted ? "backfill" : "live");
+      }
       let gifted = false;
       mutateGarden((g) => {
         gifted = claimGift(g);
@@ -94,6 +101,7 @@ export function MuseGarden() {
       setWateredIdx(idx);
       setTimeout(() => setWateredIdx(null), 1100);
       setLine(pick(t.raw("lines.bloom") as string[]));
+      recordMemory("first_bloom", "bloom", nowMs());
     } else if (res === "already") {
       setNotice(t("wateredToday"));
     }
@@ -106,6 +114,7 @@ export function MuseGarden() {
       setSelected(null);
       setLine(pick(t.raw("lines.harvest") as string[]));
       setNotice(res.bonus > 0 ? t("harvestMilestone", { bonus: res.bonus }) : "");
+      recordMemory("first_harvest", "harvest", nowMs());
     }
   };
 
@@ -118,6 +127,7 @@ export function MuseGarden() {
     }
     setNotice(t("waterAllDone", { count: res.watered }));
     setLine(pick(t.raw(res.bloomed > 0 ? "lines.bloom" : "lines.water") as string[]));
+    if (res.bloomed > 0) recordMemory("first_bloom", "bloom", nowMs());
   };
 
   const onBuy = (sp: SpeciesId) => {
