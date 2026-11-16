@@ -489,6 +489,41 @@
         "She ate properly these past days… probably. Come in, come in!"
       ]
     },
+    "herLabel": "Muse (tap her)",
+    "clickLines": {
+      "idle": [
+        "Hm? Did you call me?",
+        "I'm here — what's up?"
+      ],
+      "spam": [
+        "Hey, that tickles!",
+        "Fine… you can keep poking."
+      ],
+      "hungry": [
+        "Um… I'm getting a little hungry."
+      ],
+      "tired": [
+        "Mm… I almost dozed off just now."
+      ],
+      "lowMood": [
+        "…Can you stay with me a little?"
+      ],
+      "walking": [
+        "One sec, I'm coming!"
+      ],
+      "shelf": [
+        "Shh — I'm reading."
+      ],
+      "desk": [
+        "Let me finish this line…"
+      ],
+      "rug": [
+        "I'll come when I finish this page."
+      ],
+      "rest": [
+        "…Mm… five more minutes…"
+      ]
+    },
     "discovery": {
       "general1": "A tiny ladybug landed on the windowsill. She counted its spots.",
       "general2": "She turned the cup on the desk around, saying it looks better this way.",
@@ -508,7 +543,8 @@
       "Check in daily for +10 stars and a snack; keep the streak going.",
       "Stars buy furniture. Buying places it in the room, and she'll walk over and use it herself.",
       "Fullness, mood and energy drift down over time. Snacks, playing and rest bring them back — they never hit zero, she just gets a little needy.",
-      "Intimacy grows from check-ins, care and time spent in the room, and never decreases. A special outfit is in the works for Lv.7.",
+      "Intimacy grows from check-ins, care and time spent in the room, and never decreases. The gardener outfit unlocks by harvesting 6 flowers in total in the indoor garden.",
+      "Tap her and she'll react — you can chat with her or change her outfit. Tap the floor and she'll run over to that spot.",
       "Progress lives only in this browser on this device — clearing browser data resets it. Think of it as a tiny room in your pocket."
     ],
     "entryTitle": "Muse's Room",

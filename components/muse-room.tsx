@@ -3,7 +3,15 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
-import { getCurrentOutfit, poseSrc, type OutfitId, type PoseName } from "@/lib/outfit";
+import {
+  OUTFIT_ORDER,
+  getCurrentOutfit,
+  outfitStatus,
+  poseSrc,
+  setCurrentOutfit,
+  type OutfitId,
+  type PoseName,
+} from "@/lib/outfit";
 import {
   FURNITURE,
   FURNITURE_ORDER,
@@ -47,6 +55,10 @@ function todayNow(): string {
   return todayStr(Date.now());
 }
 
+function nowMs(): number {
+  return Date.now();
+}
+
 interface ActState {
   mode: Activity;
   target: FurnitureId | null;
@@ -73,6 +85,7 @@ const SCENE_ORDER: FurnitureId[] = ["bookshelf", "desk", "rug"];
 export function MuseRoom() {
   const t = useTranslations("Room");
   const tg = useTranslations("Garden");
+  const tw = useTranslations("Wardrobe");
   const router = useRouter();
   const locale = useLocale();
   const tm = useTranslations("Mascot");
@@ -88,12 +101,30 @@ export function MuseRoom() {
   const [notice, setNotice] = useState<string | null>(null);
   const [discoveryId, setDiscoveryId] = useState<string | null>(null);
   const [today, setToday] = useState<string>("");
+  // 点击她 / 点地板（2026-11-17）：功能气泡、换装面板、落点光标、点按反馈
+  const [panel, setPanel] = useState<null | "main" | "wardrobe">(null);
+  const [marker, setMarker] = useState<{ x: number; feet: number; id: number } | null>(null);
+  const [tapFx, setTapFx] = useState(false);
+  const [feedHL, setFeedHL] = useState(false);
+  const [wardTick, setWardTick] = useState(0);
+  const [walkDur, setWalkDur] = useState(2600);
 
   const saveRef = useRef<RoomSave | null>(null);
   const outfitRef = useRef<OutfitId>("default");
   const actRef = useRef<ActState>({ mode: "idle", target: null, resting: false });
   const herXRef = useRef(50);
+  const herFeetRef = useRef(94);
   const timersRef = useRef<number[]>([]);
+  const sceneRef = useRef<HTMLDivElement | null>(null);
+  const herRef = useRef<HTMLDivElement | null>(null);
+  const tapChainRef = useRef({ count: 0, last: 0 });
+  const lastTapOkRef = useRef(0);
+  const markerSeqRef = useRef(0);
+  const pendingDestRef = useRef<
+    | { kind: "furniture"; fid: FurnitureId; rest: boolean }
+    | { kind: "point"; x: number; feet: number }
+    | null
+  >(null);
 
   const later = (fn: () => void, ms: number) => {
     const id = window.setTimeout(fn, ms);
@@ -111,6 +142,10 @@ export function MuseRoom() {
   const setHerXBoth = (x: number) => {
     herXRef.current = x;
     setHerX(x);
+  };
+  const setHerFeetBoth = (f: number) => {
+    herFeetRef.current = f;
+    setHerFeet(f);
   };
 
   const commit = (fn: (s: RoomSave) => void) => {
@@ -140,6 +175,11 @@ export function MuseRoom() {
   const linesOf = (key: string): string[] => {
     const raw = t.raw(`lines.${key}`) as string[] | undefined;
     return Array.isArray(raw) && raw.length > 0 ? raw : [];
+  };
+
+  const clickLinesOf = (key: string): string[] => {
+    const raw = t.raw(`clickLines.${key}`) as string[] | undefined;
+    return Array.isArray(raw) && raw.length > 0 ? raw : linesOf("idleOk");
   };
 
   const idleLineFor = (s: RoomSave): string => {
@@ -173,12 +213,15 @@ export function MuseRoom() {
     const def = FURNITURE[fid];
     // 没有互动人物层的时装：只散步过去看看，不切换图层（不穿帮）
     const canLayer = hasRoomCharLayer(outfitRef.current, fid);
+    setPanel(null);
+    pendingDestRef.current = { kind: "furniture", fid, rest };
+    setWalkDur(2600);
     setActBoth({ mode: "walk", target: fid, resting: rest });
     setLine(pick(linesOf("walk")));
     const to = def.anchor.x;
     setFacing(to >= herXRef.current ? "r" : "l");
     setHerXBoth(to);
-    setHerFeet(def.anchor.feet);
+    setHerFeetBoth(def.anchor.feet);
     later(() => {
       setActBoth({ mode: rest ? "rest" : "interact", target: fid, resting: rest });
       if (rest) setLine(pick(linesOf("rest")));
@@ -205,7 +248,7 @@ export function MuseRoom() {
     if ((cur.mode === "interact" || cur.mode === "rest") && cur.target) {
       // 她正贴在另一件家具上：先把自由身放回那件家具的锚点再出发
       setHerXBoth(FURNITURE[cur.target].anchor.x);
-      setHerFeet(FURNITURE[cur.target].anchor.feet);
+      setHerFeetBoth(FURNITURE[cur.target].anchor.feet);
     }
     setActBoth({ mode: "idle", target: null, resting: false });
     goInteract(fid, rest);
@@ -279,6 +322,22 @@ export function MuseRoom() {
     };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
+  }, []);
+
+  // 换装同步：屋内换装面板或别处换装后，她立刻换上新套装
+  useEffect(() => {
+    const sync = () => {
+      const o = getCurrentOutfit();
+      outfitRef.current = o;
+      setOutfit(o);
+    };
+    const bump = () => setWardTick((n) => n + 1);
+    window.addEventListener("muse:outfit-changed", sync);
+    window.addEventListener("muse:progress", bump);
+    return () => {
+      window.removeEventListener("muse:outfit-changed", sync);
+      window.removeEventListener("muse:progress", bump);
+    };
   }, []);
 
   // ---------------- 访客操作 ----------------
@@ -356,6 +415,123 @@ export function MuseRoom() {
     interruptTo(fid, false);
   };
 
+  // 点地板：她跑到落点（距离决定时长；光标在落点闪一下）
+  const goTo = (x: number, feet: number) => {
+    const cur = actRef.current;
+    clearTimers();
+    if ((cur.mode === "interact" || cur.mode === "rest") && cur.target) {
+      setHerXBoth(FURNITURE[cur.target].anchor.x);
+      setHerFeetBoth(FURNITURE[cur.target].anchor.feet);
+    }
+    setPanel(null);
+    pendingDestRef.current = { kind: "point", x, feet };
+    const dx = x - herXRef.current;
+    const dy = feet - herFeetRef.current;
+    const dist = Math.sqrt(dx * dx + Math.pow(dy * SCENE_RATIO, 2));
+    const dur = Math.round(Math.min(3000, Math.max(450, dist * 45)));
+    setWalkDur(dur);
+    setFacing(dx >= 0 ? "r" : "l");
+    setActBoth({ mode: "walk", target: null, resting: false });
+    setHerXBoth(x);
+    setHerFeetBoth(feet);
+    later(() => {
+      pendingDestRef.current = null;
+      setActBoth({ mode: "idle", target: null, resting: false });
+      startIdle(6000 + Math.random() * 4000);
+    }, dur + 60);
+  };
+
+  const onSceneClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if ((e.target as HTMLElement).closest("button, [data-nomove]")) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const yTop = ((e.clientY - rect.top) / rect.height) * 100;
+    const cx = Math.min(94, Math.max(6, x));
+    const feet = Math.min(98, Math.max(76, yTop));
+    const id = ++markerSeqRef.current;
+    setMarker({ x: cx, feet, id });
+    window.setTimeout(() => {
+      setMarker((m) => (m && m.id === id ? null : m));
+    }, 1400);
+    setLine(pick(linesOf("walk")));
+    goTo(cx, feet);
+  };
+
+  // 点她本人：按状态给反馈；空闲时打开功能气泡（问问慕斯 / 换装 / 一起玩游戏）
+  const onHerTap = () => {
+    const s = saveRef.current;
+    if (!s) return;
+    const now = nowMs();
+    const chain = tapChainRef.current;
+    chain.count = now - chain.last < 2500 ? chain.count + 1 : 1;
+    chain.last = now;
+    const cur = actRef.current;
+
+    // 正在家具图层里互动/休息：不打断，只抬头回一句
+    if ((cur.mode === "interact" || cur.mode === "rest") && cur.target) {
+      if (cur.mode === "rest") setLine(pick(clickLinesOf("rest")));
+      else setLine(pick(clickLinesOf(INTERACT_LINE_KEY[cur.target] ?? "idle")));
+      return;
+    }
+    // 原地休息中（没买地毯时）：迷糊回应，不打断
+    if (cur.mode === "rest") {
+      setLine(pick(clickLinesOf("rest")));
+      return;
+    }
+    // 连戳抗议（优先于冷却判定）
+    if (chain.count >= 3) {
+      chain.count = 0;
+      lastTapOkRef.current = now;
+      setLine(pick(clickLinesOf("spam")));
+      return;
+    }
+    if (now - lastTapOkRef.current < 1200) return;
+    lastTapOkRef.current = now;
+
+    // 走路中被点：停下来招手打招呼，然后继续去原来的目的地
+    if (cur.mode === "walk") {
+      const el = herRef.current;
+      const sc = sceneRef.current;
+      if (el && sc) {
+        const r = el.getBoundingClientRect();
+        const sr = sc.getBoundingClientRect();
+        setHerXBoth(((r.left + r.width / 2 - sr.left) / sr.width) * 100);
+        setHerFeetBoth(((r.bottom - sr.top) / sr.height) * 100);
+      }
+      clearTimers();
+      setActBoth({ mode: "idle", target: null, resting: false });
+      setPoseOv("wave");
+      setLine(pick(clickLinesOf("walking")));
+      later(() => {
+        setPoseOv(null);
+        const d = pendingDestRef.current;
+        if (d?.kind === "furniture") goInteract(d.fid, d.rest);
+        else if (d?.kind === "point") goTo(d.x, d.feet);
+        else startIdle(4000);
+      }, 1700);
+      return;
+    }
+
+    // 空闲：小跳一下 + 按状态回话 + 打开功能气泡
+    setTapFx(true);
+    window.setTimeout(() => setTapFx(false), 650);
+    if (s.satiety < 35) {
+      setLine(pick(clickLinesOf("hungry")));
+      setFeedHL(true);
+      later(() => setFeedHL(false), 4000);
+    } else if (s.energy < 30) {
+      setLine(pick(clickLinesOf("tired")));
+    } else if (s.mood < 35) {
+      setLine(pick(clickLinesOf("lowMood")));
+    } else {
+      setLine(pick(clickLinesOf("idle")));
+    }
+    setPanel("main");
+    later(() => {
+      setPanel((p) => (p === "main" ? null : p));
+    }, 9000);
+  };
+
   // ---------------- 渲染 ----------------
 
   if (!save) {
@@ -410,11 +586,20 @@ export function MuseRoom() {
       <style>{`
         @keyframes roomBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-1.6%); } }
         .room-bob { animation: roomBob 0.52s ease-in-out infinite; }
-        @media (prefers-reduced-motion: reduce) { .room-bob { animation: none; } }
+        @keyframes roomMarker { 0% { transform: translate(-50%, 50%) scale(0.35); opacity: 0.95; } 100% { transform: translate(-50%, 50%) scale(1.6); opacity: 0; } }
+        .room-marker-ring { animation: roomMarker 1.25s ease-out forwards; }
+        @keyframes roomTap { 0% { transform: translateY(0); } 35% { transform: translateY(-4.5%) scale(1.02); } 100% { transform: translateY(0); } }
+        .room-tap { animation: roomTap 0.6s ease; }
+        @media (prefers-reduced-motion: reduce) { .room-bob, .room-marker-ring, .room-tap { animation: none; } }
       `}</style>
 
-      {/* 场景 */}
-      <div className="relative w-full overflow-hidden rounded-xl border border-stone-200 dark:border-stone-800 select-none" style={{ aspectRatio: "16/9" }}>
+      {/* 场景（点地板任意处：她跑过去；点她本人：打开功能气泡） */}
+      <div
+        ref={sceneRef}
+        onClick={onSceneClick}
+        className="relative w-full overflow-hidden rounded-xl border border-stone-200 dark:border-stone-800 select-none"
+        style={{ aspectRatio: "16/9" }}
+      >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/muse-room/backdrop.webp" alt="" className="absolute inset-0 w-full h-full object-cover" draggable={false} />
 
@@ -507,15 +692,22 @@ export function MuseRoom() {
               }}
             />
             <div
-              className="absolute"
+              ref={herRef}
+              role="button"
+              aria-label={t("herLabel")}
+              onClick={(e) => {
+                e.stopPropagation();
+                onHerTap();
+              }}
+              className="absolute cursor-pointer"
               style={{
                 left: `${herX - herWPct / 2}%`,
                 bottom: `${100 - herFeet}%`,
                 height: `${herH}%`,
-                transition: walking ? "left 2.6s linear, bottom 2.6s linear" : "none",
+                transition: walking ? `left ${walkDur}ms linear, bottom ${walkDur}ms linear` : "none",
               }}
             >
-              <div className={walking ? "room-bob h-full" : "h-full"}>
+              <div className={`${walking ? "room-bob" : ""} ${tapFx ? "room-tap" : ""} h-full`}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={walking ? walkSrc : poseSrc(outfit, freePose)}
@@ -532,13 +724,115 @@ export function MuseRoom() {
           </>
         )}
 
-        {/* 她的台词气泡 */}
+        {/* 点地板的落点光标（扩散环的圆心就是落点） */}
+        {marker && (
+          <div
+            key={marker.id}
+            className="room-marker-ring absolute z-10 pointer-events-none h-7 w-7 rounded-full border-2 border-amber-400 bg-amber-200/30"
+            style={{ left: `${marker.x}%`, bottom: `${100 - marker.feet}%` }}
+          >
+            <span className="absolute left-1/2 top-1/2 h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-500" />
+          </div>
+        )}
+
+        {/* 她的台词气泡（点她后带功能按钮） */}
         {line && (
           <div
-            className="absolute z-10 max-w-[240px] -translate-x-1/2 rounded-2xl rounded-bl-md bg-white/95 dark:bg-stone-800/95 shadow-md px-3 py-2"
+            data-nomove=""
+            className={`absolute z-10 ${panel ? "w-60" : "max-w-[240px]"} -translate-x-1/2 rounded-2xl rounded-bl-md bg-white/95 dark:bg-stone-800/95 shadow-md px-3 py-2`}
             style={{ left: `${Math.min(84, Math.max(16, bubbleAnchorX))}%`, bottom: `${bubbleBottom}%` }}
           >
             <p className="text-[13px] leading-snug text-stone-800 dark:text-stone-100">{line}</p>
+            {panel === "main" && (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => window.dispatchEvent(new Event("ling:open-chat"))}
+                  className="px-2.5 py-1 text-xs rounded-full bg-sky-600 text-white cursor-pointer hover:bg-sky-500 transition-colors"
+                >
+                  {tm("chatCta")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPanel("wardrobe")}
+                  className="px-2.5 py-1 text-xs rounded-full bg-rose-500 text-white cursor-pointer hover:bg-rose-400 transition-colors"
+                >
+                  {tm("wardrobeCta")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => router.push(`/${locale}/games`)}
+                  className="px-2.5 py-1 text-xs rounded-full bg-violet-500 text-white cursor-pointer hover:bg-violet-400 transition-colors"
+                >
+                  {tm("playCta")}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* 屋内换装面板（复用时装库状态，换上立刻生效） */}
+        {panel === "wardrobe" && (
+          <div
+            data-nomove=""
+            className="absolute z-20 right-2 top-2 w-64 max-w-[78%] rounded-2xl bg-white/95 dark:bg-stone-800/95 shadow-lg p-3 overflow-y-auto"
+            style={{ maxHeight: "calc(100% - 16px)" }}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm font-medium text-stone-800 dark:text-stone-100">{tw("title")}</p>
+              <button
+                type="button"
+                aria-label="close"
+                onClick={() => setPanel(null)}
+                className="text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 cursor-pointer px-1"
+              >
+                ✕
+              </button>
+            </div>
+            <div key={wardTick} className="space-y-2">
+              {OUTFIT_ORDER.map((id) => {
+                const st = outfitStatus(id);
+                const wearingNow = outfit === id;
+                return (
+                  <div key={id} className="flex items-center gap-2.5">
+                    <div className="relative h-12 w-9 shrink-0 overflow-hidden rounded-md bg-[#faf6ec] dark:bg-stone-900">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={poseSrc(id, "look")}
+                        alt=""
+                        className="h-full w-full object-cover object-top"
+                        style={st.unlocked ? undefined : { filter: "brightness(0)" }}
+                        draggable={false}
+                      />
+                      {!st.unlocked && (
+                        <span className="absolute inset-0 flex items-center justify-center text-amber-500 font-bold">?</span>
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[13px] font-medium text-stone-800 dark:text-stone-100 leading-tight">{tw(`names.${id}`)}</p>
+                      {!st.unlocked && (
+                        <p className="text-[11px] text-stone-500 dark:text-stone-400 leading-tight">
+                          {tw(`conditions.${id}`)}
+                          {st.progress ? ` · ${st.progress.value} / ${st.progress.target}` : ""}
+                        </p>
+                      )}
+                    </div>
+                    {wearingNow ? (
+                      <span className="text-[11px] text-rose-500 shrink-0">{tw("wearing")}</span>
+                    ) : st.unlocked ? (
+                      <button
+                        type="button"
+                        onClick={() => setCurrentOutfit(id)}
+                        className="px-2.5 py-1 text-[11px] rounded-full bg-rose-500 text-white cursor-pointer hover:bg-rose-400 transition-colors shrink-0"
+                      >
+                        {tw("wear")}
+                      </button>
+                    ) : null}
+                  </div>
+                );
+              })}
+            </div>
+            <p className="mt-2 text-[11px] text-stone-400 dark:text-stone-500 leading-snug">{tw("hint")}</p>
           </div>
         )}
       </div>
@@ -569,7 +863,7 @@ export function MuseRoom() {
           >
             {checkedIn ? `✓ ${t("checkedIn")}` : `★ ${t("checkin")}`}
           </button>
-          <button onClick={onFeed} className="px-3 py-1.5 text-sm rounded-full border border-amber-400 text-amber-700 dark:text-amber-300 cursor-pointer hover:bg-amber-50 dark:hover:bg-amber-950 transition-colors">
+          <button onClick={onFeed} className={`px-3 py-1.5 text-sm rounded-full border border-amber-400 text-amber-700 dark:text-amber-300 cursor-pointer hover:bg-amber-50 dark:hover:bg-amber-950 transition-colors ${feedHL ? "ring-2 ring-amber-400 animate-pulse" : ""}`}>
             🍰 {t("feed")}
           </button>
           <button onClick={onPlay} className="px-3 py-1.5 text-sm rounded-full border border-rose-300 text-rose-600 dark:text-rose-300 cursor-pointer hover:bg-rose-50 dark:hover:bg-rose-950 transition-colors">
