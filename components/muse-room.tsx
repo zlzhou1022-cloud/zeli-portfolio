@@ -113,6 +113,7 @@ export function MuseRoom() {
   const [discoveryId, setDiscoveryId] = useState<string | null>(null);
   const [today, setToday] = useState<string>("");
   // 点击她 / 点地板（2026-11-17）：功能气泡、换装面板、落点光标、点按反馈
+  const [levelUpFx, setLevelUpFx] = useState<string | null>(null);
   const [panel, setPanel] = useState<null | "main" | "wardrobe">(null);
   const [marker, setMarker] = useState<{ x: number; feet: number; id: number } | null>(null);
   const [tapFx, setTapFx] = useState(false);
@@ -160,8 +161,10 @@ export function MuseRoom() {
   };
 
   const commit = (fn: (s: RoomSave) => void) => {
+    let leveledTo = 0;
     setSave((prev) => {
       if (!prev) return prev;
+      const before = intimacyLevel(prev.intimacyXp);
       const next: RoomSave = {
         ...prev,
         owned: [...prev.owned],
@@ -174,8 +177,27 @@ export function MuseRoom() {
       fn(next);
       persistSave(next);
       saveRef.current = next;
+      const after = intimacyLevel(next.intimacyXp);
+      if (after > before) leveledTo = after;
       return next;
     });
+    // 亲密度升级反馈（W3）：横幅点名新称号与解锁内容，她的专属升级台词稍后接上
+    // （GPT 评审：防「台词包解锁了但玩家没感知」；台词延迟 400ms 以免被当次动作台词覆盖）
+    if (leveledTo > 0) {
+      const titles = (t.raw("levelTitles") as string[] | undefined) ?? [];
+      const unlocks = (t.raw("levelUnlocks") as Record<string, string> | undefined) ?? {};
+      const upLines = (t.raw("levelUp") as Record<string, string> | undefined) ?? {};
+      setLevelUpFx(
+        t("levelUpNotice", {
+          level: leveledTo,
+          title: titles[leveledTo - 1] ?? "",
+          unlock: unlocks[String(leveledTo)] ?? "",
+        }),
+      );
+      later(() => setLevelUpFx(null), 5000);
+      const up = upLines[String(leveledTo)];
+      if (up) later(() => setLine(up), 400);
+    }
   };
 
   const flashNotice = (msg: string) => {
@@ -197,8 +219,10 @@ export function MuseRoom() {
     if (s.satiety < 30) return pick(linesOf("idleHungry"));
     if (s.energy < 25) return pick(linesOf("idleTired"));
     if (s.mood < 35) return pick(linesOf("idleLowMood"));
-    if (s.mood >= 70) return pick(linesOf("idleHappy"));
-    return pick(linesOf("idleOk"));
+    // Lv7 起她偶尔主动搭话（GPT 评审：为 Lv8 小发现铺垫）
+    const extra = intimacyLevel(s.intimacyXp) >= 7 ? linesOf("proactive7") : [];
+    if (s.mood >= 70) return pick([...linesOf("idleHappy"), ...extra]);
+    return pick([...linesOf("idleOk"), ...extra]);
   };
 
   // ---------------- 活动调度 ----------------
@@ -207,7 +231,14 @@ export function MuseRoom() {
     later(() => {
       const s = saveRef.current;
       if (!s) return;
-      setIdlePose(pick(["look", "book", "letter"] as PoseName[]));
+      // Lv3 起待机小动作变多（亲密度奖励梯）
+      setIdlePose(
+        pick(
+          intimacyLevel(s.intimacyXp) >= 3
+            ? (["look", "book", "letter", "smell", "scratch", "stareyes"] as PoseName[])
+            : (["look", "book", "letter"] as PoseName[]),
+        ),
+      );
       const { furniture, rest } = pickAutoTarget(s, Math.random());
       if (!furniture) {
         setLine(idleLineFor(s));
@@ -543,7 +574,15 @@ export function MuseRoom() {
     } else if (s.mood < 35) {
       setLine(pick(clickLinesOf("lowMood")));
     } else {
-      setLine(pick(clickLinesOf("idle")));
+      // 亲密度台词包随等级并入点击池（Lv2/4/5/6/9，GPT 评审定版）
+      const lv = intimacyLevel(s.intimacyXp);
+      const pool = [...clickLinesOf("idle")];
+      if (lv >= 2) pool.push(...clickLinesOf("pack2"));
+      if (lv >= 4) pool.push(...clickLinesOf("pack4"));
+      if (lv >= 5) pool.push(...clickLinesOf("pack5"));
+      if (lv >= 6) pool.push(...clickLinesOf("pack6"));
+      if (lv >= 9) pool.push(...clickLinesOf("pack9"));
+      setLine(pick(pool));
     }
     setPanel("main");
     later(() => {
@@ -856,6 +895,13 @@ export function MuseRoom() {
         )}
       </div>
 
+      {/* 亲密度升级横幅（W3） */}
+      {levelUpFx && (
+        <div className="rounded-xl border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/40 px-4 py-2.5 text-sm font-medium text-rose-600 dark:text-rose-300">
+          💗 {levelUpFx}
+        </div>
+      )}
+
       {/* 状态与照顾 */}
       <div className="rounded-xl border border-stone-200 dark:border-stone-800 p-4 space-y-4 bg-white/60 dark:bg-stone-900/40">
         <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
@@ -863,6 +909,11 @@ export function MuseRoom() {
           <span className="text-sm text-stone-600 dark:text-stone-300">🍰 {t("snackLabel")} × {save.snacks}</span>
           <span className="text-sm text-stone-600 dark:text-stone-300">
             {t("intimacyLabel")} Lv.{level}
+            {((t.raw("levelTitles") as string[] | undefined) ?? [])[level - 1] && (
+              <span className="ml-1.5 text-xs font-medium text-rose-500 dark:text-rose-400">
+                {((t.raw("levelTitles") as string[])[level - 1])}
+              </span>
+            )}
             <span className="ml-2 inline-block align-middle w-24 h-2 rounded-full bg-stone-200 dark:bg-stone-700 overflow-hidden">
               <span className="block h-full bg-rose-400 rounded-full transition-all duration-700" style={{ width: `${levelPct}%` }} />
             </span>

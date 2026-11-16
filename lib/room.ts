@@ -457,6 +457,13 @@ export const DISCOVERIES: DiscoveryDef[] = [
   { id: "happy1", when: { moodMin: 75 } },
   { id: "close1", when: { intimacyMin: 3 } },
   { id: "close2", when: { intimacyMin: 5 } },
+  // Lv8 起的小发现：她开始分享小秘密（W3，文案经 GPT 评审）
+  { id: "secret1", when: { intimacyMin: 8 } },
+  { id: "secret2", when: { intimacyMin: 8 } },
+  { id: "secret3", when: { intimacyMin: 8 } },
+  { id: "secret4", when: { intimacyMin: 8 } },
+  { id: "secret5", when: { intimacyMin: 8 } },
+  { id: "secret6", when: { intimacyMin: 10 } },
 ];
 
 function discoveryMatches(def: DiscoveryDef, save: RoomSave, period: TimePeriod): boolean {
