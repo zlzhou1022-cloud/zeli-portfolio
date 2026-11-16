@@ -161,26 +161,24 @@ export function MuseRoom() {
   };
 
   const commit = (fn: (s: RoomSave) => void) => {
-    let leveledTo = 0;
-    setSave((prev) => {
-      if (!prev) return prev;
-      const before = intimacyLevel(prev.intimacyXp);
-      const next: RoomSave = {
-        ...prev,
-        owned: [...prev.owned],
-        care: { ...prev.care },
-        dash: { ...prev.dash },
-        quiz: { ...prev.quiz },
-        discovery: { ...prev.discovery },
-        interactions: { ...prev.interactions },
-      };
-      fn(next);
-      persistSave(next);
-      saveRef.current = next;
-      const after = intimacyLevel(next.intimacyXp);
-      if (after > before) leveledTo = after;
-      return next;
-    });
+    // 同步地从 saveRef 克隆并应用（不依赖 setState updater 的执行时机，升级检测才可靠）
+    const prev = saveRef.current;
+    if (!prev) return;
+    const before = intimacyLevel(prev.intimacyXp);
+    const next: RoomSave = {
+      ...prev,
+      owned: [...prev.owned],
+      care: { ...prev.care },
+      dash: { ...prev.dash },
+      quiz: { ...prev.quiz },
+      discovery: { ...prev.discovery },
+      interactions: { ...prev.interactions },
+    };
+    fn(next);
+    persistSave(next);
+    saveRef.current = next;
+    setSave(next);
+    const leveledTo = intimacyLevel(next.intimacyXp) > before ? intimacyLevel(next.intimacyXp) : 0;
     // 亲密度升级反馈（W3）：横幅点名新称号与解锁内容，她的专属升级台词稍后接上
     // （GPT 评审：防「台词包解锁了但玩家没感知」；台词延迟 400ms 以免被当次动作台词覆盖）
     if (leveledTo > 0) {
@@ -360,7 +358,9 @@ export function MuseRoom() {
     const onStorage = (e: StorageEvent) => {
       if (e.key !== ROOM_KEY || !e.newValue) return;
       const now = Date.now();
-      setSave(settle(loadSave(now), now));
+      const s = settle(loadSave(now), now);
+      saveRef.current = s;
+      setSave(s);
     };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
