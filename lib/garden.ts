@@ -4,7 +4,7 @@
 // 状态存访客浏览器 localStorage（独立 key），星星走小屋的钱包（lib/room）。
 // 累计收获里程碑：5 朵 → 花盆 4 个；6 朵 → 园丁装解锁（lib/outfit 读取）；12 朵 → 花盆 5 个。
 
-import { mutateSave, todayStr } from "@/lib/room";
+import { applyWishAction, ensureWish, mutateSave, todayStr } from "@/lib/room";
 import { notifyProgress } from "@/lib/outfit";
 
 export const GARDEN_KEY = "muse_garden_v1";
@@ -148,7 +148,7 @@ export function plantSeed(idx: number, species: SpeciesId, now: number): boolean
 export type WaterResult = "grew" | "bloomed" | "already" | "done" | "empty";
 
 export function water(idx: number, now: number): WaterResult {
-  let res: WaterResult = "empty";
+  let res = "empty" as WaterResult;
   mutateGarden((g) => {
     const p = g.pots[idx];
     if (!p) return;
@@ -165,6 +165,13 @@ export function water(idx: number, now: number): WaterResult {
     p.growthDays += 1;
     res = stageOf(p) >= 4 ? "bloomed" : "grew";
   });
+  if (res === "grew" || res === "bloomed") {
+    // 周愿望（W5）：有效浇水按天计数（跨页走小屋存档）
+    mutateSave(now, (s) => {
+      ensureWish(s, now, Math.random());
+      applyWishAction(s, "water", now);
+    });
+  }
   return res;
 }
 
@@ -182,6 +189,12 @@ export function waterAll(now: number): { watered: number; bloomed: number } {
       if (stageOf(p) >= 4) bloomed += 1;
     }
   });
+  if (watered > 0) {
+    mutateSave(now, (s) => {
+      ensureWish(s, now, Math.random());
+      applyWishAction(s, "water", now);
+    });
+  }
   return { watered, bloomed };
 }
 
@@ -208,6 +221,8 @@ export function harvest(idx: number, now: number): { bonus: number } | null {
   if (!ok) return null;
   mutateSave(now, (s) => {
     s.stars += HARVEST_STARS + bonus;
+    ensureWish(s, now, Math.random());
+    applyWishAction(s, "harvest", now);
   });
   notifyProgress(); // 园丁装解锁庆祝走时装库的既有通道
   return { bonus };
