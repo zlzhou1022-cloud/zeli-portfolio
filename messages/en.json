@@ -489,6 +489,11 @@
       "reunion": [
         "You're back! She's been waiting.",
         "She ate properly these past days… probably. Come in, come in!"
+      ],
+      "proactive7": [
+        "The room is so quiet today... but that is kind of nice too.",
+        "A little bird landed on the windowsill just now and watched me for ages.",
+        "I am wondering what to have for dinner... what about you?"
       ]
     },
     "herLabel": "Muse (tap her)",
@@ -524,6 +529,36 @@
       ],
       "rest": [
         "…Mm… five more minutes…"
+      ],
+      "pack2": [
+        "You are here! How was your day?",
+        "I was just spacing out, and then you showed up.",
+        "Hehe, caught me slacking off in here.",
+        "The sunlight in the room is just right today."
+      ],
+      "pack4": [
+        "Hey, I have been into a little thing lately...",
+        "Do you have a memory that always makes you smile?",
+        "I actually talk quite a lot — just not with people I do not know well.",
+        "Next time, tell me about the weather over there."
+      ],
+      "pack5": [
+        "Hey, you are here! I just thought of something fun.",
+        "I knew you would come around this time.",
+        "No need to do anything special. Just sit with me a while."
+      ],
+      "pack6": [
+        "Shh — I almost dozed off, and you caught me.",
+        "Can you tell? I am in a really good mood today.",
+        "Some things do not need finishing; I get the gist.",
+        "I want to show you every corner of this room."
+      ],
+      "pack9": [
+        "Only with you am I this talkative.",
+        "Our bond took time to grow, bit by bit.",
+        "Keep coming by. I will be here waiting.",
+        "The secrets I shared are just between us, okay?",
+        "Every day with you here is a good day."
       ]
     },
     "discovery": {
@@ -538,7 +573,13 @@
       "hungry1": "Her tummy just growled. She pretended it was a bird outside.",
       "happy1": "She's in an especially good mood today — little skips in her steps.",
       "close1": "She says this room feels more like a home because you visit.",
-      "close2": "She saved half of her favourite snack, saying you'd share it when you came."
+      "close2": "She saved half of her favourite snack, saying you'd share it when you came.",
+      "secret1": "Little discovery: I have a small habit — when I find a sentence I love, I secretly write it down, and read it again on low days.",
+      "secret2": "Little discovery: I think I really like rainy days. The pattering outside makes time feel slower.",
+      "secret3": "Little discovery: a secret — when I eat snacks, I always look at the prettiest piece first... then I cannot bear to eat it.",
+      "secret4": "Little discovery: sometimes I space out staring at pots that have not bloomed yet. Nothing is happening, yet they feel like they are quietly trying.",
+      "secret5": "Little discovery: if we wrote down every little thing each day, would this room slowly become a thick storybook?",
+      "secret6": "Little discovery: honestly, I have gotten used to the sound of you opening the door. On days I do not hear it, something feels missing."
     },
     "rulesTitle": "How it works",
     "rules": [
@@ -551,7 +592,42 @@
     ],
     "entryTitle": "Muse's Room",
     "entryDesc": "A little room of her own — earn stars, buy furniture, and watch her wander, read and sit on her rug. Visit often; she remembers you.",
-    "entryCta": "Visit her"
+    "entryCta": "Visit her",
+    "levelTitles": [
+      "New Friend",
+      "Familiar Face",
+      "Regular Visitor",
+      "Chat Buddy",
+      "Everyday Companion",
+      "In-Sync Partner",
+      "Trusted Companion",
+      "Close Friend",
+      "Special Partner",
+      "Old Partner"
+    ],
+    "levelUpNotice": "Intimacy rose to Lv.{level} “{title}”! {unlock}",
+    "levelUnlocks": {
+      "2": "New tap lines unlocked — tap her and listen.",
+      "3": "She has more little idle poses now.",
+      "4": "New tap lines unlocked — tap her and listen.",
+      "5": "Her replies feel more familiar and relaxed.",
+      "6": "New tap lines unlocked — tap her and listen.",
+      "7": "She sometimes starts a chat on her own now.",
+      "8": "She is willing to share little secrets now — watch for the daily discovery.",
+      "9": "New tap lines unlocked — tap her and listen.",
+      "10": "Max-level memento: thank you for always being here."
+    },
+    "levelUp": {
+      "2": "I think we got a little closer than yesterday.",
+      "3": "Hehe, being in this room feels more and more natural.",
+      "4": "Talking with you is the most relaxing. Tell me anything.",
+      "5": "I am starting to remember the rhythm of your visits.",
+      "6": "We do not have to talk. Just being here together is nice.",
+      "7": "With you here, this room does not feel so quiet.",
+      "8": "Um... from now on, some little secrets are only for you.",
+      "9": "We really are in sync now — it grew bit by bit.",
+      "10": "Old partners now. Thank you, for always being here."
+    }
   },
   "Garden": {
     "pageTitle": "Muse's Indoor Garden",
