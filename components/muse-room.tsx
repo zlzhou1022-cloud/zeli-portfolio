@@ -418,17 +418,17 @@ export function MuseRoom() {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/muse-room/backdrop.webp" alt="" className="absolute inset-0 w-full h-full object-cover" draggable={false} />
 
-        {/* 花架（室内花园入口，二期）：固定在窗边角落，点它进花园页 */}
+        {/* 花架（室内花园入口，二期）：落在书桌与墙角之间的地板上，避开窗台与地毯，点它进花园页 */}
         <div
           className="absolute rounded-[50%] bg-stone-900/15 blur-[3px]"
-          style={{ left: "62.8%", width: "7.4%", bottom: "22.2%", height: "1.8%" }}
+          style={{ left: "58.9%", width: "6.4%", bottom: "17.8%", height: "1.8%" }}
         />
         <button
           type="button"
           aria-label={tg("standLabel")}
           onClick={() => router.push(`/${locale}/games/garden`)}
           className="absolute cursor-pointer group"
-          style={{ left: "61.6%", bottom: "23%", height: "30%", aspectRatio: "899/963" }}
+          style={{ left: "55.4%", bottom: "18.5%", height: "25%", aspectRatio: "899/963" }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/muse-room/garden-stand.webp" alt="" className="h-full w-auto max-w-none mx-auto block transition-transform group-hover:scale-[1.03]" draggable={false} />
