@@ -38,6 +38,10 @@ import {
   roomWithHerLayers,
   settle,
   todayStr,
+  WISH_TARGETS,
+  applyWishAction,
+  claimWish,
+  ensureWish,
 } from "@/lib/room";
 import {
   backfillMemories,
@@ -139,6 +143,8 @@ export function MuseRoom() {
   const sceneRef = useRef<HTMLDivElement | null>(null);
   const herRef = useRef<HTMLDivElement | null>(null);
   const tapChainRef = useRef({ count: 0, last: 0 });
+  // 周愿望家具计数：只有访客主动点家具触发的互动才算（自动散步不算，GPT 评审纪律）
+  const wishTapRef = useRef<FurnitureId | null>(null);
   const lastTapOkRef = useRef(0);
   const markerSeqRef = useRef(0);
   const pendingDestRef = useRef<
@@ -182,6 +188,7 @@ export function MuseRoom() {
       quiz: { ...prev.quiz },
       discovery: { ...prev.discovery },
       interactions: { ...prev.interactions },
+      wish: prev.wish ? { ...prev.wish, days: [...prev.wish.days] } : null,
     };
     fn(next);
     persistSave(next);
@@ -262,6 +269,7 @@ export function MuseRoom() {
     const s = saveRef.current;
     if (!s) return;
     const def = FURNITURE[fid];
+    const tapCounted = wishTapRef.current === fid;
     // 没有互动人物层的时装：只散步过去看看，不切换图层（不穿帮）
     const canLayer = hasRoomCharLayer(outfitRef.current, fid);
     setPanel(null);
@@ -284,6 +292,10 @@ export function MuseRoom() {
             sv.intimacyXp += def.intimacyXp;
             sv.interactions[fid] = (sv.interactions[fid] ?? 0) + 1;
             if (rest) sv.energy = Math.min(100, sv.energy + 12);
+            if (tapCounted) {
+              applyWishAction(sv, "furniture", Date.now());
+              wishTapRef.current = null;
+            }
           });
           setActBoth({ mode: "idle", target: null, resting: false });
           startIdle(5000 + Math.random() * 3500);
@@ -330,6 +342,9 @@ export function MuseRoom() {
       const first = !raw.welcomed;
       const s = settle(raw, now);
       if (first) claimWelcome(s);
+      // 每周小愿望（W5）：跨周自动抽新愿望；进屋按天计数
+      ensureWish(s, now, Math.random());
+      applyWishAction(s, "visit", now);
       const disc = pickDiscovery(s, now, Math.random());
       persistSave(s);
       saveRef.current = s;
@@ -416,6 +431,7 @@ export function MuseRoom() {
     let ok = false;
     commit((s) => {
       ok = feed(s);
+      if (ok) applyWishAction(s, "feed", Date.now());
     });
     if (ok) {
       setLine(t("feedDone"));
@@ -429,7 +445,9 @@ export function MuseRoom() {
   const onPlay = () => {
     let ok = false;
     commit((s) => {
-      ok = playWith(s, Date.now());
+      const now = Date.now();
+      ok = playWith(s, now);
+      if (ok) applyWishAction(s, "play", now);
     });
     if (ok) {
       setLine(t("playDone"));
@@ -451,6 +469,14 @@ export function MuseRoom() {
     } else {
       flashNotice(t("restLimit"));
     }
+  };
+
+  const onClaimWish = (choice: "stars" | "snack") => {
+    let ok = false;
+    commit((s) => {
+      ok = claimWish(s, choice);
+    });
+    if (ok) flashNotice(t("wish.claimed"));
   };
 
   const onBuySnack = () => {
@@ -480,6 +506,7 @@ export function MuseRoom() {
   const onFurnitureTap = (fid: FurnitureId) => {
     if (!FURNITURE[fid].interactive) return;
     if (actRef.current.target === fid && actRef.current.mode !== "idle") return;
+    wishTapRef.current = fid;
     interruptTo(fid, false);
   };
 
@@ -488,6 +515,7 @@ export function MuseRoom() {
     const { x, feet } = clampWalkTarget(x0, feet0);
     const cur = actRef.current;
     clearTimers();
+    wishTapRef.current = null;
     if ((cur.mode === "interact" || cur.mode === "rest") && cur.target) {
       setHerXBoth(FURNITURE[cur.target].anchor.x);
       setHerFeetBoth(FURNITURE[cur.target].anchor.feet);
@@ -614,6 +642,28 @@ export function MuseRoom() {
     return <div className="w-full rounded-xl border border-stone-200 dark:border-stone-800 bg-[#f7f1e5] dark:bg-stone-900 aspect-[16/9] animate-pulse" />;
   }
 
+  const wish = save.wish;
+  // 明日预告（W6）：从当前存档确定性推导明天最值得期待的一件事
+  const tomorrowLine = ((): string => {
+    try {
+      const raw = localStorage.getItem("muse_garden_v1");
+      if (raw) {
+        const g = JSON.parse(raw) as { pots?: ({ growthDays: number } | null)[] };
+        if ((g.pots ?? []).some((p) => p && p.growthDays === 9)) return t("tomorrow.bloom");
+      }
+    } catch {
+      /* 花园存档读不到就跳过这一条 */
+    }
+    const [ty, tm, td] = today.split("-").map(Number);
+    if (ty && new Date(ty, tm - 1, td + 1).getDay() === 1) return t("tomorrow.newWeek");
+    if (wish && !wish.done) {
+      return t("tomorrow.wish", {
+        left: WISH_TARGETS[wish.id] - wish.progress,
+        unit: t(`wish.units.${wish.id}`),
+      });
+    }
+    return t("tomorrow.default");
+  })();
   const level = intimacyLevel(save.intimacyXp);
   const curBase = INTIMACY_THRESHOLDS[level - 1] ?? 0;
   const nextBase = INTIMACY_THRESHOLDS[level] ?? curBase + 50;
@@ -966,6 +1016,61 @@ export function MuseRoom() {
         </div>
         {notice && <p className="text-sm text-amber-700 dark:text-amber-300">{notice}</p>}
       </div>
+
+      {/* 本周小愿望（W5）：温柔的小约定，无惩罚无倒计时 */}
+      {wish && (
+        <div className="rounded-xl border border-stone-200 dark:border-stone-800 p-4 bg-white/60 dark:bg-stone-900/40 space-y-2">
+          <div className="flex flex-wrap items-baseline gap-x-3">
+            <h3 className="text-sm font-medium text-stone-800 dark:text-stone-100">🎋 {t("wish.title")}</h3>
+            <span className="text-xs text-stone-400">
+              {wish.done
+                ? t("wish.progressDone")
+                : `${wish.progress} / ${WISH_TARGETS[wish.id]} ${t(`wish.units.${wish.id}`)}`}
+            </span>
+          </div>
+          <p className="text-sm text-stone-700 dark:text-stone-200">
+            {t(`wish.texts.${wish.id}`)}{" "}
+            <span className="text-xs text-stone-400">{t(`wish.descs.${wish.id}`, { target: WISH_TARGETS[wish.id] })}</span>
+          </p>
+          <div className="h-2 rounded-full bg-stone-200 dark:bg-stone-700 overflow-hidden">
+            <span
+              className="block h-full bg-teal-400 rounded-full transition-all duration-700"
+              style={{ width: `${(wish.progress / WISH_TARGETS[wish.id]) * 100}%` }}
+            />
+          </div>
+          {wish.done && !wish.claimed && (
+            <div className="space-y-2 pt-1">
+              <p className="text-sm text-stone-600 dark:text-stone-300">{t("wish.doneLine")}</p>
+              <p className="text-xs text-stone-400">{t("wish.giftLabel")}</p>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => onClaimWish("stars")}
+                  className="rounded-full bg-amber-500 hover:bg-amber-400 text-white px-3.5 py-1.5 text-sm font-medium transition-colors"
+                >
+                  ★ {t("wish.claimStars")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onClaimWish("snack")}
+                  className="rounded-full bg-rose-400 hover:bg-rose-300 text-white px-3.5 py-1.5 text-sm font-medium transition-colors"
+                >
+                  🍰 {t("wish.claimSnack")}
+                </button>
+              </div>
+            </div>
+          )}
+          {wish.claimed && (
+            <p className="text-sm text-emerald-600 dark:text-emerald-400">✓ {t("wish.claimed")}</p>
+          )}
+          {!wish.done && <p className="text-xs text-stone-400">{t("wish.hint")}</p>}
+        </div>
+      )}
+
+      {/* 明日预告（W6） */}
+      <p className="text-center text-xs text-stone-400 dark:text-stone-500">
+        🌙 {t("tomorrow.label")}：{tomorrowLine}
+      </p>
 
       {/* 今日小发现 */}
       {discoveryId && (

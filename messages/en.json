@@ -704,6 +704,13 @@
         "feed": "",
         "harvest": ""
       }
+    },
+    "tomorrow": {
+      "label": "Tomorrow",
+      "bloom": "Water that flower tomorrow and it will finally bloom!",
+      "newWeek": "Tomorrow starts a new week — a new little wish will be waiting.",
+      "wish": "This week's little wish is {left} away. Keep her company again tomorrow.",
+      "default": "She will be here waiting tomorrow. Come say hi."
     }
   },
   "Garden": {

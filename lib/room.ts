@@ -38,6 +38,7 @@ export interface RoomSave {
   quiz: { date: string | null; claimed: boolean };
   discovery: { date: string | null; id: string | null };
   interactions: Partial<Record<FurnitureId, number>>;
+  wish: WishState | null;
 }
 
 export function defaultSave(now: number): RoomSave {
@@ -59,6 +60,7 @@ export function defaultSave(now: number): RoomSave {
     quiz: { date: null, claimed: false },
     discovery: { date: null, id: null },
     interactions: {},
+    wish: null,
   };
 }
 
@@ -235,6 +237,88 @@ export function buySnack(save: RoomSave): boolean {
   if (save.stars < SNACK_PRICE) return false;
   save.stars -= SNACK_PRICE;
   save.snacks += 1;
+  return true;
+}
+
+// ----------------------------------------------------------- 每周小愿望（W5，GPT 评审定版）
+// 每周（周一起）抽一个温柔的小约定：周内累计、只记成功动作、无惩罚无倒计时；
+// 奖励 15 星 / 点心 ×1 二选一（防星星通胀）。计数纪律：陪玩/投喂只记成功；
+// 浇水/进屋按日期去重；家具只记访客主动点触发并完成的互动（自动散步不算）。
+
+export type WishId = "play" | "water" | "furniture" | "visit" | "feed" | "harvest";
+
+export interface WishState {
+  week: string; // 本周周一的本地日期
+  id: WishId;
+  progress: number;
+  days: string[]; // water/visit 的已计数日期（去重用）
+  done: boolean;
+  claimed: boolean;
+}
+
+export const WISH_TARGETS: Record<WishId, number> = {
+  play: 3,
+  water: 4,
+  furniture: 3,
+  visit: 3,
+  feed: 2,
+  harvest: 1,
+};
+export const WISH_REWARD_STARS = 15;
+
+export function weekKeyOf(now: number): string {
+  const offset = (new Date(now).getDay() + 6) % 7; // 周一为一周开始
+  return todayStr(now - offset * 24 * 3600 * 1000);
+}
+
+function gardenHasBloom(): boolean {
+  try {
+    const raw = localStorage.getItem("muse_garden_v1");
+    if (!raw) return false;
+    const g = JSON.parse(raw) as { pots?: ({ growthDays: number } | null)[] };
+    return (g.pots ?? []).some((p) => p && p.growthDays >= 10);
+  } catch {
+    return false;
+  }
+}
+
+/** 本周愿望不存在或已跨周时抽一个新的（愿望池按当前可完成条件过滤，避免抽到做不到的） */
+export function ensureWish(save: RoomSave, now: number, rand: number): void {
+  const week = weekKeyOf(now);
+  if (save.wish && save.wish.week === week) return;
+  const pool: WishId[] = ["play", "water", "visit"];
+  if (save.owned.some((f) => FURNITURE[f]?.interactive)) pool.push("furniture");
+  if (save.snacks >= 1) pool.push("feed");
+  if (gardenHasBloom()) pool.push("harvest");
+  const id = pool[Math.min(pool.length - 1, Math.floor(rand * pool.length))];
+  save.wish = { week, id, progress: 0, days: [], done: false, claimed: false };
+}
+
+/** 记一次愿望进度：与本周愿望不符或已完成时不动；water/visit 按日期去重 */
+export function applyWishAction(save: RoomSave, kind: WishId, now: number): void {
+  const w = save.wish;
+  if (!w || w.id !== kind || w.done) return;
+  if (kind === "water" || kind === "visit") {
+    const today = todayStr(now);
+    if (w.days.includes(today)) return;
+    w.days.push(today);
+    w.progress = w.days.length;
+  } else {
+    w.progress += 1;
+  }
+  if (w.progress >= WISH_TARGETS[w.id]) {
+    w.progress = WISH_TARGETS[w.id];
+    w.done = true;
+  }
+}
+
+/** 领取愿望奖励（15 星或点心 ×1，二选一，只能领一次） */
+export function claimWish(save: RoomSave, choice: "stars" | "snack"): boolean {
+  const w = save.wish;
+  if (!w || !w.done || w.claimed) return false;
+  w.claimed = true;
+  if (choice === "stars") save.stars += WISH_REWARD_STARS;
+  else save.snacks += 1;
   return true;
 }
 
