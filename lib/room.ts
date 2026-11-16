@@ -199,33 +199,42 @@ function rollCare(save: RoomSave, now: number) {
   if (save.care.date !== today) save.care = { date: today, plays: 0, rests: 0 };
 }
 
-/** 投喂：消耗 1 点心，饱食 +25，亲密度 +2 */
+/** 投喂：消耗 1 点心，饱食 +30，亲密度 +2（恢复量 2026-11-17 按 GPT 玩法评审上调） */
 export function feed(save: RoomSave): boolean {
   if (save.snacks <= 0) return false;
   save.snacks -= 1;
-  save.satiety = Math.min(100, save.satiety + 25);
+  save.satiety = Math.min(100, save.satiety + 30);
   save.intimacyXp += 2;
   return true;
 }
 
-/** 陪玩：心情 +15、精力 −5，每日 ≤3 次，亲密度 +2 */
+/** 陪玩：心情 +20、精力 −5，每日 ≤3 次，亲密度 +2 */
 export function playWith(save: RoomSave, now: number): boolean {
   rollCare(save, now);
   if (save.care.plays >= 3) return false;
   save.care.plays += 1;
-  save.mood = Math.min(100, save.mood + 15);
+  save.mood = Math.min(100, save.mood + 20);
   save.energy = Math.max(STATUS_FLOOR, save.energy - 5);
   save.intimacyXp += 2;
   return true;
 }
 
-/** 哄她休息：精力 +30，每日 ≤1 次，亲密度 +2 */
+/** 哄她休息：精力 +35，每日 ≤1 次，亲密度 +2 */
 export function restHer(save: RoomSave, now: number): boolean {
   rollCare(save, now);
   if (save.care.rests >= 1) return false;
   save.care.rests += 1;
-  save.energy = Math.min(100, save.energy + 30);
+  save.energy = Math.min(100, save.energy + 35);
   save.intimacyXp += 2;
+  return true;
+}
+
+/** 买点心：12 星 1 个（GPT 玩法评审：给点心一个稳定获取渠道，投喂才舍得用） */
+export const SNACK_PRICE = 12;
+export function buySnack(save: RoomSave): boolean {
+  if (save.stars < SNACK_PRICE) return false;
+  save.stars -= SNACK_PRICE;
+  save.snacks += 1;
   return true;
 }
 

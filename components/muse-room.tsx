@@ -19,8 +19,10 @@ import {
   type Activity,
   type FurnitureId,
   type RoomSave,
+  SNACK_PRICE,
   awayMs,
   buyFurniture,
+  buySnack,
   claimWelcome,
   doCheckin,
   feed,
@@ -57,6 +59,15 @@ function todayNow(): string {
 
 function nowMs(): number {
   return Date.now();
+}
+
+// 可行走区（背景图实测）：右侧墙基线从 (70.5, 72.5) 斜向 (100, 97)，
+// 给定脚底 y，她的中心 x 不得越过墙基线左侧 4%——她只能在地板上走，不能进墙。
+function clampWalkTarget(x: number, feet: number): { x: number; feet: number } {
+  const f = Math.min(98, Math.max(76, feet));
+  const wallX = 70.5 + (f - 72.5) * (29.5 / 24.5);
+  const maxX = Math.min(94, wallX - 4);
+  return { x: Math.min(Math.max(6, x), Math.max(6, maxX)), feet: f };
 }
 
 interface ActState {
@@ -395,6 +406,14 @@ export function MuseRoom() {
     }
   };
 
+  const onBuySnack = () => {
+    let ok = false;
+    commit((s) => {
+      ok = buySnack(s);
+    });
+    flashNotice(ok ? t("snackBought") : t("notEnough"));
+  };
+
   const onBuy = (fid: FurnitureId) => {
     let ok = false;
     commit((s) => {
@@ -416,7 +435,8 @@ export function MuseRoom() {
   };
 
   // 点地板：她跑到落点（距离决定时长；光标在落点闪一下）
-  const goTo = (x: number, feet: number) => {
+  const goTo = (x0: number, feet0: number) => {
+    const { x, feet } = clampWalkTarget(x0, feet0);
     const cur = actRef.current;
     clearTimers();
     if ((cur.mode === "interact" || cur.mode === "rest") && cur.target) {
@@ -446,8 +466,7 @@ export function MuseRoom() {
     const rect = e.currentTarget.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const yTop = ((e.clientY - rect.top) / rect.height) * 100;
-    const cx = Math.min(94, Math.max(6, x));
-    const feet = Math.min(98, Math.max(76, yTop));
+    const { x: cx, feet } = clampWalkTarget(x, yTop);
     const id = ++markerSeqRef.current;
     setMarker({ x: cx, feet, id });
     window.setTimeout(() => {
@@ -871,6 +890,9 @@ export function MuseRoom() {
           </button>
           <button onClick={onRest} className="px-3 py-1.5 text-sm rounded-full border border-sky-300 text-sky-700 dark:text-sky-300 cursor-pointer hover:bg-sky-50 dark:hover:bg-sky-950 transition-colors">
             ☾ {t("rest")}
+          </button>
+          <button onClick={onBuySnack} className="px-3 py-1.5 text-sm rounded-full border border-stone-300 dark:border-stone-600 text-stone-600 dark:text-stone-300 cursor-pointer hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors">
+            🛒 {t("buySnack")} · {SNACK_PRICE}★
           </button>
         </div>
         {notice && <p className="text-sm text-amber-700 dark:text-amber-300">{notice}</p>}

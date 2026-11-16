@@ -424,6 +424,8 @@
     "welcomeGift": "Welcome gift +20 stars",
     "feed": "Give a snack",
     "feedDone": "Yummy! Thank you.",
+    "buySnack": "Buy a snack",
+    "snackBought": "Got it — snacks +1.",
     "noSnack": "No snacks left — tomorrow's check-in brings another.",
     "play": "Play together",
     "playDone": "Hehe — stay a little longer?",
