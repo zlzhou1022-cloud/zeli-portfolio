@@ -40,6 +40,8 @@ export const SPECIES: Record<SpeciesId, { price: number; seasonal: boolean; scal
 export const BLOOM_DAYS = 10;
 export const HARVEST_STARS = 6;
 export const GARDENER_HARVESTS = 6;
+// 收获里程碑奖励（GPT 评审 2026-11-17 采纳）：累计收获跨过门槛时一次性加星
+export const HARVEST_MILESTONES: Record<number, number> = { 3: 10, 12: 20 };
 
 export function stageOf(p: Plant): number {
   const g = p.growthDays;
@@ -166,25 +168,47 @@ export function water(idx: number, now: number): WaterResult {
   return res;
 }
 
-export function harvest(idx: number, now: number): boolean {
+// 一键浇水（GPT 评审 2026-11-17 采纳）：所有未开花、今天还没浇过的盆一起推进一天
+export function waterAll(now: number): { watered: number; bloomed: number } {
+  let watered = 0;
+  let bloomed = 0;
+  mutateGarden((g) => {
+    const today = todayStr(now);
+    for (const p of g.pots) {
+      if (!p || stageOf(p) >= 4 || p.lastWatered === today) continue;
+      p.lastWatered = today;
+      p.growthDays += 1;
+      watered += 1;
+      if (stageOf(p) >= 4) bloomed += 1;
+    }
+  });
+  return { watered, bloomed };
+}
+
+// 收获成功返回 { bonus }（bonus = 本次跨过的里程碑奖励星数，没有为 0）；失败返回 null
+export function harvest(idx: number, now: number): { bonus: number } | null {
   let ok = false;
+  let bonus = 0;
   mutateGarden((g) => {
     const p = g.pots[idx];
     if (!p || stageOf(p) < 4) return;
     const rec = g.album[p.species];
     if (rec) rec.count += 1;
     else g.album[p.species] = { first: todayStr(now), count: 1 };
+    const prev = g.totalHarvests;
     g.totalHarvests += 1;
+    for (const [threshold, stars] of Object.entries(HARVEST_MILESTONES)) {
+      if (prev < Number(threshold) && g.totalHarvests >= Number(threshold)) bonus += stars;
+    }
     g.pots[idx] = null;
     const want = potCount(g.totalHarvests);
     while (g.pots.length < want) g.pots.push(null);
     ok = true;
   });
-  if (ok) {
-    mutateSave(now, (s) => {
-      s.stars += HARVEST_STARS;
-    });
-    notifyProgress(); // 园丁装解锁庆祝走时装库的既有通道
-  }
-  return ok;
+  if (!ok) return null;
+  mutateSave(now, (s) => {
+    s.stars += HARVEST_STARS + bonus;
+  });
+  notifyProgress(); // 园丁装解锁庆祝走时装库的既有通道
+  return { bonus };
 }
