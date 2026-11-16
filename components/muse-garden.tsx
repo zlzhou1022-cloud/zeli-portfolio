@@ -22,6 +22,7 @@ import {
   stageOf,
   stageSrc,
   water,
+  waterAll,
 } from "@/lib/garden";
 
 // 室内花园（小屋二期）：花架点进来。种花靠浇水日推进、漏浇只暂停、开花可收可留。
@@ -99,11 +100,24 @@ export function MuseGarden() {
   };
 
   const onHarvest = (idx: number) => {
-    if (harvest(idx, nowMs())) {
+    const res = harvest(idx, nowMs());
+    if (res) {
       refresh();
       setSelected(null);
       setLine(pick(t.raw("lines.harvest") as string[]));
+      setNotice(res.bonus > 0 ? t("harvestMilestone", { bonus: res.bonus }) : "");
     }
+  };
+
+  const onWaterAll = () => {
+    const res = waterAll(nowMs());
+    refresh();
+    if (res.watered === 0) {
+      setNotice(t("waterAllNone"));
+      return;
+    }
+    setNotice(t("waterAllDone", { count: res.watered }));
+    setLine(pick(t.raw(res.bloomed > 0 ? "lines.bloom" : "lines.water") as string[]));
   };
 
   const onBuy = (sp: SpeciesId) => {
@@ -195,6 +209,13 @@ export function MuseGarden() {
         <span className="text-sm text-stone-600 dark:text-stone-300">
           {unlocked ? t("gardenerDone") : t("gardenerProgress", { count: garden.totalHarvests, target: GARDENER_HARVESTS })}
         </span>
+        <button
+          type="button"
+          onClick={onWaterAll}
+          className="rounded-full border border-emerald-300 dark:border-emerald-800 px-3 py-1 text-sm text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors"
+        >
+          💧 {t("waterAll")}
+        </button>
         {notice && <span className="text-sm text-rose-500">{notice}</span>}
       </div>
 

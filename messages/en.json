@@ -569,6 +569,10 @@
     "noSeedHint": "Out of seeds? Buy a few in the seed shop below.",
     "water": "Water",
     "wateredToday": "This pot already had its water today — see you tomorrow.",
+    "waterAll": "Water all flowers",
+    "waterAllDone": "Watered all {count} pots.",
+    "waterAllNone": "All of today's flowers have already been watered.",
+    "harvestMilestone": "Milestone bonus: +{bonus}★ extra!",
     "harvest": "Harvest",
     "keep": "Keep it on display",
     "growthDays": "Watered {days} / {total} days",
@@ -585,7 +589,7 @@
     "rules": [
       "Water a pot once a day and it grows one day: sprout (day 1), leaves (day 3), bud (day 6), bloom (day 10).",
       "Forgot to water? No harm done — the flower simply waits for you and never wilts.",
-      "A bloom can be harvested (+6 stars, saved in the album) or left in its pot to enjoy.",
+      "Once a flower blooms you can harvest it (+6 stars, added to the album) or leave it in the pot to enjoy; reaching 3 and 12 total harvests also earns milestone star bonuses.",
       "At 5 and 12 lifetime harvests you gain an extra pot; at 6 you unlock the gardener outfit.",
       "Progress is stored in this browser on this device; clearing site data erases it."
     ],
