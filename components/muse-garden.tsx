@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { getCurrentOutfit, poseSrc, type OutfitId } from "@/lib/outfit";
 import { loadSave } from "@/lib/room";
+import { isOwnerMode } from "@/lib/owner";
 import {
   BLOOM_DAYS,
   GARDENER_HARVESTS,
@@ -214,7 +215,7 @@ export function MuseGarden() {
 
       {/* 顶部计数 */}
       <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-        <span className="text-sm font-medium text-amber-600 dark:text-amber-400">★ {stars} <span className="text-stone-500 dark:text-stone-400 font-normal">{t("starsLabel")}</span></span>
+        <span className="text-sm font-medium text-amber-600 dark:text-amber-400">★ {isOwnerMode() ? "∞" : stars} <span className="text-stone-500 dark:text-stone-400 font-normal">{t("starsLabel")}</span></span>
         <span className="text-sm text-stone-600 dark:text-stone-300">🌱 {t("harvestCount", { count: garden.totalHarvests })}</span>
         <span className="text-sm text-stone-600 dark:text-stone-300">
           {unlocked ? t("gardenerDone") : t("gardenerProgress", { count: garden.totalHarvests, target: GARDENER_HARVESTS })}
@@ -315,7 +316,7 @@ export function MuseGarden() {
                 onClick={() => onBuy(sp)}
                 className="mt-2 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1 text-xs font-medium transition-colors"
               >
-                {t("buySeed")} · {SPECIES[sp].price}★
+                {t("buySeed")} · {isOwnerMode() ? "∞" : `${SPECIES[sp].price}★`}
               </button>
             </div>
           ))}

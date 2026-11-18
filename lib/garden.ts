@@ -6,6 +6,7 @@
 
 import { applyWishAction, ensureWish, mutateSave, todayStr } from "@/lib/room";
 import { notifyProgress } from "@/lib/outfit";
+import { isOwnerMode } from "@/lib/owner";
 
 export const GARDEN_KEY = "muse_garden_v1";
 
@@ -119,6 +120,13 @@ export function claimGift(g: GardenSave): boolean {
 }
 
 export function buySeed(species: SpeciesId): boolean {
+  // 站长模式：种子免费（花园是状态型玩法，买入即真实入包，与小屋的只读解锁覆盖不同）
+  if (isOwnerMode()) {
+    mutateGarden((g) => {
+      g.seeds[species] += 1;
+    });
+    return true;
+  }
   const price = SPECIES[species].price;
   let paid = false;
   mutateSave(Date.now(), (s) => {
@@ -157,7 +165,8 @@ export function water(idx: number, now: number): WaterResult {
       return;
     }
     const today = todayStr(now);
-    if (p.lastWatered === today) {
+    // 站长模式：解除每日一次限制，连浇连长（测试生长阶段用；进度真实保留）
+    if (p.lastWatered === today && !isOwnerMode()) {
       res = "already";
       return;
     }
@@ -182,7 +191,7 @@ export function waterAll(now: number): { watered: number; bloomed: number } {
   mutateGarden((g) => {
     const today = todayStr(now);
     for (const p of g.pots) {
-      if (!p || stageOf(p) >= 4 || p.lastWatered === today) continue;
+      if (!p || stageOf(p) >= 4 || (p.lastWatered === today && !isOwnerMode())) continue;
       p.lastWatered = today;
       p.growthDays += 1;
       watered += 1;
