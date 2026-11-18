@@ -117,13 +117,22 @@ export default function Home() {
             </div>
           </Link>
         </TextReveal>
+      </section>
 
-        {/* Guestbook - 左下小块 */}
+      {/* 旅行区（光影与足迹）——站长 2026-11-19 定序：档案 01、实验室 02 之后，留言 04、小游戏 05 之前 */}
+      <div className="mt-6">
+        <TextReveal delay={150}>
+          <HomeTravel photos={photos} />
+        </TextReveal>
+      </div>
+
+      <section className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6 mt-6">
+        {/* Guestbook - 旅行之后 */}
         <TextReveal delay={300} className="md:col-span-5">
           <Link href="/guestbook" className="group relative overflow-hidden border border-stone-200 dark:border-stone-800 transition-all hover:border-stone-400 dark:hover:border-stone-600 cursor-pointer block bg-white dark:bg-stone-950 hover-lift h-full">
             <div className="p-6 md:p-8 h-full flex flex-col justify-between min-h-[180px]">
               <div>
-                <div className="text-xs tracking-[0.2em] uppercase text-stone-400 dark:text-stone-500 mb-3 font-medium">03</div>
+                <div className="text-xs tracking-[0.2em] uppercase text-stone-400 dark:text-stone-500 mb-3 font-medium">04</div>
                 <h3 className="text-2xl font-serif mb-3 text-stone-900 dark:text-stone-100 transition-colors">{t("modules.guestbook.title")}</h3>
                 <p className="text-xs text-stone-600 dark:text-stone-400 leading-relaxed transition-colors font-light">
                   {t("modules.guestbook.desc")}
@@ -142,7 +151,7 @@ export default function Home() {
           <Link href="/games" className="group relative overflow-hidden border border-stone-200 dark:border-stone-800 transition-all hover:border-stone-400 dark:hover:border-stone-600 cursor-pointer block bg-stone-50 dark:bg-stone-900 hover-lift h-full">
             <div className="p-6 md:p-8 h-full flex flex-col justify-between min-h-[180px]">
               <div>
-                <div className="text-xs tracking-[0.2em] uppercase text-stone-400 dark:text-stone-500 mb-3 font-medium">04</div>
+                <div className="text-xs tracking-[0.2em] uppercase text-stone-400 dark:text-stone-500 mb-3 font-medium">05</div>
                 <h3 className="text-2xl font-serif mb-3 text-stone-900 dark:text-stone-100 transition-colors">{t("modules.games.title")}</h3>
                 <p className="text-xs text-stone-600 dark:text-stone-400 leading-relaxed transition-colors font-light max-w-md">
                   {t("modules.games.desc")}
@@ -157,11 +166,8 @@ export default function Home() {
         </TextReveal>
       </section>
 
-      {/* 旅行露出 + 慕斯邀请条（2026-11-18 新增） */}
-      <div className="mt-6 space-y-6">
-        <TextReveal delay={150}>
-          <HomeTravel photos={photos} />
-        </TextReveal>
+      {/* 慕斯邀请条（2026-11-18 新增；2026-11-19 随定序移到全部入口之后收尾） */}
+      <div className="mt-6">
         <HomeInvite />
       </div>
 
