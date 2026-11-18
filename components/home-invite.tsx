@@ -40,7 +40,7 @@ export function HomeInvite() {
     <section className="border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900 p-5 md:p-6 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5">
       <Image
         src="/muse-pet/book.webp"
-        alt="Muse"
+        alt="Mousse"
         width={339}
         height={560}
         className="w-10 md:w-12 h-auto shrink-0 hidden sm:block"

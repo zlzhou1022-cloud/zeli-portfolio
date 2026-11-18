@@ -28,7 +28,7 @@
       },
       "games": {
         "title": "Mini Games",
-        "desc": "Mini-games with Muse: the Dash, the prefecture photo quiz, plus Muse's Room and Garden.",
+        "desc": "Mini-games with Mousse: the Dash, the prefecture photo quiz, plus Mousse's Room and Garden.",
         "link": "Play games"
       }
     },
@@ -38,7 +38,7 @@
       "focus": "Focused on RAG / LLM Agents in finance",
       "learning": "Learning Databricks & LangGraph",
       "updatedLabel": "Latest update",
-      "updatedText": "Muse's Room & Garden launched",
+      "updatedText": "Mousse's Room & Garden launched",
       "pageUpdated": "Page updated Nov 2026"
     },
     "travel": {
@@ -58,7 +58,7 @@
       }
     },
     "invite": {
-      "iam": "I'm Muse, Zeli's little agent.",
+      "iam": "I'm Mousse, Zeli's little agent.",
       "greetingMorning": "Good morning",
       "greetingNoon": "Hello",
       "greetingAfternoon": "Good afternoon",
@@ -67,10 +67,10 @@
       "line1": "Don't feel like browsing page by page? Ask me about his background, projects and trips.",
       "line2": "Every photo in the travel section is his own — try tapping a gold prefecture on the map.",
       "line3": "He hid a few of his own little tools in the Lab. Take a look?",
-      "button": "Ask Muse"
+      "button": "Ask Mousse"
     },
     "footer": {
-      "onDuty": "Muse is on duty",
+      "onDuty": "Mousse is on duty",
       "served": "{count} visitors today"
     }
   },
@@ -183,7 +183,7 @@
   },
   "ChatBot": {
     "title": "AI Assistant",
-    "greeting": "Hello! I'm Muse, Zeli's little agent. Feel free to ask me anything about the site or its author, Zeli.",
+    "greeting": "Hello! I'm Mousse, Zeli's little agent. Feel free to ask me anything about the site or its author, Zeli.",
     "disclaimer": "AI-generated responses are for reference only and may contain errors.",
     "placeholder": "Type a message…",
     "send": "Send",
@@ -202,45 +202,45 @@
     ],
     "greetings": {
       "morning": [
-        "Good morning! I'm Muse, Zeli's little agent. A brand-new day — ask me anything about Zeli's background, travel stories, or projects!",
-        "Morning! I'm Muse, Zeli's little agent. Where shall we start today — his travel stories, his projects, or a question for me?",
-        "Good morning! I'm Muse, Zeli's little agent. While your mind is fresh, let's explore this site together."
+        "Good morning! I'm Mousse, Zeli's little agent. A brand-new day — ask me anything about Zeli's background, travel stories, or projects!",
+        "Morning! I'm Mousse, Zeli's little agent. Where shall we start today — his travel stories, his projects, or a question for me?",
+        "Good morning! I'm Mousse, Zeli's little agent. While your mind is fresh, let's explore this site together."
       ],
       "noon": [
-        "Hello, good noon! I'm Muse, Zeli's little agent. Perfect lunch-break browsing — Zeli's snowy Tohoku story or his projects first?",
-        "Hi there! I'm Muse, Zeli's little agent. Had lunch yet? Relax a while and let me tell you about Zeli.",
-        "Good day! I'm Muse, Zeli's little agent. The noon sun is out — ask me anything you'd like to know."
+        "Hello, good noon! I'm Mousse, Zeli's little agent. Perfect lunch-break browsing — Zeli's snowy Tohoku story or his projects first?",
+        "Hi there! I'm Mousse, Zeli's little agent. Had lunch yet? Relax a while and let me tell you about Zeli.",
+        "Good day! I'm Mousse, Zeli's little agent. The noon sun is out — ask me anything you'd like to know."
       ],
       "afternoon": [
-        "Good afternoon! I'm Muse, Zeli's little agent. Tea time — let me walk you through Zeli's travels and projects.",
-        "Good afternoon! I'm Muse, Zeli's little agent. Feeling the afternoon slump? A prefecture quiz in the games corner will wake you right up.",
-        "Good afternoon! I'm Muse, Zeli's little agent. Curious about Zeli's career, or his photo albums first? Just ask."
+        "Good afternoon! I'm Mousse, Zeli's little agent. Tea time — let me walk you through Zeli's travels and projects.",
+        "Good afternoon! I'm Mousse, Zeli's little agent. Feeling the afternoon slump? A prefecture quiz in the games corner will wake you right up.",
+        "Good afternoon! I'm Mousse, Zeli's little agent. Curious about Zeli's career, or his photo albums first? Just ask."
       ],
       "evening": [
-        "Good evening! I'm Muse, Zeli's little agent. Long day done — take it slow here. Travel stories, or a couple of games with me?",
-        "Good evening! I'm Muse, Zeli's little agent. Zeli's snow-country photos look especially nice in the evening light.",
-        "Good evening! I'm Muse, Zeli's little agent. How was your day? Either way, unwind here for a bit."
+        "Good evening! I'm Mousse, Zeli's little agent. Long day done — take it slow here. Travel stories, or a couple of games with me?",
+        "Good evening! I'm Mousse, Zeli's little agent. Zeli's snow-country photos look especially nice in the evening light.",
+        "Good evening! I'm Mousse, Zeli's little agent. How was your day? Either way, unwind here for a bit."
       ],
       "night": [
-        "Still up? I'm Muse, Zeli's little agent. Late-night visitors are the rarest kind — between us, the travel stories read best at night.",
-        "It's late — I'm Muse, Zeli's little agent. Don't stay up too long, but a little chat before bed is lovely. What would you like to know?",
-        "Shh — good evening, night owl. I'm Muse, Zeli's little agent. Everyone's asleep but us. Tell me softly what you'd like to see."
+        "Still up? I'm Mousse, Zeli's little agent. Late-night visitors are the rarest kind — between us, the travel stories read best at night.",
+        "It's late — I'm Mousse, Zeli's little agent. Don't stay up too long, but a little chat before bed is lovely. What would you like to know?",
+        "Shh — good evening, night owl. I'm Mousse, Zeli's little agent. Everyone's asleep but us. Tell me softly what you'd like to see."
       ]
     }
   },
   "Mascot": {
-    "ariaLabel": "Muse the desktop pet",
-    "chatCta": "Ask Muse",
+    "ariaLabel": "Mousse the desktop pet",
+    "chatCta": "Ask Mousse",
     "playCta": "Play together",
     "closeBubble": "Close",
     "dismiss": "Hide her away",
     "hide": "Hide pet",
-    "summon": "✦ Summon Muse",
+    "summon": "✦ Summon Mousse",
     "lines": [
-      "Hi, I'm Muse — Zeli's little agent.",
+      "Hi, I'm Mousse — Zeli's little agent.",
       "I look after this site. Let me keep you company while you browse.",
       "Poke me and I'll make a face — poke again for another one.",
-      "Curious about Zeli? Tap me, then hit “Ask Muse” — I remember it all.",
+      "Curious about Zeli? Tap me, then hit “Ask Mousse” — I remember it all.",
       "Drag me onto the bubble above and we can play a game together.",
       "You can also drag me anywhere and leave me there. I don't mind."
     ],
@@ -248,30 +248,30 @@
     "roomCta": "Her room",
     "timeGreetings": {
       "morning": [
-        "Good morning! I'm Muse — let's explore together today.",
-        "Morning! I'm Muse. Slept well? I'm here all day."
+        "Good morning! I'm Mousse — let's explore together today.",
+        "Morning! I'm Mousse. Slept well? I'm here all day."
       ],
       "noon": [
-        "Good noon! I'm Muse. Lunch break? Spend a little of it here.",
-        "Hi! I'm Muse. All fed? Come play a while."
+        "Good noon! I'm Mousse. Lunch break? Spend a little of it here.",
+        "Hi! I'm Mousse. All fed? Come play a while."
       ],
       "afternoon": [
-        "Good afternoon! I'm Muse. Sleepy? Drag me to the games to wake up.",
-        "Good afternoon, I'm Muse. Grab some tea and we'll look around."
+        "Good afternoon! I'm Mousse. Sleepy? Drag me to the games to wake up.",
+        "Good afternoon, I'm Mousse. Grab some tea and we'll look around."
       ],
       "evening": [
-        "Good evening! I'm Muse. Long day — take it slow here.",
-        "Evening! I'm Muse. This site feels different at night, in a good way."
+        "Good evening! I'm Mousse. Long day — take it slow here.",
+        "Evening! I'm Mousse. This site feels different at night, in a good way."
       ],
       "night": [
-        "Still awake? I'm Muse. Keep it down — don't wake the website.",
-        "It's late, I'm Muse. I'll keep you company a little — then off to bed, okay?"
+        "Still awake? I'm Mousse. Keep it down — don't wake the website.",
+        "It's late, I'm Mousse. I'll keep you company a little — then off to bed, okay?"
       ]
     }
   },
   "MiniGame": {
-    "title": "Muse Dash",
-    "howTo": "📖 Last night a data storm scattered ALL of this homepage's data! Muse has 45 seconds to charge upward and gather it all back.\n🎮 Drag her (or use the arrow keys) to run anywhere in the field:\n• Golden motes are important data, +30 pts\n• Plain motes are ordinary data, +10 pts\n• Ink blobs are garbled data, −20 pts if you brush one\n• The purple spiky ones are viruses, −1 life on contact\n• The brick walls lying across are fallen firewalls: solid — hit one from below and it stops you and carries you down, so slip around the gaps at their ends or in the middle\n• Getting pushed off the screen also costs 1 life\n💪 3 lives. The farther you run and the more you gather, the higher the score. Charge — bring the homepage's data home!",
+    "title": "Mousse Dash",
+    "howTo": "📖 Last night a data storm scattered ALL of this homepage's data! Mousse has 45 seconds to charge upward and gather it all back.\n🎮 Drag her (or use the arrow keys) to run anywhere in the field:\n• Golden motes are important data, +30 pts\n• Plain motes are ordinary data, +10 pts\n• Ink blobs are garbled data, −20 pts if you brush one\n• The purple spiky ones are viruses, −1 life on contact\n• The brick walls lying across are fallen firewalls: solid — hit one from below and it stops you and carries you down, so slip around the gaps at their ends or in the middle\n• Getting pushed off the screen also costs 1 life\n💪 3 lives. The farther you run and the more you gather, the higher the score. Charge — bring the homepage's data home!",
     "start": "Start",
     "again": "Play again",
     "close": "Close",
@@ -284,16 +284,16 @@
     "livesLabel": "Lives",
     "finalScore": "Your score",
     "newRecord": "New record!",
-    "labCardTitle": "Muse Dash",
-    "labCardDesc": "A data storm scattered the homepage's data! Charge upward with Muse for 45 seconds, slip around the fallen firewalls, and gather it all back.",
+    "labCardTitle": "Mousse Dash",
+    "labCardDesc": "A data storm scattered the homepage's data! Charge upward with Mousse for 45 seconds, slip around the fallen firewalls, and gather it all back.",
     "labCardCta": "Play"
   },
   "PrefectureGame": {
     "pageTitle": "Guess the Prefecture · Japan Stamp Map",
-    "pageDesc": "Zeli has visited all 47 prefectures of Japan, and his album holds the photos to prove it. Look at a photo and guess which prefecture it was taken in — get it right and you stamp that prefecture on the map. Hosted by Muse.",
+    "pageDesc": "Zeli has visited all 47 prefectures of Japan, and his album holds the photos to prove it. Look at a photo and guess which prefecture it was taken in — get it right and you stamp that prefecture on the map. Hosted by Mousse.",
     "backLab": "Back to the Lab",
     "labCardTitle": "Guess the Prefecture · Japan Stamp Map",
-    "labCardDesc": "Look at photos from Zeli's travel album and guess the prefecture each was taken in. Every correct answer stamps the Japan map. Hosted by Muse — 47 prefectures to collect.",
+    "labCardDesc": "Look at photos from Zeli's travel album and guess the prefecture each was taken in. Every correct answer stamps the Japan map. Hosted by Mousse — 47 prefectures to collect.",
     "labCardCta": "Start guessing",
     "tabQuiz": "Guess the Prefecture",
     "tabMap": "Stamp Map",
@@ -340,11 +340,11 @@
   },
   "PageGuide": {
     "home": {
-      "intro": "You made it! This is Zeli's personal homepage — I'm Muse, his little agent. Happy to show you around.",
+      "intro": "You made it! This is Zeli's personal homepage — I'm Mousse, his little agent. Happy to show you around.",
       "guide": [
         "The cards above lead to his profile, the lab, the travel albums, and the games corner; the guestbook card is down there too.",
         "Not sure where to start? Try the travel albums — the snow festivals and Morioka noodles are worth it.",
-        "Tap me and choose “Ask Muse” to ask me directly; I'll help you find any page."
+        "Tap me and choose “Ask Mousse” to ask me directly; I'll help you find any page."
       ]
     },
     "profile": {
@@ -388,7 +388,7 @@
       ]
     },
     "room": {
-      "intro": "This is Muse's room — where you earn stars and buy her furniture. She lives here.",
+      "intro": "This is Mousse's room — where you earn stars and buy her furniture. She lives here.",
       "guide": [
         "Check in daily for stars and a snack; when you've saved enough, the shop below sells her furniture.",
         "She walks over and uses what you buy: reaching for books, writing at her desk, reading on the rug.",
@@ -405,7 +405,7 @@
       ]
     },
     "garden": {
-      "intro": "This is Muse's indoor garden — you came in through the flower stand in her room. Planting, watering, blooming: everything here takes its time.",
+      "intro": "This is Mousse's indoor garden — you came in through the flower stand in her room. Planting, watering, blooming: everything here takes its time.",
       "guide": [
         "Tap a pot to water it — once a day moves it one day forward, and it blooms on day ten.",
         "Harvesting blooms earns stars, and six lifetime harvests unlock her gardener outfit.",
@@ -414,7 +414,7 @@
     }
   },
   "Wardrobe": {
-    "title": "Muse's Wardrobe",
+    "title": "Mousse's Wardrobe",
     "hint": "Complete little achievements to unlock new outfits. Tap an unlocked outfit to wear it.",
     "wear": "Wear",
     "wearing": "Wearing",
@@ -430,7 +430,7 @@
     },
     "conditions": {
       "default": "The outfit she starts with",
-      "sport": "Score 300 in a single run of Muse Dash",
+      "sport": "Score 300 in a single run of Mousse Dash",
       "school": "Answer one prefecture correctly in the quiz",
       "hakama": "Leave a message on the guestbook",
       "travel": "Answer every prefecture that has album photos",
@@ -447,12 +447,12 @@
   },
   "GamesPage": {
     "title": "Mini Games",
-    "description": "A corner of games to play with Muse: a 45-second dash, a guess-the-prefecture quiz over travel photos, and a little room where you earn stars to buy her furniture. She hosts them all.",
+    "description": "A corner of games to play with Mousse: a 45-second dash, a guess-the-prefecture quiz over travel photos, and a little room where you earn stars to buy her furniture. She hosts them all.",
     "backHome": "Back to home"
   },
   "Room": {
-    "pageTitle": "Muse's Room",
-    "pageDesc": "A little room where Muse lives. Earn stars from the mini games and daily check-ins to buy her furniture — she'll wander over and use it herself. Come back often; she remembers you.",
+    "pageTitle": "Mousse's Room",
+    "pageDesc": "A little room where Mousse lives. Earn stars from the mini games and daily check-ins to buy her furniture — she'll wander over and use it herself. Come back often; she remembers you.",
     "backGames": "Back to Mini Games",
     "starsLabel": "Stars",
     "snackLabel": "Snacks",
@@ -484,7 +484,7 @@
     "ownedLabel": "In the room",
     "notEnough": "Not enough stars yet — earn some in the mini games, or check in tomorrow.",
     "boughtLine": "New furniture! Let me go try it.",
-    "dashNote": "In Muse Dash, a run scoring 150 earns +3 stars and 300 earns +8 — up to 3 runs settled per day.",
+    "dashNote": "In Mousse Dash, a run scoring 150 earns +3 stars and 300 earns +8 — up to 3 runs settled per day.",
     "quizNote": "In the prefecture quiz, the first correct answer each day earns +5 stars.",
     "discoveryTitle": "Today's little discovery",
     "nextLevel": "{xp} XP to Lv.{next}",
@@ -541,7 +541,7 @@
         "I am wondering what to have for dinner... what about you?"
       ]
     },
-    "herLabel": "Muse (tap her)",
+    "herLabel": "Mousse (tap her)",
     "clickLines": {
       "idle": [
         "Hm? Did you call me?",
@@ -636,7 +636,7 @@
       "Progress lives only in this browser on this device — clearing browser data resets it. Think of it as a tiny room in your pocket.",
       "Each week she has one little wish. Help her with it slowly and you can claim a small gift — and if it does not happen, that is fine too; there is always next week."
     ],
-    "entryTitle": "Muse's Room",
+    "entryTitle": "Mousse's Room",
     "entryDesc": "A little room of her own — earn stars, buy furniture, and watch her wander, read and sit on her rug. Visit often; she remembers you.",
     "entryCta": "Visit her",
     "levelTitles": [
@@ -759,8 +759,8 @@
     }
   },
   "Garden": {
-    "pageTitle": "Muse's Indoor Garden",
-    "pageDesc": "Step in from the flower stand by the window in Muse's room. Buy a few seeds, plant them, and come by each day to water — watch them sprout, leaf out, bud, and bloom. A harvested bloom earns stars and a place in the album. Flowers never wilt, so just drop by whenever you remember.",
+    "pageTitle": "Mousse's Indoor Garden",
+    "pageDesc": "Step in from the flower stand by the window in Mousse's room. Buy a few seeds, plant them, and come by each day to water — watch them sprout, leaf out, bud, and bloom. A harvested bloom earns stars and a place in the album. Flowers never wilt, so just drop by whenever you remember.",
     "backRoom": "Back to the Room",
     "standLabel": "Indoor Garden",
     "starsLabel": "stars",
