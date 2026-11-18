@@ -777,10 +777,11 @@ export function MuseRoom() {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/muse-room/backdrop.webp" alt="" className="absolute inset-0 w-full h-full object-cover" draggable={false} />
 
-        {/* 花架（室内花园入口，二期）：视觉层保持原始层级（家具/她可以挡在前面，符合透视）；
-            点击判定单独上移到花架上半部与墙面空白区（站长 2026-11-19 定），与地毯判定分开——
-            地毯按钮的透明框很高，判定若留在花架下半部会被地毯截走（曾用 z-20 置顶修过，
-            但花架会反过来压住所有图层，不符合透视，已按站长方案改为判定上移） */}
+        {/* 花架（室内花园入口，二期）：视觉层保持原始层级（家具/她可以挡在前面，符合透视）。
+            「🌱 室内花园」标签牌挂在花架本体上、随视觉层同层级——站长 2026-11-19 夜报：
+            标签曾挂在上移判定框顶部，正好压住她的台词气泡；标签必须永远让位于她的台词。
+            点击判定改为贴合花架轮廓（高 27%，顶部 44.5% 低于气泡静止位 46%），z 介于家具
+            判定与气泡（z-10）之间：点花架进花园，点气泡永远是气泡。 */}
         <div
           className="absolute rounded-[50%] bg-stone-900/15 blur-[3px]"
           style={{ left: "58.9%", width: "6.4%", bottom: "17.8%", height: "1.8%" }}
@@ -792,18 +793,17 @@ export function MuseRoom() {
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/muse-room/garden-stand.webp" alt="" className="h-full w-auto max-w-none mx-auto block" draggable={false} />
+          <span className="absolute left-1/2 -translate-x-1/2 top-[2%] whitespace-nowrap rounded-full bg-emerald-600/90 text-white text-[11px] px-2 py-0.5 shadow">
+            🌱 {tg("standLabel")}
+          </span>
         </div>
         <button
           type="button"
           aria-label={tg("standLabel")}
           onClick={() => router.push(`/${locale}/games/garden`)}
-          className="absolute cursor-pointer z-20"
-          style={{ left: "55%", bottom: "34%", width: "15%", height: "24%" }}
-        >
-          <span className="absolute left-1/2 -translate-x-1/2 top-1 whitespace-nowrap rounded-full bg-emerald-600/90 text-white text-[11px] px-2 py-0.5 shadow pointer-events-none">
-            🌱 {tg("standLabel")}
-          </span>
-        </button>
+          className="absolute cursor-pointer z-[5]"
+          style={{ left: "54.5%", bottom: "17.5%", width: "15.5%", height: "27%" }}
+        />
 
         {/* 家具（固定槽位；拥有后出现，她互动时切换图层组） */}
         {SCENE_ORDER.map((fid) => {
