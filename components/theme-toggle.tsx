@@ -5,7 +5,7 @@ import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 
 export function ThemeToggle() {
-  const { theme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
 
   React.useEffect(() => {
@@ -17,8 +17,10 @@ export function ThemeToggle() {
 
   if (!mounted) return <div className="w-[120px] h-[38px]" />;
 
-  // 这里的逻辑：如果当前是 dark，点击就去 light；反之亦然
-  const isDark = theme === "dark";
+  // 用 resolvedTheme（实际生效的主题）而不是 theme：无痕模式等无存储时 theme 是 "system"，
+  // 夜间系统为暗色时页面已是暗色但 theme !== "dark"，旧逻辑第一下会把主题设成已经生效的
+  // dark（看不见变化），要按两下才到 light（2026-11-19 站长反馈修复）
+  const isDark = resolvedTheme === "dark";
 
   return (
     <button
