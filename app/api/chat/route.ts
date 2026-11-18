@@ -29,7 +29,22 @@ export async function POST(req: Request) {
 
     // 接收前端传来的完整聊天记录、唯一会话 ID 和当前语言（locale 可缺省）；
     // page 是访客当前页面描述（页面感知二期），只用于本次提示词，不落库。
-    const { messages, chatId, locale, page } = await req.json();
+    // 入参校验（2026-11-18）：坏请求回 400，不再让缺字段的请求掉进 500。
+    let body: unknown;
+    try {
+      body = await req.json();
+    } catch {
+      return new NextResponse("bad_request", { status: 400 });
+    }
+    const { messages, chatId, locale, page } = (body ?? {}) as {
+      messages?: unknown;
+      chatId?: string;
+      locale?: string;
+      page?: unknown;
+    };
+    if (!Array.isArray(messages) || messages.length === 0) {
+      return new NextResponse("bad_request", { status: 400 });
+    }
 
     // 1. 检查配额（两层）
     const today = new Date().toISOString().split('T')[0];

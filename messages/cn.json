@@ -106,7 +106,8 @@
       "date": "2017.9 ~ 2021.6",
       "thesis_title": "基于深度学习的单目相机深度预测模型"
     },
-    "credentials": "东京大学硕士 · Salesforce 认证 ×8 · AWS 认证 ×1"
+    "credentials": "东京大学硕士 · Salesforce 认证 ×8 · AWS 认证 ×1",
+    "nameAlt": "周澤立 · ZHOU ZELI"
   },
   "LabPage": {
     "backHome": "返回主页",
@@ -841,5 +842,9 @@
         "嗯，留在盆里，路过就能看见。"
       ]
     }
+  },
+  "Metadata": {
+    "title": "周澤立 Zeli Zhou | 个人主页",
+    "description": "周澤立（Zeli Zhou）的个人主页：金融领域数据科学与生成式 AI（RAG / LLM Agent）实践、软件工程师履历、日本旅行记录与小游戏。"
   }
 }

@@ -106,7 +106,8 @@
       "date": "2017.9 ~ 2021.6",
       "thesis_title": "深層学習を用いた単眼カメラによる距離予測モデル"
     },
-    "credentials": "東京大学 修士 · Salesforce 認定 ×8 · AWS 認定 ×1"
+    "credentials": "東京大学 修士 · Salesforce 認定 ×8 · AWS 認定 ×1",
+    "nameAlt": "周澤立 · ZHOU ZELI"
   },
   "LabPage": {
     "backHome": "ホームへ戻る",
@@ -841,5 +842,9 @@
         "うん、鉢にいれば、通るたびに見られる。"
       ]
     }
+  },
+  "Metadata": {
+    "title": "周澤立 Zeli Zhou | 個人サイト",
+    "description": "周澤立（Zeli Zhou）の個人サイト：金融領域のデータサイエンスと生成AI（RAG / LLM Agent）の実践、エンジニア経歴、日本旅行の記録とミニゲーム。"
   }
 }
