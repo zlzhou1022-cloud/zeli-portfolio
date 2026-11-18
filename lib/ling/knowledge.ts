@@ -1,5 +1,6 @@
 import { getAllProjects } from "@/lib/lab-data";
 import { getAllTrips } from "@/lib/travel-data";
+import { getPrefecture } from "@/lib/prefectures";
 import cnMessages from "@/messages/cn.json";
 import jpMessages from "@/messages/jp.json";
 import enMessages from "@/messages/en.json";
@@ -49,6 +50,17 @@ const CAMERA_GEAR: Record<LingLocale, string> = {
   en: "Camera gear: travel photos are mainly shot on a Fujifilm X-S20",
 };
 
+// 旅行覆盖事实（站长 2026-11-19 追加）：47 县全部去过，但有照片的只有一部分县。
+// 有照片的县名单按 travel-data 动态生成，新增旅程自动扩容，不要写死。
+const TRAVEL_COVERAGE: Record<LingLocale, (n: number, names: string) => string> = {
+  cn: (n, names) =>
+    `旅行覆盖：Zeli 已走遍日本全部 47 个都道府县（47 个县全部去过）。但本站相册目前只收录了其中 ${n} 个县的照片：${names}。访客问「去过 X 县吗」——去过；问「有 X 县的照片或游记吗」——只有上述县有，其余县暂未收录，不要编造不存在的照片或游记。`,
+  jp: (n, names) =>
+    `旅行カバー範囲：Zeli は日本の47都道府県をすべて訪れています。ただし本サイトのアルバムに写真があるのは現在のところ次の ${n} 県だけです：${names}。「X 県に行ったことがありますか」と聞かれたら、行ったことがあると答えてください。「X 県の写真や旅行記はありますか」と聞かれたら、上記の県のみで、それ以外は未収録です。存在しない写真や旅行記を捏造しないでください。`,
+  en: (n, names) =>
+    `Travel coverage: Zeli has visited all 47 prefectures of Japan. However, the albums on this site currently include photos from only these ${n} prefectures: ${names}. If a visitor asks "Has he been to prefecture X?" — yes, he has been to all 47. If they ask "Are there photos or a story from prefecture X?" — only the prefectures listed above have any; do not invent photos or stories that do not exist.`,
+};
+
 // 输出体积守卫：超过此长度时逐图说明降级（见 buildKnowledge）。
 const MAX_KNOWLEDGE_CHARS = 6000;
 
@@ -84,6 +96,11 @@ function buildKnowledgeInner(locale: LingLocale, fullPhotoCaptions: boolean): st
   }
 
   lines.push(`## ${h.trips}`);
+  const photoPrefIds = [...new Set(getAllTrips().flatMap((tr) => tr.photos.map((p) => p.prefecture)))];
+  const photoPrefNames = photoPrefIds
+    .map((id) => getPrefecture(id)?.[locale] ?? id)
+    .join(locale === "en" ? ", " : "、");
+  lines.push(`- ${TRAVEL_COVERAGE[locale](photoPrefIds.length, photoPrefNames)}`);
   for (const trip of getAllTrips()) {
     const t = m.Trips[trip.id as keyof typeof m.Trips] as
       | { title: string; photos: Record<string, string> }
