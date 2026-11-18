@@ -106,7 +106,8 @@
       "date": "Sep 2017 - Jun 2021",
       "thesis_title": "Monocular Camera Depth Prediction Model Based on Deep Learning"
     },
-    "credentials": "Master's, University of Tokyo · 8× Salesforce certified · 1× AWS certified"
+    "credentials": "Master's, University of Tokyo · 8× Salesforce certified · 1× AWS certified",
+    "nameAlt": "周澤立 · ZHOU ZELI"
   },
   "LabPage": {
     "backHome": "Back to Home",
@@ -841,5 +842,9 @@
         "Mm, in its pot, where everyone passing by can see it."
       ]
     }
+  },
+  "Metadata": {
+    "title": "Zeli Zhou (周澤立) | Personal Homepage",
+    "description": "Personal homepage of Zeli Zhou (周澤立): data science and generative AI (RAG / LLM Agents) in finance, software engineering profile, Japan travel notes and mini games."
   }
 }

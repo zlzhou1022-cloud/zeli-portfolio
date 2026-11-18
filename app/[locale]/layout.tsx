@@ -7,7 +7,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { LanguageSwitcher } from "@/components/language-switcher";
 
 import {NextIntlClientProvider} from 'next-intl';
-import {getMessages} from 'next-intl/server';
+import {getMessages, getTranslations} from 'next-intl/server';
 import {routing} from '@/i18n/routing';
 import {notFound} from 'next/navigation';
 
@@ -24,9 +24,51 @@ import type { Viewport } from 'next';
 
 const inter = Inter({ subsets: ["latin"] });
 
-export const metadata: Metadata = {
-  title: "Zeli | 个人主页",
-  description: "软件工程师履历、技术博客与生活记录",
+// SEO（2026-11-18）：标题/描述带站长姓名三形态（周澤立 / Zeli Zhou），供搜索引擎按名检索；
+// 另在 body 注入 Person 结构化数据（JSON-LD），只含已公开信息。
+const SITE_URL = "https://zeli-portfolio.vercel.app";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "Metadata" });
+  return {
+    metadataBase: new URL(SITE_URL),
+    title: t("title"),
+    description: t("description"),
+    authors: [{ name: "Zeli Zhou" }],
+    keywords: ["周澤立", "周泽立", "Zeli Zhou", "ZHOU ZELI"],
+    alternates: {
+      canonical: `/${locale}`,
+      languages: { "zh-CN": "/cn", ja: "/jp", en: "/en", "x-default": "/cn" },
+    },
+    openGraph: {
+      title: t("title"),
+      description: t("description"),
+      url: `/${locale}`,
+      siteName: "Zeli Zhou",
+      type: "website",
+    },
+  };
+}
+
+const PERSON_JSON_LD = {
+  "@context": "https://schema.org",
+  "@type": "Person",
+  name: "Zeli Zhou",
+  alternateName: ["周澤立", "周泽立", "ZHOU ZELI"],
+  url: `${SITE_URL}/`,
+  jobTitle: "Consultant / Data Scientist",
+  worksFor: { "@type": "Organization", name: "Mitsubishi Research Institute" },
+  alumniOf: { "@type": "CollegeOrUniversity", name: "University of Tokyo" },
+  address: { "@type": "PostalAddress", addressLocality: "Yokohama", addressCountry: "JP" },
+  sameAs: [
+    "https://www.linkedin.com/in/澤立-周-758a9a227",
+    "https://github.com/zlzhou1022-cloud",
+  ],
 };
 
 export const viewport: Viewport = {
@@ -73,6 +115,10 @@ export default async function LocaleLayout({
       {/* 建议给 body 也加上 suppressHydrationWarning，防止因为插件注入导致的类名不匹配警告 */}
       <body className={`${inter.className} antialiased min-h-screen flex flex-col`} suppressHydrationWarning>
         
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(PERSON_JSON_LD) }}
+        />
         {/* 1. 把 ThemeProvider 放在最外层，并补齐暗黑模式的属性 */}
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           

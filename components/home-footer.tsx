@@ -23,7 +23,7 @@ export default async function HomeFooter() {
 
   return (
     <footer className="border-t border-stone-200 dark:border-stone-800 pt-6 pb-2 flex flex-col md:flex-row md:items-center md:justify-between gap-1.5 text-xs text-stone-400 dark:text-stone-500">
-      <div>© {new Date().getFullYear()} Zeli Zhou</div>
+      <div>© {new Date().getFullYear()} Zeli Zhou（周澤立）</div>
       <div>
         {t("footer.onDuty")}
         {count !== null && (
