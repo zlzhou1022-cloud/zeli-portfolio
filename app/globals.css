@@ -121,3 +121,24 @@
     animation: float-slowest 35s ease-in-out infinite;
   }
 }
+
+/* 首页活化（2026-11-18）：近况条呼吸点 + 旅行地图点亮过渡 */
+.now-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 9999px;
+  background: #65a30d;
+  flex: none;
+  animation: now-pulse 2.2s ease-in-out infinite;
+}
+@keyframes now-pulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(101, 163, 13, 0.18); }
+  50% { box-shadow: 0 0 0 7px rgba(101, 163, 13, 0.07); }
+}
+.home-map-path {
+  transition: fill 0.45s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .now-dot { animation: none; }
+  .home-map-path { transition: none; }
+}
