@@ -27,11 +27,50 @@ const MESSAGES: Record<LingLocale, MessagesShape> = {
 
 const HEADINGS: Record<
   LingLocale,
-  { author: string; career: string; education: string; projects: string; trips: string; thesis: string; photosUnit: string; morePhotos: string }
+  { author: string; career: string; education: string; projects: string; trips: string; pages: string; thesis: string; photosUnit: string; morePhotos: string }
 > = {
-  cn: { author: "作者", career: "职业经历", education: "教育背景", projects: "实验室项目", trips: "旅行游记", thesis: "毕业论文", photosUnit: "张照片", morePhotos: "等" },
-  jp: { author: "著者", career: "職務経歴", education: "学歴", projects: "ラボのプロジェクト", trips: "旅行記", thesis: "論文", photosUnit: "枚の写真", morePhotos: "など" },
-  en: { author: "Author", career: "Career", education: "Education", projects: "Lab Projects", trips: "Travel Stories", thesis: "Thesis", photosUnit: "photos", morePhotos: "and more" },
+  cn: { author: "作者", career: "职业经历", education: "教育背景", projects: "实验室项目", trips: "旅行游记", pages: "站内页面", thesis: "毕业论文", photosUnit: "张照片", morePhotos: "等" },
+  jp: { author: "著者", career: "職務経歴", education: "学歴", projects: "ラボのプロジェクト", trips: "旅行記", pages: "サイト内のページ", thesis: "論文", photosUnit: "枚の写真", morePhotos: "など" },
+  en: { author: "Author", career: "Career", education: "Education", projects: "Lab Projects", trips: "Travel Stories", pages: "Site Pages", thesis: "Thesis", photosUnit: "photos", morePhotos: "and more" },
+};
+
+// 站内各页面的真实内容（站长 2026-11-19 追加）：此前事实区没有小屋/花园等页面的
+// 内容，模型被问「小屋里有什么」时凭空编了留言、相册精选、小工具。介绍页面内容
+// 只能以这里为准（提示词边界一节有硬约束）。页面功能变了记得同步改这里。
+const PAGE_CONTENTS: Record<LingLocale, string[]> = {
+  cn: [
+    "首页：Zeli 的自我介绍与各栏目入口",
+    "个人主页：教育背景与职场履历",
+    "实验室与插件：Zeli 做的工程小实验与工具（具体条目见「实验室项目」）",
+    "留言板：访客留言、看大家留言的地方",
+    "小游戏专区：小游戏的集合页，入口有向上冲、看图猜县、慕斯的小屋、慕斯的花园",
+    "向上冲（Muse Dash）：控制慕斯向上跑、收集数据、躲开病毒的小游戏",
+    "看图猜县：看 Zeli 的旅行照片，猜照片是在哪个县拍的问答游戏",
+    "慕斯的小屋：慕斯住的小屋——陪她说话、喂点心、每日签到、给她换装、用星星买家具（地毯、书架、书桌）布置房间；点屋里的花架可以去她的花园",
+    "慕斯的花园：她的室内花园——买种子种花、每天浇水、花开后收获攒星星",
+  ],
+  jp: [
+    "ホーム：Zeli の自己紹介と各コーナーへの入口",
+    "プロフィール：学歴と職務経歴",
+    "ラボ：Zeli が作った小さな実験とツール（詳細は「ラボのプロジェクト」）",
+    "ゲストブック：訪問者がメッセージを残したり、みんなのメッセージを読んだりする場所",
+    "ミニゲーム：ゲームの入口ページ。「上にダッシュ」「写真で県当てクイズ」「ムースのお部屋」「ムースのガーデン」があります",
+    "上にダッシュ（Muse Dash）：ムースを操作して上へ走り、データを集めてウイルスを避けるゲーム",
+    "写真で県当てクイズ：Zeli の旅行写真を見て、撮った県を当てるクイズ",
+    "ムースのお部屋：ムースが暮らす部屋——お話し、おやつ、毎日のチェックイン、着せ替え、スターで家具（ラグ・本棚・机）を買って模様替えができます。部屋のフラワースタンドから彼女のガーデンへ行けます",
+    "ムースのガーデン：彼女の室内ガーデン——種を買って植え、毎日水やりをして、花が咲いたら収穫してスターを貯めます",
+  ],
+  en: [
+    "Home: Zeli's intro and the entry points to every section",
+    "Profile: education and career history",
+    "Lab: Zeli's small engineering experiments and tools (see Lab Projects for details)",
+    "Guestbook: where visitors leave and read messages",
+    "Games: the games hub — Muse Dash, the Prefecture Quiz, Mousse's Room, and Mousse's Garden",
+    "Muse Dash: a runner game where you guide Mousse upward, collecting data and dodging viruses",
+    "Prefecture Quiz: guess which prefecture each of Zeli's travel photos was taken in",
+    "Mousse's Room: where Mousse lives — chat with her, feed her snacks, check in daily, change her outfits, and buy furniture (rug, bookshelf, desk) with stars to decorate the room; the flower stand in the room leads to her garden",
+    "Mousse's Garden: her indoor garden — buy seeds, plant them, water daily, and harvest blooms for stars",
+  ],
 };
 
 // 本站技术栈（公开信息：仓库本身就是 public）。访客问技术实现时以此为准，
@@ -93,6 +132,11 @@ function buildKnowledgeInner(locale: LingLocale, fullPhotoCaptions: boolean): st
       | undefined;
     if (!t) continue;
     lines.push(`- ${t.title}（id: ${project.id}）｜${t.description}｜Tags: ${project.tags.join(", ")}｜URL: ${project.url}`);
+  }
+
+  lines.push(`## ${h.pages}`);
+  for (const pageLine of PAGE_CONTENTS[locale]) {
+    lines.push(`- ${pageLine}`);
   }
 
   lines.push(`## ${h.trips}`);
