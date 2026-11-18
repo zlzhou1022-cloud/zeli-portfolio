@@ -10,7 +10,7 @@ import { isOwnerMode } from "@/lib/owner";
 
 export const GARDEN_KEY = "muse_garden_v1";
 
-export type SpeciesId = "tulip" | "daisy" | "pansy" | "chrys";
+export type SpeciesId = "tulip" | "daisy" | "pansy" | "sasanqua";
 
 export interface Plant {
   species: SpeciesId;
@@ -28,7 +28,7 @@ export interface GardenSave {
   totalHarvests: number;
 }
 
-export const SPECIES_ORDER: SpeciesId[] = ["tulip", "daisy", "pansy", "chrys"];
+export const SPECIES_ORDER: SpeciesId[] = ["tulip", "daisy", "pansy", "sasanqua"];
 
 // scale = 该阶段图高 / 盆高（本地实测）：渲染时盆高恒定，图高 = 盆高 × scale
 // aspect = 该阶段图宽 / 图高（本地实测）：渲染定位必须用真实宽高比——
@@ -37,7 +37,8 @@ export const SPECIES: Record<SpeciesId, { price: number; seasonal: boolean; scal
   tulip: { price: 4, seasonal: false, scale: [1.058, 1.275, 2.142, 2.432, 2.494], aspect: [1.027, 0.85, 0.677, 0.455, 0.49] },
   daisy: { price: 4, seasonal: false, scale: [1.054, 1.313, 2.262, 2.168, 2.253], aspect: [1.0, 0.811, 0.694, 0.485, 0.476] },
   pansy: { price: 4, seasonal: false, scale: [1.052, 1.217, 1.707, 1.881, 2.048], aspect: [1.007, 0.873, 0.802, 0.726, 0.687] },
-  chrys: { price: 5, seasonal: true, scale: [1.046, 1.254, 1.746, 1.995, 2.1], aspect: [1.03, 0.862, 0.639, 0.557, 0.532] },
+  // 季节限定槽位：原菊花，站长 2026-11-19 定「菊花不吉利」换 11 月应季的山茶花（サザンカ）
+  sasanqua: { price: 5, seasonal: true, scale: [1.101, 1.296, 2.061, 2.162, 2.178], aspect: [1.013, 0.841, 0.607, 0.557, 0.577] },
 };
 
 export const BLOOM_DAYS = 10;
@@ -67,7 +68,7 @@ export function defaultGarden(): GardenSave {
   return {
     version: 1,
     pots: [null, null, null],
-    seeds: { tulip: 0, daisy: 0, pansy: 0, chrys: 0 },
+    seeds: { tulip: 0, daisy: 0, pansy: 0, sasanqua: 0 },
     gifted: false,
     album: {},
     totalHarvests: 0,
@@ -81,6 +82,23 @@ export function loadGarden(): GardenSave {
     if (!raw) return base;
     const parsed = JSON.parse(raw) as GardenSave;
     if (parsed.version !== 1) return base;
+    // 菊花下线迁移（2026-11-19）：旧存档的 chrys 种子/盆栽/图鉴改名 sasanqua，不丢进度
+    const legacy = parsed as unknown as {
+      seeds?: Record<string, number>;
+      pots?: ({ species: string } | null)[];
+      album?: Record<string, unknown>;
+    };
+    if (legacy.seeds && typeof legacy.seeds.chrys === "number") {
+      legacy.seeds.sasanqua = (legacy.seeds.sasanqua ?? 0) + legacy.seeds.chrys;
+      delete legacy.seeds.chrys;
+    }
+    if (Array.isArray(legacy.pots)) {
+      for (const pot of legacy.pots) if (pot && pot.species === "chrys") pot.species = "sasanqua";
+    }
+    if (legacy.album && legacy.album.chrys) {
+      legacy.album.sasanqua = legacy.album.chrys;
+      delete legacy.album.chrys;
+    }
     const merged: GardenSave = {
       ...base,
       ...parsed,
