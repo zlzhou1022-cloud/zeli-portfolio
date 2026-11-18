@@ -15,6 +15,7 @@
 // 即使已解锁也不能选（避免选了个空壳）。图齐一套、READY 加一套。
 
 import { getAllTrips } from "./travel-data";
+import { isOwnerMode } from "./owner";
 
 export type OutfitId = "default" | "sport" | "school" | "hakama" | "travel" | "gardener";
 
@@ -134,8 +135,14 @@ export interface OutfitProgress {
   target: number | null;
 }
 
-/** 每套的解锁判定 + 进度（判定逻辑的唯一出处，面板/提示都读这里） */
+/** 每套的解锁判定 + 进度（判定逻辑的唯一出处，面板/提示都读这里）。
+ *  站长模式开启时全部放行（只改判定结果，进度数值仍按真实存档显示）。 */
 export function outfitStatus(id: OutfitId): { unlocked: boolean; progress: OutfitProgress } {
+  const base = outfitStatusBase(id);
+  return isOwnerMode() ? { unlocked: true, progress: base.progress } : base;
+}
+
+function outfitStatusBase(id: OutfitId): { unlocked: boolean; progress: OutfitProgress } {
   if (typeof window === "undefined") return { unlocked: id === "default", progress: { value: null, target: null } };
   switch (id) {
     case "default":

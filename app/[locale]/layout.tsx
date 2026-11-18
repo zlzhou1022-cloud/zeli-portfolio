@@ -17,6 +17,7 @@ import { reportInfraFailure } from "@/lib/alert";
 import { ChatBot } from "@/components/chat-bot";
 import { LingMascot } from "@/components/ling-mascot";
 import { LingGame } from "@/components/ling-game";
+import { OwnerModeBadge } from "@/components/owner-mode-badge";
 import { CustomCursor } from "@/components/custom-cursor";
 import { ScrollProgress } from "@/components/scroll-progress";
 import { AnimatedBackground } from "@/components/animated-background";
@@ -157,6 +158,7 @@ export default async function LocaleLayout({
             <ChatBot isQuotaFull={isQuotaFull} />
             <LingMascot />
             <LingGame />
+            <OwnerModeBadge />
 
           </NextIntlClientProvider>
         </ThemeProvider>
