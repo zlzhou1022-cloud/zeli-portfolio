@@ -72,9 +72,9 @@ const TEXT: Record<
     home: "The visitor is currently on the home page (with cards and menu links to the profile, lab, travel albums, games corner, and guestbook).",
     profile: "The visitor is currently on the profile (resume) page.",
     lab: "The visitor is currently on the Lab & Plugins page.",
-    games: "The visitor is currently on the Mini Games page (games played with Muse: the 45-second dash, the prefecture quiz, and Muse's Room).",
-    room: "The visitor is currently on Muse's Room page (a care page where stars buy her furniture: daily check-ins, looking after her fullness/mood/energy, and watching her wander and use the furniture; stars come from check-ins and the two mini games).",
-    garden: "The visitor is currently on Muse's Indoor Garden page (reached from the flower stand in her room: buy seeds, plant them, water daily to grow, harvest blooms for stars and the album; 6 lifetime harvests unlock the gardener outfit).",
+    games: "The visitor is currently on the Mini Games page (games played with Mousse: the 45-second dash, the prefecture quiz, and Mousse's Room).",
+    room: "The visitor is currently on Mousse's Room page (a care page where stars buy her furniture: daily check-ins, looking after her fullness/mood/energy, and watching her wander and use the furniture; stars come from check-ins and the two mini games).",
+    garden: "The visitor is currently on Mousse's Indoor Garden page (reached from the flower stand in her room: buy seeds, plant them, water daily to grow, harvest blooms for stars and the album; 6 lifetime harvests unlock the gardener outfit).",
     guestbook: "The visitor is currently on the guestbook page.",
     travels: (list) => `The visitor is currently on the travel album list page. The site's travel stories are: ${list}.`,
     trip: (title, date, total) =>

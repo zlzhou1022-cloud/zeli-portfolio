@@ -198,7 +198,7 @@ matched.length > 0
 
 navigate_to: tool({
 description:
-"Offer the visitor a navigation card to an internal page. Call this when you recommend a specific page: the visitor sees an 'open page' card and clicks it themselves (no automatic redirect). Valid targets: home, /profile, /lab, /games, /games/prefecture-game, /games/room (Muse's Room, the care page), /games/garden (her indoor garden: planting and watering flowers), /travels, /travels/<tripId>, /guestbook (with or without locale prefix). After calling it, still write a normal sentence telling the visitor what the page is.",
+"Offer the visitor a navigation card to an internal page. Call this when you recommend a specific page: the visitor sees an 'open page' card and clicks it themselves (no automatic redirect). Valid targets: home, /profile, /lab, /games, /games/prefecture-game, /games/room (Mousse's Room, the care page), /games/garden (her indoor garden: planting and watering flowers), /travels, /travels/<tripId>, /guestbook (with or without locale prefix). After calling it, still write a normal sentence telling the visitor what the page is.",
 inputSchema: z.object({
 path: z.string().describe("Internal path such as /travels/tohoku-feb-2026 or /profile"),
 }),
