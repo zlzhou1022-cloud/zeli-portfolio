@@ -17,16 +17,33 @@ export interface HomePhoto {
 
 // 首页「光影与足迹」露出区（2026-11-18）：真实县界地图 + 旅程照片。
 // 地图入场时按从北到南逐县点亮（47 县制霸）。金色 = 有照片的县（站长 2026-11-19
-// 改定：不再绑定最近一趟旅程，凡相册里有照片的县都金色），由照片数据动态算；
-// 点金色县 → 下方换成该县的照片；不点时默认显示最新一趟旅程的照片。
+// 改定：不再绑定最近一趟旅程，凡相册里有照片的县都金色），由照片数据动态算。
+// 展示规则（站长 2026-11-19 夜定，手机端优先）：默认显示最新一趟旅程的前 4 张；
+// 点金色县 → 从该县照片里随机抽 4 张（不足 4 张就全显示）；再点一次或点
+// 「回到最新旅程」复位。
 export function HomeTravel({ photos, latestTripId }: { photos: HomePhoto[]; latestTripId: string }) {
   const t = useTranslations("Home");
   const tt = useTranslations("Trips");
   const svgRef = useRef<SVGSVGElement>(null);
   const [lit, setLit] = useState<Set<string>>(new Set());
   const [sel, setSel] = useState<string | null>(null);
+  const [picked, setPicked] = useState<HomePhoto[] | null>(null);
   const goldSet = new Set(photos.map((p) => p.pref));
-  const shown = (sel ? photos.filter((p) => p.pref === sel) : photos.filter((p) => p.tripId === latestTripId)).slice(0, 8);
+  const shown = picked ?? photos.filter((p) => p.tripId === latestTripId).slice(0, 4);
+  const choose = (id: string) => {
+    if (sel === id) {
+      setSel(null);
+      setPicked(null);
+      return;
+    }
+    setSel(id);
+    const pool = photos.filter((p) => p.pref === id);
+    setPicked([...pool].sort(() => Math.random() - 0.5).slice(0, 4));
+  };
+  const reset = () => {
+    setSel(null);
+    setPicked(null);
+  };
 
   useEffect(() => {
     const svg = svgRef.current;
@@ -95,7 +112,7 @@ export function HomeTravel({ photos, latestTripId }: { photos: HomePhoto[]; late
                   key={location.id}
                   id={location.id}
                   d={location.path}
-                  onClick={gold ? () => setSel(sel === location.id ? null : location.id) : undefined}
+                  onClick={gold ? () => choose(location.id) : undefined}
                   className={`home-map-path stroke-white dark:stroke-stone-900 ${fillFor(location.id)} ${
                     gold ? "cursor-pointer hover:fill-[#c08c1d]" : ""
                   } ${sel === location.id ? "stroke-amber-800 dark:stroke-amber-200" : ""}`}
@@ -115,7 +132,7 @@ export function HomeTravel({ photos, latestTripId }: { photos: HomePhoto[]; late
               <>
                 {t("travel.viewing", { name: t(`travel.prefNames.${sel}`) })}
                 {" · "}
-                <button type="button" onClick={() => setSel(null)} className="underline underline-offset-2 cursor-pointer hover:text-stone-600 dark:hover:text-stone-300">
+                <button type="button" onClick={reset} className="underline underline-offset-2 cursor-pointer hover:text-stone-600 dark:hover:text-stone-300">
                   {t("travel.showLatest")}
                 </button>
               </>
