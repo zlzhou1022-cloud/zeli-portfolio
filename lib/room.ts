@@ -9,6 +9,7 @@
 // 原则：状态只让他更想回来、永不惩罚；亲密度永不衰减；衰减下限 15 不见底。
 
 import type { OutfitId } from "@/lib/outfit";
+import { isOwnerMode } from "@/lib/owner";
 
 // ---------------------------------------------------------------- State
 
@@ -330,6 +331,13 @@ export function intimacyLevel(xp: number): number {
     if (xp >= INTIMACY_THRESHOLDS[i]) lv = i + 1;
   }
   return lv;
+}
+
+/** 有效亲密度等级：站长模式下按满级 Lv.10 生效（只读覆盖，xp 本身不写）——
+ *  供台词包/待机动作/主动搭话等按等级解锁的内容与展示层使用；
+ *  升级检测仍走 intimacyLevel 本值，避免伪造升级横幅与回忆记录。 */
+export function effectiveIntimacyLevel(save: RoomSave): number {
+  return isOwnerMode() ? 10 : intimacyLevel(save.intimacyXp);
 }
 
 // ------------------------------------------------------- Furniture data

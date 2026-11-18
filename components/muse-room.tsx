@@ -29,6 +29,7 @@ import {
   feed,
   hasRoomCharLayer,
   intimacyLevel,
+  effectiveIntimacyLevel,
   ROOM_KEY,
   loadSave,
   persistSave,
@@ -238,7 +239,7 @@ export function MuseRoom() {
     if (s.energy < 25) return pick(linesOf("idleTired"));
     if (s.mood < 35) return pick(linesOf("idleLowMood"));
     // Lv7 起她偶尔主动搭话（GPT 评审：为 Lv8 小发现铺垫）
-    const extra = intimacyLevel(s.intimacyXp) >= 7 ? linesOf("proactive7") : [];
+    const extra = effectiveIntimacyLevel(s) >= 7 ? linesOf("proactive7") : [];
     if (s.mood >= 70) return pick([...linesOf("idleHappy"), ...extra]);
     return pick([...linesOf("idleOk"), ...extra]);
   };
@@ -252,7 +253,7 @@ export function MuseRoom() {
       // Lv3 起待机小动作变多（亲密度奖励梯）
       setIdlePose(
         pick(
-          intimacyLevel(s.intimacyXp) >= 3
+          effectiveIntimacyLevel(s) >= 3
             ? (["look", "book", "letter", "smell", "scratch", "stareyes"] as PoseName[])
             : (["look", "book", "letter"] as PoseName[]),
         ),
@@ -666,7 +667,7 @@ export function MuseRoom() {
       setLine(pick(clickLinesOf("lowMood")));
     } else {
       // 亲密度台词包随等级并入点击池（Lv2/4/5/6/9，GPT 评审定版）
-      const lv = intimacyLevel(s.intimacyXp);
+      const lv = effectiveIntimacyLevel(s);
       const pool = [...clickLinesOf("idle")];
       if (lv >= 2) pool.push(...clickLinesOf("pack2"));
       if (lv >= 4) pool.push(...clickLinesOf("pack4"));
@@ -709,10 +710,12 @@ export function MuseRoom() {
     }
     return t("tomorrow.default");
   })();
-  const level = intimacyLevel(save.intimacyXp);
+  const level = effectiveIntimacyLevel(save);
   const curBase = INTIMACY_THRESHOLDS[level - 1] ?? 0;
   const nextBase = INTIMACY_THRESHOLDS[level] ?? curBase + 50;
-  const levelPct = Math.min(100, ((save.intimacyXp - curBase) / (nextBase - curBase)) * 100);
+  const levelPct = isOwnerMode()
+    ? 100
+    : Math.min(100, ((save.intimacyXp - curBase) / (nextBase - curBase)) * 100);
   const checkedIn = today !== "" && save.lastCheckin === today;
 
   const interactingWith = (fid: FurnitureId) =>
@@ -783,7 +786,7 @@ export function MuseRoom() {
           type="button"
           aria-label={tg("standLabel")}
           onClick={() => router.push(`/${locale}/games/garden`)}
-          className="absolute cursor-pointer group"
+          className="absolute cursor-pointer group z-20"
           style={{ left: "55.4%", bottom: "18.5%", height: "25%", aspectRatio: "899/963" }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
