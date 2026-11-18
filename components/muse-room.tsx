@@ -777,21 +777,30 @@ export function MuseRoom() {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/muse-room/backdrop.webp" alt="" className="absolute inset-0 w-full h-full object-cover" draggable={false} />
 
-        {/* 花架（室内花园入口，二期）：落在书桌与墙角之间的地板上，避开窗台与地毯，点它进花园页 */}
+        {/* 花架（室内花园入口，二期）：视觉层保持原始层级（家具/她可以挡在前面，符合透视）；
+            点击判定单独上移到花架上半部与墙面空白区（站长 2026-11-19 定），与地毯判定分开——
+            地毯按钮的透明框很高，判定若留在花架下半部会被地毯截走（曾用 z-20 置顶修过，
+            但花架会反过来压住所有图层，不符合透视，已按站长方案改为判定上移） */}
         <div
           className="absolute rounded-[50%] bg-stone-900/15 blur-[3px]"
           style={{ left: "58.9%", width: "6.4%", bottom: "17.8%", height: "1.8%" }}
         />
+        <div
+          aria-hidden
+          className="absolute pointer-events-none"
+          style={{ left: "55.4%", bottom: "18.5%", height: "25%", aspectRatio: "899/963" }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/muse-room/garden-stand.webp" alt="" className="h-full w-auto max-w-none mx-auto block" draggable={false} />
+        </div>
         <button
           type="button"
           aria-label={tg("standLabel")}
           onClick={() => router.push(`/${locale}/games/garden`)}
-          className="absolute cursor-pointer group z-20"
-          style={{ left: "55.4%", bottom: "18.5%", height: "25%", aspectRatio: "899/963" }}
+          className="absolute cursor-pointer z-20"
+          style={{ left: "55%", bottom: "34%", width: "15%", height: "24%" }}
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/muse-room/garden-stand.webp" alt="" className="h-full w-auto max-w-none mx-auto block transition-transform group-hover:scale-[1.03]" draggable={false} />
-          <span className="absolute left-1/2 -translate-x-1/2 -bottom-1 whitespace-nowrap rounded-full bg-emerald-600/90 text-white text-[11px] px-2 py-0.5 shadow">
+          <span className="absolute left-1/2 -translate-x-1/2 top-1 whitespace-nowrap rounded-full bg-emerald-600/90 text-white text-[11px] px-2 py-0.5 shadow pointer-events-none">
             🌱 {tg("standLabel")}
           </span>
         </button>
@@ -909,12 +918,19 @@ export function MuseRoom() {
           </div>
         )}
 
-        {/* 她的台词气泡（点她后带功能按钮） */}
+        {/* 她的台词气泡（点她后带功能按钮）。防溢出（站长 2026-11-19 报：手机上被截断）：
+            旧版固定居中平移 + [16,84]% 夹取只在桌面宽度成立，窄屏必出界；
+            改为按锚点三分区平移（靠左→气泡向右展开，靠右→向左展开）+ 宽度上限 min(280px, 86%) */}
         {line && (
           <div
             data-nomove=""
-            className={`absolute z-10 ${panel ? "w-60" : "max-w-[240px]"} -translate-x-1/2 rounded-2xl rounded-bl-md bg-white/95 dark:bg-stone-800/95 shadow-md px-3 py-2`}
-            style={{ left: `${Math.min(84, Math.max(16, bubbleAnchorX))}%`, bottom: `${bubbleBottom}%` }}
+            className={`absolute z-10 ${panel ? "w-60" : ""} rounded-2xl rounded-bl-md bg-white/95 dark:bg-stone-800/95 shadow-md px-3 py-2`}
+            style={{
+              left: `${Math.min(92, Math.max(8, bubbleAnchorX))}%`,
+              bottom: `${bubbleBottom}%`,
+              maxWidth: "min(280px, 86%)",
+              transform: `translateX(${bubbleAnchorX <= 30 ? -8 : bubbleAnchorX >= 70 ? -92 : -50}%)`,
+            }}
           >
             <p className="text-[13px] leading-snug text-stone-800 dark:text-stone-100">{line}</p>
             {panel === "main" && (
