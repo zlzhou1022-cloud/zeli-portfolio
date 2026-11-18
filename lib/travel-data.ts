@@ -40,7 +40,7 @@ const trips: Trip[] = [
   },
   {
     id: "kyushu-may-2026",
-    date: "2026-05-01",
+    date: "2026-05-11",
     title: "九州纪行：从关门海峡到樱岛",
     cover: getImageUrl("kyushu2026May/p15.jpg"),
     photos: [
