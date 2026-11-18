@@ -38,6 +38,37 @@ const trips: Trip[] = [
       { src: getImageUrl("tohoku2026Feb/wanko.jpg"), desc: "100碗挑战", prefecture: "iwate", place: { cn: "岩手县盛冈市", jp: "岩手県盛岡市", en: "Morioka, Iwate" } },
     ]
   },
+  {
+    id: "kyushu-may-2026",
+    date: "2026-05-01",
+    title: "九州纪行：从关门海峡到樱岛",
+    cover: getImageUrl("kyushu2026May/p15.jpg"),
+    photos: [
+      { src: getImageUrl("kyushu2026May/p15.jpg"), desc: "旧丰后森机关库", prefecture: "oita", place: { cn: "大分县玖珠町", jp: "大分県玖珠町", en: "Kusu, Oita" } },
+      { src: getImageUrl("kyushu2026May/p17.jpg"), desc: "血之池地狱", prefecture: "oita", place: { cn: "大分县别府市", jp: "大分県別府市", en: "Beppu, Oita" } },
+      { src: getImageUrl("kyushu2026May/p16.jpg"), desc: "海地狱", prefecture: "oita", place: { cn: "大分县别府市", jp: "大分県別府市", en: "Beppu, Oita" } },
+      { src: getImageUrl("kyushu2026May/p18.jpg"), desc: "地狱蒸", prefecture: "oita", place: { cn: "大分县别府市", jp: "大分県別府市", en: "Beppu, Oita" } },
+      { src: getImageUrl("kyushu2026May/p14.jpg"), desc: "巨人纪念石", prefecture: "oita", place: { cn: "大分县日田市", jp: "大分県日田市", en: "Hita, Oita" } },
+      { src: getImageUrl("kyushu2026May/p23.jpg"), desc: "赤间神宫", prefecture: "yamaguchi", place: { cn: "山口县下关市", jp: "山口県下関市", en: "Shimonoseki, Yamaguchi" } },
+      { src: getImageUrl("kyushu2026May/p10.jpg"), desc: "关门大桥", prefecture: "yamaguchi", place: { cn: "山口县下关市", jp: "山口県下関市", en: "Shimonoseki, Yamaguchi" } },
+      { src: getImageUrl("kyushu2026May/p11.jpg"), desc: "门司港地啤", prefecture: "fukuoka", place: { cn: "福冈县北九州市", jp: "福岡県北九州市", en: "Kitakyushu, Fukuoka" } },
+      { src: getImageUrl("kyushu2026May/p13.jpg"), desc: "宫地岳神社夕阳", prefecture: "fukuoka", place: { cn: "福冈县福津市", jp: "福岡県福津市", en: "Fukutsu, Fukuoka" } },
+      { src: getImageUrl("kyushu2026May/p12.jpg"), desc: "宫地岳留言石", prefecture: "fukuoka", place: { cn: "福冈县福津市", jp: "福岡県福津市", en: "Fukutsu, Fukuoka" } },
+      { src: getImageUrl("kyushu2026May/p08.jpg"), desc: "祐德稻荷神社", prefecture: "saga", place: { cn: "佐贺县鹿岛市", jp: "佐賀県鹿島市", en: "Kashima, Saga" } },
+      { src: getImageUrl("kyushu2026May/p09.jpg"), desc: "武雄市图书馆", prefecture: "saga", place: { cn: "佐贺县武雄市", jp: "佐賀県武雄市", en: "Takeo, Saga" } },
+      { src: getImageUrl("kyushu2026May/p07.jpg"), desc: "佐贺牛", prefecture: "saga", place: { cn: "佐贺县", jp: "佐賀県", en: "Saga" } },
+      { src: getImageUrl("kyushu2026May/p06.jpg"), desc: "二十六圣人纪念馆", prefecture: "nagasaki", place: { cn: "长崎县长崎市", jp: "長崎県長崎市", en: "Nagasaki City, Nagasaki" } },
+      { src: getImageUrl("kyushu2026May/p02.jpg"), desc: "大浦天主堂", prefecture: "nagasaki", place: { cn: "长崎县长崎市", jp: "長崎県長崎市", en: "Nagasaki City, Nagasaki" } },
+      { src: getImageUrl("kyushu2026May/p03.jpg"), desc: "长崎孔子庙", prefecture: "nagasaki", place: { cn: "长崎县长崎市", jp: "長崎県長崎市", en: "Nagasaki City, Nagasaki" } },
+      { src: getImageUrl("kyushu2026May/p04.jpg"), desc: "长崎电车", prefecture: "nagasaki", place: { cn: "长崎县长崎市", jp: "長崎県長崎市", en: "Nagasaki City, Nagasaki" } },
+      { src: getImageUrl("kyushu2026May/p05.jpg"), desc: "平和祈念像", prefecture: "nagasaki", place: { cn: "长崎县长崎市", jp: "長崎県長崎市", en: "Nagasaki City, Nagasaki" } },
+      { src: getImageUrl("kyushu2026May/p01.jpg"), desc: "茄子番茄面", prefecture: "nagasaki", place: { cn: "长崎县长崎市", jp: "長崎県長崎市", en: "Nagasaki City, Nagasaki" } },
+      { src: getImageUrl("kyushu2026May/p20.jpg"), desc: "太阳之丘日南", prefecture: "miyazaki", place: { cn: "宫崎县日南市", jp: "宮崎県日南市", en: "Nichinan, Miyazaki" } },
+      { src: getImageUrl("kyushu2026May/p19.jpg"), desc: "宫崎海岸", prefecture: "miyazaki", place: { cn: "宫崎县", jp: "宮崎県", en: "Miyazaki" } },
+      { src: getImageUrl("kyushu2026May/p21.jpg"), desc: "樱岛", prefecture: "kagoshima", place: { cn: "鹿儿岛县鹿儿岛市", jp: "鹿児島県鹿児島市", en: "Kagoshima City, Kagoshima" } },
+      { src: getImageUrl("kyushu2026May/p22.jpg"), desc: "黑猪丼", prefecture: "kagoshima", place: { cn: "鹿儿岛县鹿儿岛市", jp: "鹿児島県鹿児島市", en: "Kagoshima City, Kagoshima" } },
+    ]
+  },
 ];
 
 export const getAllTrips = () => {
