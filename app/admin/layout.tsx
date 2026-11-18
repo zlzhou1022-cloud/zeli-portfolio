@@ -8,6 +8,8 @@ import type { Viewport } from 'next';
 export const metadata = {
   title: "管理后台 | Zeli's Space",
   description: "纯中文极简管理后台",
+  // 后台不进搜索引擎（2026-11-18）：用 noindex 而非 robots.txt Disallow，避免广播路径
+  robots: { index: false, follow: false },
 };
 
 export const viewport: Viewport = {
