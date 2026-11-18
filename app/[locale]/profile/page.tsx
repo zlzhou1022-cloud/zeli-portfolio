@@ -31,6 +31,7 @@ export default function ProfilePage() {
             <div>
               <h1 className="text-5xl md:text-6xl font-serif mb-4 text-stone-900 dark:text-stone-100 transition-colors leading-[1.1]">Zeli Zhou</h1>
               <p className="text-xl text-stone-600 dark:text-stone-400 font-light transition-colors mb-6">{t("role")}</p>
+              <p className="text-sm text-stone-400 dark:text-stone-500 tracking-wide -mt-3 mb-6">{t("credentials")}</p>
               
               <div className="flex flex-col gap-3 text-sm text-stone-600 dark:text-stone-400 transition-colors font-light">
                 <div className="flex items-center gap-3">
