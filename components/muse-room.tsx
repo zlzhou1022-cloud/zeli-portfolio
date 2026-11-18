@@ -152,6 +152,7 @@ export function MuseRoom() {
     | { kind: "point"; x: number; feet: number }
     | null
   >(null);
+  const departSeqRef = useRef(0);
 
   const later = (fn: () => void, ms: number) => {
     const id = window.setTimeout(fn, ms);
@@ -305,16 +306,43 @@ export function MuseRoom() {
     }, 2650);
   };
 
-  const interruptTo = (fid: FurnitureId, rest: boolean) => {
-    const cur = actRef.current;
-    clearTimers();
-    if ((cur.mode === "interact" || cur.mode === "rest") && cur.target) {
-      // 她正贴在另一件家具上：先把自由身放回那件家具的锚点再出发
-      setHerXBoth(FURNITURE[cur.target].anchor.x);
-      setHerFeetBoth(FURNITURE[cur.target].anchor.feet);
+  // 她正贴在某件家具的合成图层里（且该时装有这件家具的人物层）时的锚点；不在图层里返回 null。
+  // 图层接管时自由身是卸载状态——直接改坐标出发，自由身会在终点首次挂载，CSS 过渡没有起点＝瞬移。
+  const layerAnchorOf = (a: ActState): { x: number; feet: number } | null => {
+    if (
+      (a.mode === "interact" || a.mode === "rest") &&
+      a.target &&
+      hasRoomCharLayer(outfitRef.current, a.target)
+    ) {
+      const an = FURNITURE[a.target].anchor;
+      return { x: an.x, feet: an.feet };
     }
+    return null;
+  };
+
+  // 两段式离层（2026-11-19 站长反馈修复）：先把自由身在锚点挂载站好（idle、无过渡），
+  // 隔一小段时间再执行真正的出发，过渡有了起点，她会「起身 → 跑过去」而不是瞬移。
+  const departThen = (next: () => void) => {
+    const anchor = layerAnchorOf(actRef.current);
+    if (!anchor) {
+      next();
+      return;
+    }
+    clearTimers();
+    const seq = ++departSeqRef.current;
+    setHerXBoth(anchor.x);
+    setHerFeetBoth(anchor.feet);
     setActBoth({ mode: "idle", target: null, resting: false });
-    goInteract(fid, rest);
+    later(() => {
+      if (departSeqRef.current === seq) next();
+    }, 70);
+  };
+
+  const interruptTo = (fid: FurnitureId, rest: boolean) => {
+    departThen(() => {
+      clearTimers();
+      goInteract(fid, rest);
+    });
   };
 
   const careRest = () => {
@@ -511,7 +539,12 @@ export function MuseRoom() {
   };
 
   // 点地板：她跑到落点（距离决定时长；光标在落点闪一下）
+  // 外层先走 departThen 两段式离层（在家具图层里时先起身站好再跑，防瞬移），再进 goToNow
   const goTo = (x0: number, feet0: number) => {
+    departThen(() => goToNow(x0, feet0));
+  };
+
+  const goToNow = (x0: number, feet0: number) => {
     const { x, feet } = clampWalkTarget(x0, feet0);
     const cur = actRef.current;
     clearTimers();
