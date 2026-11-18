@@ -2,6 +2,7 @@ import { tool} from "ai";
 import { z} from "zod";
 import { getAllProjects} from "@/lib/lab-data";
 import { getAllTrips, getTripById} from "@/lib/travel-data";
+import { getPrefecture} from "@/lib/prefectures";
 import cnMessages from "@/messages/cn.json";
 import jpMessages from "@/messages/jp.json";
 import enMessages from "@/messages/en.json";
@@ -163,6 +164,14 @@ reasons.push(`season:${season}`);
 }
 }
 if (theme) {
+// 地点优先（2026-11-19）：主题词命中县名/地点名时权重高于季节与一般主题词。
+const placeHaystack = trip.photos
+.map((p) => [p.place.cn, p.place.jp, p.place.en, getPrefecture(p.prefecture)?.cn ?? "", getPrefecture(p.prefecture)?.jp ?? "", getPrefecture(p.prefecture)?.en ?? ""].join(" "))
+.join(" ");
+if (placeHaystack.includes(theme)) {
+score += 3;
+reasons.push(`place:${theme}`);
+}
 const haystack = [
 tripTitle(locale, trip.id),
 ...trip.photos.map((p) => p.desc),
@@ -185,13 +194,109 @@ reasons,
 });
 scored.sort((a, b) => b.score - a.score);
 const matched = scored.filter((s) => s.score > 0);
+if (matched.length === 0) {
+// 空结果纪律：不许把不相关的游记当匹配递出去；只给全量简表供她如实说明。
 return {
-candidates: matched.length > 0? matched: scored,
-exactMatch: matched.length > 0,
+candidates: [],
+exactMatch: false,
+allTrips: scored.map((s) => ({ title: s.title, date: s.date })),
+note: "No trip matches the requested season/theme at all. Tell the visitor honestly that there is no matching trip; you may name what does exist (allTrips) but never present an unrelated trip as a match.",
+};
+}
+return {
+candidates: matched,
+exactMatch: true,
+note: "Candidates ranked by the server; pick the best one and explain why.",
+};
+},
+}),
+
+search_photos: tool({
+description:
+"Search ALL photos across every travel story by keyword: the photo captions (in the visitor's language), place names, prefecture names and photo keywords are all searched. Use this when the visitor asks for photos of a specific subject, place or scene (e.g. 'any photos of the sea?', 'show me a shrine photo', 'find the photo with the torii'). Returns each match with its trip, photo number, caption and a direct link to that photo. If nothing matches, the result says so — never invent a photo.",
+inputSchema: z.object({
+query: z.string().describe("Keyword to search for, in any language, e.g. 海, 神社, sea, shrine, 桜島"),
+limit: z.number().optional().describe("Max results to return (default 5, max 10)"),
+}),
+execute: async ({ query, limit}) => {
+// 规范化（NFKC+小写+去空格）抹平全半角/大小写差异；同义词组做跨语言扩展
+// （2026-11-19 与 ChatGPT 讨论定的低成本方案，词条按本站照片实际主题选）。
+const norm = (s: string) => s.normalize("NFKC").toLowerCase().replace(/\s+/g, "");
+const SYNONYM_GROUPS: string[][] = [
+["雪", "雪景", "雪景色", "snow", "snowy"],
+["海", "海岸", "海边", "sea", "ocean", "coast", "beach"],
+["祭", "祭典", "まつり", "festival"],
+["神社", "shrine"],
+["寺", "寺院", "寺庙", "temple"],
+["美食", "料理", "グルメ", "food", "cuisine"],
+["夜景", "夜", "night", "nightscape"],
+["樱花", "桜", "さくら", "sakura", "cherryblossom"],
+["红叶", "紅葉", "枫叶", "もみじ", "autumnleaves", "foliage"],
+["桥", "橋", "bridge"],
+["电车", "電車", "火车", "列车", "train", "tram"],
+["鸟居", "鳥居", "torii"],
+];
+const q = norm(query.trim());
+const max = Math.min(Math.max(limit ?? 5, 1), 10);
+if (!q) return { found: false, results: [], note: "Empty query."};
+const tokens = query.toLowerCase().split(/[\s,、，]+/).map((t) => norm(t)).filter((t) => t.length >= 1);
+// 查询命中的同义词组：组内其他词也算命中（权重低一档）。
+const expanded = new Set<string>();
+for (const group of SYNONYM_GROUPS) {
+const g = group.map(norm);
+if (g.some((term) => q.includes(term) || tokens.some((tok) => tok === term))) {
+g.forEach((term) => expanded.add(term));
+}
+}
+type Hit = { tripId: string; title: string; photo: number; caption: string; place: string; prefecture: string; matchedTerms: string[]; path: string; score: number };
+const hits: Hit[] = [];
+for (const trip of getAllTrips()) {
+const m = MESSAGES[locale];
+const t = m.Trips[trip.id as keyof typeof m.Trips] as | { title: string; photos: Record<string, string>} | undefined;
+trip.photos.forEach((photo, i) => {
+const caption = t?.photos[String(i + 1)] ?? "";
+const pref = getPrefecture(photo.prefecture);
+const fields: { text: string; weight: number}[] = [
+{ text: caption, weight: 3 },
+{ text: [photo.place.cn, photo.place.jp, photo.place.en].join(" "), weight: 3 },
+{ text: photo.desc, weight: 2 },
+{ text: pref ? [pref.cn, pref.jp, pref.en].join(" ") : "", weight: 2 },
+{ text: tripTitle(locale, trip.id), weight: 1 },
+];
+let score = 0;
+const matched = new Set<string>();
+for (const f of fields) {
+const hay = norm(f.text);
+if (hay.includes(q)) { score += f.weight; matched.add(query.trim()); }
+else if (tokens.length > 1 && tokens.some((tok) => tok.length >= 2 && hay.includes(tok))) { score += f.weight - 1; matched.add(query.trim()); }
+for (const term of expanded) {
+if (term !== q && hay.includes(term)) { score += Math.max(f.weight - 1, 1); matched.add(term); break; }
+}
+}
+if (score > 0) {
+hits.push({
+tripId: trip.id,
+title: tripTitle(locale, trip.id),
+photo: i + 1,
+caption,
+place: photo.place[locale] ?? photo.place.cn,
+prefecture: pref ? pref[locale] : photo.prefecture,
+matchedTerms: [...matched],
+path: `/${locale}/travels/${trip.id}?p=${i + 1}`,
+score,
+});
+}
+});
+}
+hits.sort((a, b) => b.score - a.score);
+const results = hits.slice(0, max).map(({ score, ...rest }) => rest);
+return {
+found: results.length > 0,
+results,
 note:
-matched.length > 0
-? "Candidates ranked by the server; pick the best one and explain why."
-: "No trip matches exactly; these are all the trips on the site — recommend the closest one honestly, or say there is no exact match.",
+results.length > 0
+? "These photos really exist on the site. Link the visitor to the exact photo with its path, and use matchedTerms if they ask why this photo."
+: "No photo matches. Tell the visitor honestly that there is no such photo in the albums; do not invent one.",
 };
 },
 }),

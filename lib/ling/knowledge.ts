@@ -103,7 +103,14 @@ const TRAVEL_COVERAGE: Record<LingLocale, (n: number, names: string) => string> 
 // 输出体积守卫：超过此长度时逐图说明降级（见 buildKnowledge）。
 const MAX_KNOWLEDGE_CHARS = 6000;
 
-function buildKnowledgeInner(locale: LingLocale, fullPhotoCaptions: boolean): string {
+// 逐图说明降级等级：0=全量，1=每辑 4 张，2=每辑 2 张，3=不带说明（仅索引）。
+// 分区预算（2026-11-19 与 ChatGPT 讨论后定）：作者/履历/页面/旅行覆盖等核心事实
+// 与游记索引（标题/日期/张数）永不截断，只有逐图说明分级降级——旧实现只有
+// 「全量→每辑4张」两档，游记一多就跳崖，现在改成四档平滑降级。
+type CaptionLevel = 0 | 1 | 2 | 3;
+const CAPTION_LIMITS: Record<CaptionLevel, number> = { 0: Infinity, 1: 4, 2: 2, 3: 0 };
+
+function buildKnowledgeInner(locale: LingLocale, captionLevel: CaptionLevel): string {
   const m = MESSAGES[locale];
   const h = HEADINGS[locale];
   const p = m.ProfilePage;
@@ -153,14 +160,15 @@ function buildKnowledgeInner(locale: LingLocale, fullPhotoCaptions: boolean): st
     const total = trip.photos.length;
     lines.push(`- ${t.title}（id: ${trip.id}）｜${trip.date}｜${total} ${h.photosUnit}`);
     const captions = trip.photos.map((_, i) => t.photos[String(i + 1)]).filter(Boolean);
-    // TODO(Phase 4): 行程变多后改为 get_trip_detail 工具按需取逐图说明，常驻提示词只保留标题与张数。
-    const shown = fullPhotoCaptions ? captions : captions.slice(0, 4);
+    // 逐图说明只是背景索引：访客问某辑细节时她有 get_trip_detail 工具现查，
+    // 常驻提示词里的说明按上面的等级降级，索引行（标题/日期/张数）永不丢。
+    const shown = captions.slice(0, CAPTION_LIMITS[captionLevel]);
     shown.forEach((caption, i) => {
       // 带上 travel-data 的短关键词（如「睡魔面部」「生剥鬼下山」），帮模型把照片与祭典/地点对准，避免混淆相近条目。
       const keyword = trip.photos[i]?.desc;
       lines.push(keyword ? `  ${i + 1}. 【${keyword}】${caption}` : `  ${i + 1}. ${caption}`);
     });
-    if (!fullPhotoCaptions && captions.length > shown.length) {
+    if (captions.length > shown.length) {
       lines.push(`  …${h.morePhotos}（${total} ${h.photosUnit}）`);
     }
   }
@@ -169,7 +177,15 @@ function buildKnowledgeInner(locale: LingLocale, fullPhotoCaptions: boolean): st
 }
 
 export function buildKnowledge(locale: LingLocale): string {
-  const full = buildKnowledgeInner(locale, true);
-  if (full.length <= MAX_KNOWLEDGE_CHARS) return full;
-  return buildKnowledgeInner(locale, false);
+  for (const level of [0, 1, 2, 3] as CaptionLevel[]) {
+    const built = buildKnowledgeInner(locale, level);
+    if (built.length <= MAX_KNOWLEDGE_CHARS) return built;
+  }
+  // 连「仅索引」都超限 = 核心事实本身太长，必须人工精简（与 ChatGPT 讨论定的断言）。
+  // 线上不抛错断聊（保可用性），但留一条醒目错误日志，审计脚本也会拦住。
+  const indexOnly = buildKnowledgeInner(locale, 3);
+  console.error(
+    `[ling] knowledge for ${locale} is ${indexOnly.length} chars at index-only level (max ${MAX_KNOWLEDGE_CHARS}). Core facts must be trimmed manually.`
+  );
+  return indexOnly;
 }

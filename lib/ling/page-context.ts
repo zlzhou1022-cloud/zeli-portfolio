@@ -50,7 +50,7 @@ const TEXT: Record<
     trip: (title, date, total) =>
       `访客此刻正在看：游记《${title}》（${date}，共 ${total} 张照片）。`,
     currentPhoto: (n, caption) => `当前打开的是第 ${n} 张，页面上给这张写的说明是：「${caption}」。`,
-    rule: "访客说「这张照片」「这一页」「这里」时，指的就是上面这个页面/这张照片。回答请依据页面说明与事实区，不要编造说明之外的画面细节。",
+    rule: "访客说「这张照片」「这一页」「这里」时，指的就是上面这个页面/这张照片。回答请依据页面说明与事实区，不要编造说明之外的画面细节。访客明确换了话题时，不要再硬套当前页面；当前页面信息不足以回答时，先用 get_trip_detail 等工具核实再答。判断优先级：访客这句话里明确说的对象 > 当前页面 > 之前的对话。",
   },
   jp: {
     heading: "## 訪問者が今見ているページ",
@@ -65,7 +65,7 @@ const TEXT: Record<
     trip: (title, date, total) =>
       `訪問者は今、旅行記『${title}』（${date}、全${total}枚）を見ています。`,
     currentPhoto: (n, caption) => `現在開いているのは ${n} 枚目で、ページに書かれた説明は「${caption}」です。`,
-    rule: "訪問者が「この写真」「このページ」「ここ」と言ったら、上記のページ／写真のことです。ページの説明と事実セクションに基づいて答え、説明にない画面の細部を捏造しないでください。",
+    rule: "訪問者が「この写真」「このページ」「ここ」と言ったら、上記のページ／写真のことです。ページの説明と事実セクションに基づいて答え、説明にない画面の細部を捏造しないでください。訪問者が明確に話題を変えたら、現在のページに無理に結びつけないでください。現在のページの情報だけでは答えられない場合は、get_trip_detail などのツールで確認してから答えてください。優先順位は、今の発言で明示された対象 > 現在のページ > それまでの会話、です。",
   },
   en: {
     heading: "## Page the visitor is currently viewing",
@@ -80,7 +80,7 @@ const TEXT: Record<
     trip: (title, date, total) =>
       `The visitor is currently viewing the travel story "${title}" (${date}, ${total} photos).`,
     currentPhoto: (n, caption) => `The photo currently open is #${n}, whose caption on the page reads: "${caption}".`,
-    rule: "When the visitor says \"this photo\", \"this page\", or \"here\", they mean the page/photo above. Answer from the page captions and the facts section; do not invent visual details beyond the captions.",
+    rule: "When the visitor says \"this photo\", \"this page\", or \"here\", they mean the page/photo above. Answer from the page captions and the facts section; do not invent visual details beyond the captions. If the visitor clearly changes the topic, drop the current-page anchor instead of forcing a connection. If the current page's information is not enough to answer, verify with tools such as get_trip_detail first. Priority: what the visitor explicitly names in this message > the current page > earlier conversation.",
   },
 };
 
