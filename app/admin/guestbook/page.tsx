@@ -2,8 +2,15 @@
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { revalidatePath } from "next/cache";
 import Link from "next/link";
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation"; 
+import { cookies, headers } from "next/headers";
+import { redirect } from "next/navigation";
+import {
+  isAdminLocked,
+  recordAdminFailure,
+  resetAdminFailures,
+  createAdminUnlockToken,
+} from "@/lib/admin-guard";
+import { sendLineAlert } from "@/lib/alert";
 import { AdminThemeToggle } from "./admin-theme-toggle";
 import { AdminTableClient } from "./admin-table-client";
 
@@ -15,19 +22,49 @@ export default async function AdminGuestbookPage({ searchParams }: { searchParam
   const cookieStore = await cookies();
   const isAdmin = cookieStore.get("admin_session")?.value === process.env.ADMIN_PASSWORD;
 
-  // --- 服务端动作：登录 ---
+  // --- 服务端动作：登录（2026-11-18 加防爆破：同 IP 15 分钟内错 5 次锁 15 分钟，
+  // 触发锁定时给站长发 LINE 告警，内含一次性解锁链接） ---
   async function login(formData: FormData) {
     "use server";
     const password = formData.get("password");
+    const ip =
+      ((await headers()).get("x-forwarded-for") ?? "").split(",")[0].trim() ||
+      "unknown";
+    if (await isAdminLocked(ip)) {
+      redirect("/admin/guestbook?error=locked");
+    }
     if (password === process.env.ADMIN_PASSWORD) {
+      await resetAdminFailures(ip);
       (await cookies()).set("admin_session", password as string, {
         httpOnly: true,
-        maxAge: 60 * 60 * 24, 
+        maxAge: 60 * 60 * 24,
       });
       redirect("/admin/guestbook");
-    } else {
-      redirect("/admin/guestbook?error=1");
     }
+    const lockedNow = await recordAdminFailure(ip);
+    if (lockedNow) {
+      const token = await createAdminUnlockToken(ip);
+      const time = new Date().toLocaleString("ja-JP", {
+        timeZone: "Asia/Tokyo",
+      });
+      await sendLineAlert(
+        [
+          "🔐 zeli-portfolio 后台登录告警",
+          "管理后台在 15 分钟内连续输错密码 5 次，已锁定该来源 15 分钟。",
+          `来源 IP: ${ip}`,
+          `时间: ${time} (JST)`,
+          "若不是你本人，说明有人在试你的后台密码，请留意。",
+          ...(token
+            ? [
+                "若是你自己输错的，点此立即解除锁定（1 小时内有效、仅可使用一次）：",
+                `https://zeli-portfolio.vercel.app/api/admin-unlock?token=${token}`,
+              ]
+            : []),
+        ].join("\n"),
+      );
+      redirect("/admin/guestbook?error=locked");
+    }
+    redirect("/admin/guestbook?error=1");
   }
 
   // --- 服务端动作：退出 ---
@@ -51,6 +88,12 @@ export default async function AdminGuestbookPage({ searchParams }: { searchParam
           {loginError === '1' && (
             <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-sm font-bold text-center rounded-xl border border-red-100 dark:border-red-800/50 animate-in shake">
               ❌ 密码错误，请重试
+            </div>
+          )}
+
+          {loginError === 'locked' && (
+            <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-sm font-bold text-center rounded-xl border border-amber-100 dark:border-amber-800/50">
+              🔒 登录失败次数过多，已锁定 15 分钟。若是你本人，可用站长 LINE 里的一次性链接立即解除。
             </div>
           )}
 

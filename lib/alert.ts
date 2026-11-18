@@ -11,6 +11,35 @@
 const LINE_PUSH_URL = "https://api.line.me/v2/bot/message/push";
 const COOLDOWN_MS = 6 * 60 * 60 * 1000;
 
+/** 通用 LINE 推送（2026-11-18）：给站长发一条自定义文本；未配置或失败时静默，绝不影响调用方 */
+export async function sendLineAlert(text: string): Promise<void> {
+  try {
+    const token = process.env.LINE_CHANNEL_ACCESS_TOKEN;
+    const userId = process.env.LINE_ALERT_USER_ID;
+    if (!token || !userId) return;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 3000);
+    try {
+      await fetch(LINE_PUSH_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          to: userId,
+          messages: [{ type: "text", text }],
+        }),
+        signal: controller.signal,
+      });
+    } finally {
+      clearTimeout(timer);
+    }
+  } catch {
+    // 告警通道自身失败时静默
+  }
+}
+
 const lastSentAt = new Map<string, number>();
 
 export async function reportInfraFailure(
