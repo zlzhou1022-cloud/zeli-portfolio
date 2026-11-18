@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import japan from "@svg-maps/japan";
@@ -121,13 +122,15 @@ export function HomeTravel({ photos }: { photos: HomePhoto[] }) {
                 sel === photo.pref ? "ring-2 ring-amber-500 shadow-lg" : ""
               }`}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={photo.src}
-                alt={t(`travel.photos.${photo.titleKey}`)}
-                className="w-full h-32 md:h-44 object-cover group-hover:scale-105 transition-transform duration-500"
-                loading="lazy"
-              />
+              <div className="relative h-32 md:h-44 overflow-hidden">
+                <Image
+                  src={photo.src}
+                  alt={t(`travel.photos.${photo.titleKey}`)}
+                  fill
+                  sizes="(max-width: 768px) 50vw, 25vw"
+                  className="object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+              </div>
               <div className="p-3">
                 <div className="text-sm font-medium text-stone-900 dark:text-stone-100 leading-snug">
                   {t(`travel.photos.${photo.titleKey}`)}
