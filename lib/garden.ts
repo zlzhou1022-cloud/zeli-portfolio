@@ -31,11 +31,13 @@ export interface GardenSave {
 export const SPECIES_ORDER: SpeciesId[] = ["tulip", "daisy", "pansy", "chrys"];
 
 // scale = 该阶段图高 / 盆高（本地实测）：渲染时盆高恒定，图高 = 盆高 × scale
-export const SPECIES: Record<SpeciesId, { price: number; seasonal: boolean; scale: number[] }> = {
-  tulip: { price: 4, seasonal: false, scale: [1.058, 1.275, 2.142, 2.432, 2.494] },
-  daisy: { price: 4, seasonal: false, scale: [1.054, 1.313, 2.262, 2.168, 2.253] },
-  pansy: { price: 4, seasonal: false, scale: [1.052, 1.217, 1.707, 1.881, 2.048] },
-  chrys: { price: 5, seasonal: true, scale: [1.046, 1.254, 1.746, 1.995, 2.1] },
+// aspect = 该阶段图宽 / 图高（本地实测）：渲染定位必须用真实宽高比——
+// 曾用「约 1」近似算按钮左偏移，阶段越高图越窄、花盆中心越往左漂（站长 2026-11-19 报的「移位」），已改实测值
+export const SPECIES: Record<SpeciesId, { price: number; seasonal: boolean; scale: number[]; aspect: number[] }> = {
+  tulip: { price: 4, seasonal: false, scale: [1.058, 1.275, 2.142, 2.432, 2.494], aspect: [1.027, 0.85, 0.677, 0.455, 0.49] },
+  daisy: { price: 4, seasonal: false, scale: [1.054, 1.313, 2.262, 2.168, 2.253], aspect: [1.0, 0.811, 0.694, 0.485, 0.476] },
+  pansy: { price: 4, seasonal: false, scale: [1.052, 1.217, 1.707, 1.881, 2.048], aspect: [1.007, 0.873, 0.802, 0.726, 0.687] },
+  chrys: { price: 5, seasonal: true, scale: [1.046, 1.254, 1.746, 1.995, 2.1], aspect: [1.03, 0.862, 0.639, 0.557, 0.532] },
 };
 
 export const BLOOM_DAYS = 10;
