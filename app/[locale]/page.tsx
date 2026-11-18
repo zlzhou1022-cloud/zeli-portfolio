@@ -11,27 +11,21 @@ export default function Home() {
   const t = useTranslations("Home");
   const locale = useLocale() as "cn" | "jp" | "en";
 
-  // 旅行露出：最新一趟旅程里挑东北三县的 4 张（与看图猜县同一批照片数据）
-  const trip = getAllTrips()[0];
-  const pick = (file: string, pref: string, titleKey: string, page: number): HomePhoto | null => {
-    const ph = trip.photos.find((p) => p.src.endsWith(file));
-    if (!ph) return null;
-    return {
-      src: ph.src,
-      pref,
-      titleKey,
-      place: ph.place[locale] ?? ph.place.cn,
-      date: trip.date.slice(0, 7).replace("-", "."),
-      page,
-      tripId: trip.id,
-    };
-  };
-  const photos = [
-    pick("tazawako.jpg", "akita", "tazawako", 5),
-    pick("kamakurasaiyoru.jpg", "akita", "kamakura", 9),
-    pick("nebuta.jpg", "aomori", "nebuta", 3),
-    pick("moriokahachiman.jpg", "iwate", "hachiman", 10),
-  ].filter((p): p is HomePhoto => p !== null);
+  // 旅行露出：全部旅程的照片都传下去，金色县（有照片的县）与按县筛选由
+  // HomeTravel 按数据动态算（站长 2026-11-19 定）。旧版在最新旅程里按文件名
+  // 硬编码挑东北 4 张，新旅程一上线就全挑空、首页预览消失——不要再硬编码。
+  const trips = getAllTrips();
+  const latestTripId = trips[0]?.id ?? "";
+  const photos: HomePhoto[] = trips.flatMap((tr) =>
+    tr.photos.map((p, i) => ({
+      src: p.src,
+      pref: p.prefecture,
+      tripId: tr.id,
+      page: i + 1,
+      place: p.place[locale] ?? p.place.cn,
+      date: tr.date.slice(0, 7).replace("-", "."),
+    }))
+  );
 
   return (
     <div>
@@ -122,7 +116,7 @@ export default function Home() {
       {/* 旅行区（光影与足迹）——站长 2026-11-19 定序：档案 01、实验室 02 之后，留言 04、小游戏 05 之前 */}
       <div className="mt-6">
         <TextReveal delay={150}>
-          <HomeTravel photos={photos} />
+          <HomeTravel photos={photos} latestTripId={latestTripId} />
         </TextReveal>
       </div>
 

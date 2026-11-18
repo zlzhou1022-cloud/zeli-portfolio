@@ -9,22 +9,24 @@ import japan from "@svg-maps/japan";
 export interface HomePhoto {
   src: string;
   pref: string;
-  titleKey: string;
   place: string;
   date: string;
   page: number;
   tripId: string;
 }
 
-const GOLD = ["aomori", "akita", "iwate"];
-
-// 首页「光影与足迹」露出区（2026-11-18）：真实县界地图 + 最新旅程照片。
-// 地图入场时按从北到南逐县点亮；点金色三县（有照片的东北三县）高亮对应照片。
-export function HomeTravel({ photos }: { photos: HomePhoto[] }) {
+// 首页「光影与足迹」露出区（2026-11-18）：真实县界地图 + 旅程照片。
+// 地图入场时按从北到南逐县点亮（47 县制霸）。金色 = 有照片的县（站长 2026-11-19
+// 改定：不再绑定最近一趟旅程，凡相册里有照片的县都金色），由照片数据动态算；
+// 点金色县 → 下方换成该县的照片；不点时默认显示最新一趟旅程的照片。
+export function HomeTravel({ photos, latestTripId }: { photos: HomePhoto[]; latestTripId: string }) {
   const t = useTranslations("Home");
+  const tt = useTranslations("Trips");
   const svgRef = useRef<SVGSVGElement>(null);
   const [lit, setLit] = useState<Set<string>>(new Set());
   const [sel, setSel] = useState<string | null>(null);
+  const goldSet = new Set(photos.map((p) => p.pref));
+  const shown = (sel ? photos.filter((p) => p.pref === sel) : photos.filter((p) => p.tripId === latestTripId)).slice(0, 8);
 
   useEffect(() => {
     const svg = svgRef.current;
@@ -59,7 +61,7 @@ export function HomeTravel({ photos }: { photos: HomePhoto[] }) {
 
   const fillFor = (id: string) => {
     if (!lit.has(id)) return "fill-stone-200 dark:fill-stone-800";
-    if (GOLD.includes(id)) return "fill-[#d9a441]";
+    if (goldSet.has(id)) return "fill-[#d9a441]";
     return "fill-[#b3c2a4] dark:fill-[#7d8c6f]";
   };
 
@@ -87,13 +89,13 @@ export function HomeTravel({ photos }: { photos: HomePhoto[] }) {
         <div className="w-44 md:w-52 shrink-0 mx-auto md:mx-0 text-center">
           <svg ref={svgRef} viewBox={japan.viewBox} className="w-full h-auto" role="group" aria-label="Japan">
             {japan.locations.map((location: { id: string; name: string; path: string }) => {
-              const gold = GOLD.includes(location.id);
+              const gold = goldSet.has(location.id);
               return (
                 <path
                   key={location.id}
                   id={location.id}
                   d={location.path}
-                  onClick={gold ? () => setSel(location.id) : undefined}
+                  onClick={gold ? () => setSel(sel === location.id ? null : location.id) : undefined}
                   className={`home-map-path stroke-white dark:stroke-stone-900 ${fillFor(location.id)} ${
                     gold ? "cursor-pointer hover:fill-[#c08c1d]" : ""
                   } ${sel === location.id ? "stroke-amber-800 dark:stroke-amber-200" : ""}`}
@@ -109,23 +111,31 @@ export function HomeTravel({ photos }: { photos: HomePhoto[] }) {
             {t("travel.conquered")}
           </div>
           <div className="mt-1 text-xs text-stone-400 dark:text-stone-500">
-            {sel ? t("travel.viewing", { name: t(`travel.prefNames.${sel}`) }) : t("travel.goldHint")}
+            {sel ? (
+              <>
+                {t("travel.viewing", { name: t(`travel.prefNames.${sel}`) })}
+                {" · "}
+                <button type="button" onClick={() => setSel(null)} className="underline underline-offset-2 cursor-pointer hover:text-stone-600 dark:hover:text-stone-300">
+                  {t("travel.showLatest")}
+                </button>
+              </>
+            ) : (
+              t("travel.goldHint")
+            )}
           </div>
         </div>
 
         <div className="flex-1 grid grid-cols-2 xl:grid-cols-4 gap-3 md:gap-4">
-          {photos.map((photo) => (
+          {shown.map((photo) => (
             <Link
               key={photo.src}
               href={`/travels/${photo.tripId}?p=${photo.page}`}
-              className={`group border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900 overflow-hidden transition-shadow ${
-                sel === photo.pref ? "ring-2 ring-amber-500 shadow-lg" : ""
-              }`}
+              className="group border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900 overflow-hidden transition-shadow"
             >
               <div className="relative h-32 md:h-44 overflow-hidden">
                 <Image
                   src={photo.src}
-                  alt={t(`travel.photos.${photo.titleKey}`)}
+                  alt={tt(`${photo.tripId}.photos.${photo.page}`)}
                   fill
                   sizes="(max-width: 768px) 50vw, 25vw"
                   className="object-cover group-hover:scale-105 transition-transform duration-500"
@@ -133,7 +143,7 @@ export function HomeTravel({ photos }: { photos: HomePhoto[] }) {
               </div>
               <div className="p-3">
                 <div className="text-sm font-medium text-stone-900 dark:text-stone-100 leading-snug">
-                  {t(`travel.photos.${photo.titleKey}`)}
+                  {tt(`${photo.tripId}.photos.${photo.page}`)}
                 </div>
                 <div className="text-[11px] text-stone-400 dark:text-stone-500 mt-1">
                   {photo.place} · {photo.date}

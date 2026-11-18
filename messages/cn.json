@@ -43,12 +43,20 @@
     },
     "travel": {
       "conquered": "都道府县已制霸",
-      "goldHint": "金色 = 最近的东北之旅",
+      "goldHint": "金色 = 有照片的县，点一下看它的照片",
+      "showLatest": "回到最新旅程",
       "viewing": "正在看：{name}",
       "prefNames": {
         "aomori": "青森县",
         "akita": "秋田县",
-        "iwate": "岩手县"
+        "iwate": "岩手县",
+        "oita": "大分县",
+        "yamaguchi": "山口县",
+        "fukuoka": "福冈县",
+        "saga": "佐贺县",
+        "nagasaki": "长崎县",
+        "miyazaki": "宫崎县",
+        "kagoshima": "鹿儿岛县"
       },
       "photos": {
         "tazawako": "田泽湖 · 辰子像",

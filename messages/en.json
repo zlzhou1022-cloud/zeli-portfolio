@@ -43,12 +43,20 @@
     },
     "travel": {
       "conquered": "prefectures completed",
-      "goldHint": "Gold = the latest Tohoku trip",
+      "goldHint": "Gold = prefectures with photos — tap one to see its photos",
+      "showLatest": "Back to the latest trip",
       "viewing": "Viewing: {name}",
       "prefNames": {
         "aomori": "Aomori",
         "akita": "Akita",
-        "iwate": "Iwate"
+        "iwate": "Iwate",
+        "oita": "Oita",
+        "yamaguchi": "Yamaguchi",
+        "fukuoka": "Fukuoka",
+        "saga": "Saga",
+        "nagasaki": "Nagasaki",
+        "miyazaki": "Miyazaki",
+        "kagoshima": "Kagoshima"
       },
       "photos": {
         "tazawako": "Lake Tazawa · Tatsuko Statue",
