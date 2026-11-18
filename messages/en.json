@@ -57,12 +57,6 @@
         "nagasaki": "Nagasaki",
         "miyazaki": "Miyazaki",
         "kagoshima": "Kagoshima"
-      },
-      "photos": {
-        "tazawako": "Lake Tazawa · Tatsuko Statue",
-        "kamakura": "Yokote Kamakura Festival · Night",
-        "nebuta": "Nebuta Festival Float",
-        "hachiman": "Morioka Hachimangu Shrine"
       }
     },
     "invite": {
@@ -235,7 +229,7 @@
     "suggestions": [
       "Where does he work now?",
       "Which travel stories does he have?",
-      "Where should I go to see snow in winter?"
+      "Where did he travel most recently?"
     ],
     "greetings": {
       "morning": [
@@ -244,7 +238,7 @@
         "Good morning! I'm Mousse, Zeli's little agent. While your mind is fresh, let's explore this site together."
       ],
       "noon": [
-        "Hello, good noon! I'm Mousse, Zeli's little agent. Perfect lunch-break browsing — Zeli's snowy Tohoku story or his projects first?",
+        "Hello, good noon! I'm Mousse, Zeli's little agent. Perfect lunch-break browsing — Zeli's travel stories or his projects first?",
         "Hi there! I'm Mousse, Zeli's little agent. Had lunch yet? Relax a while and let me tell you about Zeli.",
         "Good day! I'm Mousse, Zeli's little agent. The noon sun is out — ask me anything you'd like to know."
       ],
@@ -255,7 +249,7 @@
       ],
       "evening": [
         "Good evening! I'm Mousse, Zeli's little agent. Long day done — take it slow here. Travel stories, or a couple of games with me?",
-        "Good evening! I'm Mousse, Zeli's little agent. Zeli's snow-country photos look especially nice in the evening light.",
+        "Good evening! I'm Mousse, Zeli's little agent. Zeli's travel photos look especially nice in the evening light.",
         "Good evening! I'm Mousse, Zeli's little agent. How was your day? Either way, unwind here for a bit."
       ],
       "night": [
@@ -403,7 +397,7 @@
     "travels": {
       "intro": "The travel albums. Zeli has visited all 47 prefectures of Japan, and these were shot on his Fujifilm X-S20.",
       "feel": [
-        "I've been through every album many times; the snowy one is my favourite.",
+        "I've been through every album many times; each has its own charm.",
         "Every place in these photos is somewhere he actually went — all 47 prefectures.",
         "Open any album and take your time; each photo comes with a caption."
       ]
