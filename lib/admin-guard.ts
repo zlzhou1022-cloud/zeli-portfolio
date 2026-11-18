@@ -67,6 +67,17 @@ export async function createAdminUnlockToken(ip: string): Promise<string | null>
   }
 }
 
+/** 只验不销：返回令牌绑定的 IP（不存在/过期返回 null），不删除令牌。
+ *  解锁链接会先被 LINE 的链接预览爬虫 GET 一次，若 GET 即消费，站长本人点开时令牌已作废——
+ *  因此 GET 只展示确认页，真正的消费留给确认按钮的 POST。 */
+export async function peekAdminUnlockToken(token: string): Promise<string | null> {
+  try {
+    return await redis().get<string>(tokenKey(token));
+  } catch {
+    return null;
+  }
+}
+
 /** 消费解锁令牌：有效则解除对应 IP 的锁定与计数并返回该 IP；无效/已用/过期返回 null */
 export async function consumeAdminUnlockToken(token: string): Promise<string | null> {
   try {
