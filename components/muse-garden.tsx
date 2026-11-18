@@ -167,7 +167,8 @@ export function MuseGarden() {
           const src = plant ? stageSrc(plant.species, stage) : stageSrc("tulip", 0);
           const scale = plant ? SPECIES[plant.species].scale[stage] : SPECIES.tulip.scale[0];
           const h = POT_H * scale;
-          const wPct = h * (9 / 16) * 0.98; // 近似宽度占场景宽 %（图宽高比约 1）
+          const aspect = plant ? SPECIES[plant.species].aspect[stage] : SPECIES.tulip.aspect[0];
+          const wPct = h * (9 / 16) * aspect; // 真实宽度占场景宽 %（图内花盆居中，按钮按真实宽居中 → 各阶段盆位不漂）
           return (
             <div key={i}>
               <div
