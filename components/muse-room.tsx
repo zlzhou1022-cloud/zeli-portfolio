@@ -12,6 +12,7 @@ import {
   type OutfitId,
   type PoseName,
 } from "@/lib/outfit";
+import { isOwnerMode } from "@/lib/owner";
 import {
   FURNITURE,
   FURNITURE_ORDER,
@@ -256,7 +257,10 @@ export function MuseRoom() {
             : (["look", "book", "letter"] as PoseName[]),
         ),
       );
-      const { furniture, rest } = pickAutoTarget(s, Math.random());
+      const { furniture, rest } = pickAutoTarget(
+        isOwnerMode() ? { ...s, owned: [...FURNITURE_ORDER] } : s,
+        Math.random(),
+      );
       if (!furniture) {
         setLine(idleLineFor(s));
         startIdle(6000 + Math.random() * 4000);
@@ -348,7 +352,7 @@ export function MuseRoom() {
   const careRest = () => {
     clearTimers();
     const s = saveRef.current;
-    if (s?.owned.includes("rug")) {
+    if (s?.owned.includes("rug") || isOwnerMode()) {
       interruptTo("rug", true);
     } else {
       setActBoth({ mode: "rest", target: null, resting: true });
@@ -508,6 +512,14 @@ export function MuseRoom() {
   };
 
   const onBuySnack = () => {
+    // 站长模式：零食免费拿（只加数量，不扣星）
+    if (isOwnerMode()) {
+      commit((s) => {
+        s.snacks += 1;
+      });
+      flashNotice(t("snackBought"));
+      return;
+    }
     let ok = false;
     commit((s) => {
       ok = buySnack(s);
@@ -784,7 +796,7 @@ export function MuseRoom() {
         {/* 家具（固定槽位；拥有后出现，她互动时切换图层组） */}
         {SCENE_ORDER.map((fid) => {
           const def = FURNITURE[fid];
-          if (!save.owned.includes(fid)) return null;
+          if (!(isOwnerMode() ? FURNITURE_ORDER : save.owned).includes(fid)) return null;
           const withHer = interactingWith(fid);
           const layers = withHer ? roomWithHerLayers(def, outfit) : (def.layers?.alone ?? []);
           const main = layers[0];
@@ -1006,7 +1018,7 @@ export function MuseRoom() {
       {/* 状态与照顾 */}
       <div className="rounded-xl border border-stone-200 dark:border-stone-800 p-4 space-y-4 bg-white/60 dark:bg-stone-900/40">
         <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-          <span className="text-sm font-medium text-amber-600 dark:text-amber-400">★ {save.stars} <span className="text-stone-500 dark:text-stone-400 font-normal">{t("starsLabel")}</span></span>
+          <span className="text-sm font-medium text-amber-600 dark:text-amber-400">★ {isOwnerMode() ? "∞" : save.stars} <span className="text-stone-500 dark:text-stone-400 font-normal">{t("starsLabel")}</span></span>
           <span className="text-sm text-stone-600 dark:text-stone-300">🍰 {t("snackLabel")} × {save.snacks}</span>
           <span className="text-sm text-stone-600 dark:text-stone-300">
             {t("intimacyLabel")} Lv.{level}
@@ -1122,7 +1134,7 @@ export function MuseRoom() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {SCENE_ORDER.map((fid) => {
             const def = FURNITURE[fid];
-            const owned = save.owned.includes(fid);
+            const owned = isOwnerMode() || save.owned.includes(fid);
             const thumb = def.layers?.alone[0];
             return (
               <div key={fid} className="rounded-xl border border-stone-200 dark:border-stone-800 overflow-hidden bg-[#faf6ec] dark:bg-stone-900/40">

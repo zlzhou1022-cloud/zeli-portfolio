@@ -12,6 +12,7 @@ import {
 } from "@/lib/admin-guard";
 import { sendLineAlert } from "@/lib/alert";
 import { AdminThemeToggle } from "./admin-theme-toggle";
+import { OwnerModeToggle } from "./owner-mode-toggle";
 import { AdminTableClient } from "./admin-table-client";
 
 export const dynamic = 'force-dynamic';
@@ -196,6 +197,8 @@ export default async function AdminGuestbookPage({ searchParams }: { searchParam
             </Link>
           </div>
         </header>
+
+        <OwnerModeToggle />
 
         {error && <div className="p-4 bg-red-100 text-red-600 rounded-lg shadow-sm">数据拉取失败: {error.message}</div>}
 
