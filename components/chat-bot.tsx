@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import dynamic from "next/dynamic";
 import { parsePage } from "@/lib/page-guide";
+import { isOwnerMode } from "@/lib/owner";
 
 // Markdown 渲染器懒加载，只进聊天 chunk，不拖慢首屏（规格 §8）。
 const ChatMarkdown = dynamic(() => import("./chat-markdown"), { ssr: false });
@@ -205,6 +206,9 @@ export function ChatBot({ isQuotaFull }: { isQuotaFull: boolean }) {
         const pageInfo = parsePage(window.location.pathname, window.location.search);
         const res = await fetch("/api/chat", {
           method: "POST",
+          // 站长模式开启时带上标记：服务端据此跳过本站自设软上限（见 route.ts），
+          // 站长在正式站自测不受访客配额影响；Groq 官方限流仍照常生效。
+          headers: { "Content-Type": "application/json", ...(isOwnerMode() ? { "x-muse-owner": "1" } : {}) },
           body: JSON.stringify({
             messages: newMessages.map(({ role, content, timestamp }) => ({ role, content, timestamp })),
             chatId: chatId,
