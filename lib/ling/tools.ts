@@ -235,6 +235,7 @@ const SYNONYM_GROUPS: string[][] = [
 ["桥", "橋", "bridge"],
 ["电车", "電車", "火车", "列车", "train", "tram"],
 ["鸟居", "鳥居", "torii"],
+["温泉", "溫泉", "onsen", "hotspring", "地狱", "地獄", "足汤", "足湯", "露天风吕", "露天風呂", "源泉"],
 ];
 const q = norm(query.trim());
 const max = Math.min(Math.max(limit ?? 5, 1), 10);
@@ -242,13 +243,15 @@ if (!q) return { found: false, results: [], note: "Empty query."};
 const tokens = query.toLowerCase().split(/[\s,、，]+/).map((t) => norm(t)).filter((t) => t.length >= 1);
 // 查询命中的同义词组：组内其他词也算命中（权重低一档）。
 const expanded = new Set<string>();
+let onsenTriggered = false;
 for (const group of SYNONYM_GROUPS) {
 const g = group.map(norm);
 if (g.some((term) => q.includes(term) || tokens.some((tok) => tok === term))) {
 g.forEach((term) => expanded.add(term));
+if (group.includes("温泉")) onsenTriggered = true;
 }
 }
-type Hit = { tripId: string; title: string; photo: number; caption: string; place: string; prefecture: string; matchedTerms: string[]; path: string; score: number };
+type Hit = { tripId: string; title: string; photo: number; caption: string; place: string; prefecture: string; matchedTerms: string[]; path: string; score: number; primary: boolean };
 const hits: Hit[] = [];
 for (const trip of getAllTrips()) {
 const m = MESSAGES[locale];
@@ -273,6 +276,14 @@ for (const term of expanded) {
 if (term !== q && hay.includes(term)) { score += Math.max(f.weight - 1, 1); matched.add(term); break; }
 }
 }
+// 语义标签命中 = 照片本体就是所找的东西（如别府双地狱之于温泉），
+// 权重最高并标 primary，与「说明里顺带出现该词」（温泉蛋、地狱蒸）区分开。
+let primary = false;
+if (onsenTriggered && photo.tags?.includes("onsen")) {
+score += 6;
+primary = true;
+matched.add("onsen");
+}
 if (score > 0) {
 hits.push({
 tripId: trip.id,
@@ -284,18 +295,19 @@ prefecture: pref ? pref[locale] : photo.prefecture,
 matchedTerms: [...matched],
 path: `/${locale}/travels/${trip.id}?p=${i + 1}`,
 score,
+primary,
 });
 }
 });
 }
-hits.sort((a, b) => b.score - a.score);
+hits.sort((a, b) => Number(b.primary) - Number(a.primary) || b.score - a.score);
 const results = hits.slice(0, max).map(({ score, ...rest }) => rest);
 return {
 found: results.length > 0,
 results,
 note:
 results.length > 0
-? "These photos really exist on the site. Link the visitor to the exact photo with its path, and use matchedTerms if they ask why this photo."
+? "These photos really exist on the site. Link the visitor to the exact photo with its path. Results with primary=true ARE the subject itself — present those first as the answer. Results without it only matched a word in a caption (e.g. an onsen egg in a dish, food steamed with onsen steam): present them afterwards, clearly framed as related extras, never as the subject itself."
 : "No photo matches. Tell the visitor honestly that there is no such photo in the albums; do not invent one.",
 };
 },

@@ -5,6 +5,10 @@ export interface Photo {
   // prefecture = lib/prefectures.ts 的 id；place = 县市短标签，供答题揭晓显示）
   prefecture: string;
   place: { cn: string; jp: string; en: string };
+  // 语义标签（语言无关的概念 id，如 "onsen"）：照片「本体」是什么，而不是说明里
+  // 顺带提到的词。search_photos 用它区分本体命中与字面命中——如别府双地狱是
+  // 温泉本体，而温泉蛋只是菜里顺带出现的词（2026-11-19 站长反馈后加）。
+  tags?: string[];
 }
 
 export interface Trip {
@@ -45,8 +49,8 @@ const trips: Trip[] = [
     cover: getImageUrl("kyushu2026May/p15.jpg"),
     photos: [
       { src: getImageUrl("kyushu2026May/p15.jpg"), desc: "旧丰后森机关库", prefecture: "oita", place: { cn: "大分县玖珠町", jp: "大分県玖珠町", en: "Kusu, Oita" } },
-      { src: getImageUrl("kyushu2026May/p17.jpg"), desc: "血之池地狱", prefecture: "oita", place: { cn: "大分县别府市", jp: "大分県別府市", en: "Beppu, Oita" } },
-      { src: getImageUrl("kyushu2026May/p16.jpg"), desc: "海地狱", prefecture: "oita", place: { cn: "大分县别府市", jp: "大分県別府市", en: "Beppu, Oita" } },
+      { src: getImageUrl("kyushu2026May/p17.jpg"), desc: "血之池地狱", prefecture: "oita", place: { cn: "大分县别府市", jp: "大分県別府市", en: "Beppu, Oita" }, tags: ["onsen"] },
+      { src: getImageUrl("kyushu2026May/p16.jpg"), desc: "海地狱", prefecture: "oita", place: { cn: "大分县别府市", jp: "大分県別府市", en: "Beppu, Oita" }, tags: ["onsen"] },
       { src: getImageUrl("kyushu2026May/p18.jpg"), desc: "地狱蒸", prefecture: "oita", place: { cn: "大分县别府市", jp: "大分県別府市", en: "Beppu, Oita" } },
       { src: getImageUrl("kyushu2026May/p14.jpg"), desc: "巨人纪念石", prefecture: "oita", place: { cn: "大分县日田市", jp: "大分県日田市", en: "Hita, Oita" } },
       { src: getImageUrl("kyushu2026May/p23.jpg"), desc: "赤间神宫", prefecture: "yamaguchi", place: { cn: "山口县下关市", jp: "山口県下関市", en: "Shimonoseki, Yamaguchi" } },
