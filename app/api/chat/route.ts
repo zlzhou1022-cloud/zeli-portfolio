@@ -9,6 +9,7 @@ import { streamText, stepCountIs } from "ai";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import { google } from "@ai-sdk/google";
 import { createLingTools, LING_TOOLS_ENABLED } from "@/lib/ling/tools";
+import { recordGroqHeaders, recordGeminiStatus } from "@/lib/ling/quota";
 
 const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL!,
@@ -196,6 +197,16 @@ export async function POST(req: Request) {
       },
     });
 
+    // 额度快照（管理员监控页的实时剩余额度）：供应商一响应就把限流头/状态抄进
+    // Redis。旁路记账，失败不影响聊天；流内报错走下面 onError 的同路记账。
+    void Promise.resolve(result.response).then(
+      (r) => {
+        if (provider === "gemini") void recordGeminiStatus(true, null, "chat");
+        else void recordGroqHeaders(r.headers ?? {}, "chat");
+      },
+      () => {},
+    );
+
     return result.toUIMessageStreamResponse({
       // 流内错误给前端可区分的标记（2026-11-19 站长要求）：每日额度耗尽回
       // "quota_exceeded"（前端直接显示额度文案、不重试），突发限流回 "rate_limited"
@@ -203,17 +214,26 @@ export async function POST(req: Request) {
       onError: (error) => {
         const e = error as { statusCode?: number; message?: string } | null;
         const msg = e?.message ?? String(error ?? "");
+        let kind: string;
         // 每日词元额度（TPD）耗尽：重试也没用，前端直接显示额度文案。
         if (/tokens per day|tpd|per day/i.test(msg)) {
-          return "quota_exceeded";
+          kind = "quota_exceeded";
+        } else if (e?.statusCode === 429 || e?.statusCode === 503 || /rate.?limit|too many requests|quota|resource_exhausted|high demand|unavailable/i.test(msg)) {
+          // 其余限流（TPM/RPM 突发）：前端会先自动重试一次，两次都中才显示额度文案。
+          // Gemini 的 503 高负载（high demand / UNAVAILABLE，2026-11-19 实测）也归
+          // 此类：瞬时容量问题，前端对兜底通道再试一次即可，不当成额度耗尽。
+          kind = "rate_limited";
+        } else {
+          kind = "stream_error";
         }
-        // 其余限流（TPM/RPM 突发）：前端会先自动重试一次，两次都中才显示额度文案。
-        // Gemini 的 503 高负载（high demand / UNAVAILABLE，2026-11-19 实测）也归
-        // 此类：瞬时容量问题，前端对兜底通道再试一次即可，不当成额度耗尽。
-        if (e?.statusCode === 429 || e?.statusCode === 503 || /rate.?limit|too many requests|quota|resource_exhausted|high demand|unavailable/i.test(msg)) {
-          return "rate_limited";
+        // 同路记账到额度快照：Gemini 记成败，Groq 的 429 响应头也带剩余量。
+        if (provider === "gemini") {
+          void recordGeminiStatus(false, kind, "chat");
+        } else {
+          const hdrs = (error as { responseHeaders?: Record<string, string> } | null)?.responseHeaders;
+          if (hdrs) void recordGroqHeaders(hdrs, "chat");
         }
-        return "stream_error";
+        return kind;
       },
     });
 
