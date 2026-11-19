@@ -207,6 +207,10 @@ export function ChatBot({ isQuotaFull }: { isQuotaFull: boolean }) {
           setSessionBlocked(true);
           const errMsg: Message = { role: "assistant", content: t("sessionFull"), timestamp: new Date().toISOString() };
           setMessages([...newMessages, errMsg]);
+        } else if (errorText === "daily_quota_full") {
+          // 站点自设的每日新会话上限：与上游额度一样，都是「额度用完」，用专门文案。
+          const errMsg: Message = { role: "assistant", content: t("quotaError"), timestamp: new Date().toISOString() };
+          setMessages([...newMessages, errMsg]);
         } else {
           // 不把服务端原始报错（如限流英文详情）原样展示给访客，统一用本地化友好文案。
           const errMsg: Message = { role: "assistant", content: t("connectionError"), timestamp: new Date().toISOString() };
@@ -265,7 +269,8 @@ export function ChatBot({ isQuotaFull }: { isQuotaFull: boolean }) {
       }
       if (streamError && !acc) {
         // 流内错误（如 Groq 限流）同样不外露原始报错，统一用本地化友好文案。
-        const errMsg: Message = { role: "assistant", content: t("connectionError"), timestamp: new Date().toISOString() };
+        // 额度/限流（服务端标记 quota_exceeded）单独用「额度用完」文案，与真断线区分。
+        const errMsg: Message = { role: "assistant", content: streamError === "quota_exceeded" ? t("quotaError") : t("connectionError"), timestamp: new Date().toISOString() };
         setMessages([...newMessages, errMsg]);
       }
     } catch (err) {
