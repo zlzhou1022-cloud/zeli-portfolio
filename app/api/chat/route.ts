@@ -115,6 +115,10 @@ export async function POST(req: Request) {
           : groq("openai/gpt-oss-120b"),
       system: finalSystemContent,
       messages: messagesForLLM,
+      // 快速失败（v2.6 极速版）：关掉框架内重试——429/503 的内部重试每次都等
+      // 退避，是「失败也要 8 秒」的主因；重试编排交给前端（Groq→Gemini 接力），
+      // 服务端一次调用要么出结果要么立刻报错离场。
+      maxRetries: 0,
       // Phase 4 工具调用：步数上限 3 步防死循环；工具失败降级为纯文本回答。
       // LING_TOOLS_ENABLED=false 时不传 tools，即退回 Phase 3 行为（配置级止血）。
       ...(LING_TOOLS_ENABLED
@@ -204,7 +208,9 @@ export async function POST(req: Request) {
           return "quota_exceeded";
         }
         // 其余限流（TPM/RPM 突发）：前端会先自动重试一次，两次都中才显示额度文案。
-        if (e?.statusCode === 429 || /rate.?limit|too many requests|quota|resource_exhausted/i.test(msg)) {
+        // Gemini 的 503 高负载（high demand / UNAVAILABLE，2026-11-19 实测）也归
+        // 此类：瞬时容量问题，前端对兜底通道再试一次即可，不当成额度耗尽。
+        if (e?.statusCode === 429 || e?.statusCode === 503 || /rate.?limit|too many requests|quota|resource_exhausted|high demand|unavailable/i.test(msg)) {
           return "rate_limited";
         }
         return "stream_error";

@@ -79,7 +79,7 @@ export function createLingTools(locale: LingLocale) {
 return {
 list_trips: tool({
 description:
-"List all travel stories on this site. Returns each trip's id, localized title, date, photo count and internal path. Use this when the visitor asks what travel stories exist.",
+"List all travel stories (id, title, date, photo count, path). Use when asked what travel stories exist.",
 inputSchema: z.object({}),
 execute: async () => {
 const trips = getAllTrips().map((trip) => ({
@@ -95,7 +95,7 @@ return { trips};
 
 get_trip_detail: tool({
 description:
-"Get the full detail of one travel story, including the caption of every photo (where each photo was taken). Use this when the visitor asks about a specific trip or a specific photo. If the trip id does not exist, the result says so — never invent a trip.",
+"Full detail of one trip, incl. every photo's caption. Use for questions about a specific trip or photo. Unknown id returns not-found — never invent.",
 inputSchema: z.object({
 tripId: z.string().describe("The trip id, e.g. tohoku-feb-2026 (get ids from list_trips)"),
 }),
@@ -118,7 +118,7 @@ photos: tripCaptions(locale, trip.id),
 
 list_projects: tool({
 description:
-"List the lab projects on this site with localized title, description, tags and external URL. Use this when the visitor asks what projects Zeli has built.",
+"List lab projects (title, description, tags, URL). Use when asked what projects Zeli has built.",
 inputSchema: z.object({}),
 execute: async () => {
 const m = MESSAGES[locale];
@@ -141,7 +141,7 @@ return { projects};
 
 recommend_trip: tool({
 description:
-"Recommend a travel story by season and/or theme. The server scores trips by their date (season) and photo captions (theme keywords) and returns ranked candidates; you pick one and explain why. Use this when the visitor asks where to go or what to see in a season, or asks for snow/festival/scenery recommendations.",
+"Recommend a trip by season/theme; server returns ranked candidates, you pick one and explain why. Use for where-to-go or seasonal recommendation asks.",
 inputSchema: z.object({
 season: z
 .enum(["spring", "summer", "autumn", "winter"])
@@ -213,7 +213,7 @@ note: "Candidates ranked by the server; pick the best one and explain why.",
 
 search_photos: tool({
 description:
-"Search ALL photos across every travel story by keyword: the photo captions (in the visitor's language), place names, prefecture names and photo keywords are all searched. Use this when the visitor asks for photos of a specific subject, place or scene (e.g. 'any photos of the sea?', 'show me a shrine photo', 'find the photo with the torii'). Returns each match with its trip, photo number, caption and a direct link to that photo. If nothing matches, the result says so — never invent a photo.",
+"Search ALL photos across every trip by keyword (captions, place/prefecture names, keywords, semantic tags). Use for photos of a specific subject/place/scene. Returns matches with direct links; empty means none — never invent a photo.",
 inputSchema: z.object({
 query: z.string().describe("Keyword to search for, in any language, e.g. 海, 神社, sea, shrine, 桜島"),
 limit: z.number().optional().describe("Max results to return (default 5, max 10)"),
@@ -315,7 +315,7 @@ results.length > 0
 
 navigate_to: tool({
 description:
-"Offer the visitor a navigation card to an internal page. Call this when you recommend a specific page: the visitor sees an 'open page' card and clicks it themselves (no automatic redirect). Valid targets: home, /profile, /lab, /games, /games/prefecture-game, /games/room (Mousse's Room, the care page), /games/garden (her indoor garden: planting and watering flowers), /travels, /travels/<tripId>, /guestbook (with or without locale prefix). After calling it, still write a normal sentence telling the visitor what the page is.",
+"Show a navigation card to an internal page (visitor clicks it; no auto-redirect). Valid: home, /profile, /lab, /games, /games/prefecture-game, /games/room, /games/garden, /travels, /travels/<tripId>, /guestbook. Still write a normal sentence about the page.",
 inputSchema: z.object({
 path: z.string().describe("Internal path such as /travels/tohoku-feb-2026 or /profile"),
 }),
@@ -334,7 +334,7 @@ return { ok: true, path: normalized};
 
 get_current_time: tool({
 description:
-"Get the current date and time in Tokyo, Japan (JST, UTC+9), including the weekday and which part of the day it is. Use this whenever the visitor asks what time it is, today's date, the day of the week, or anything else that depends on the current time. You have no other way to know the time — always answer time questions from this result, never guess.",
+"Current date/time in Tokyo (JST) with weekday. Always use for time/date/weekday questions — never guess the time.",
 inputSchema: z.object({}),
 execute: async () => {
 const parts = new Intl.DateTimeFormat("en-US", {
