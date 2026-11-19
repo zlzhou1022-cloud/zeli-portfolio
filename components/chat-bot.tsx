@@ -186,7 +186,7 @@ export function ChatBot({ isQuotaFull }: { isQuotaFull: boolean }) {
     // 单次尝试：只做请求与流式读取，返回结果分类；失败重试与最终文案由外层统一处理
     // （2026-11-19）。背景：Groq 免费档会间歇性限流/抖动，今早出现过问一句先挂
     // 几分钟才报「连接失败」——一次瞬时失败不该直接判死刑。
-    const attempt = async (): Promise<"ok" | "quota" | "session" | "fail" | "aborted"> => {
+    const attempt = async (): Promise<"ok" | "quota" | "busy" | "session" | "fail" | "aborted"> => {
       const controller = new AbortController();
       abortRef.current = controller;
       // 无活动看门狗：流 45 秒没有任何数据就中止本次尝试，避免无限挂起。
@@ -273,8 +273,11 @@ export function ChatBot({ isQuotaFull }: { isQuotaFull: boolean }) {
           }
         }
         if (streamError && !acc) {
-          // 流内错误（如 Groq 限流）不外露原始报错：额度标记单独归类，其余算失败。
-          return streamError === "quota_exceeded" ? "quota" : "fail";
+          // 流内错误（如 Groq 限流）不外露原始报错：每日额度标记单独归类（不重试），
+          // 突发限流归 busy（重试一次），其余算失败。
+          if (streamError === "quota_exceeded") return "quota";
+          if (streamError === "rate_limited") return "busy";
+          return "fail";
         }
         return "ok";
       } catch (err) {
@@ -288,9 +291,9 @@ export function ChatBot({ isQuotaFull }: { isQuotaFull: boolean }) {
 
     try {
       let outcome = await attempt();
-      if (outcome === "fail" || outcome === "quota") {
-        // 只自动重试一次，间隔 2 秒：救回限流抖动/瞬断/流挂起；
-        // 真额度耗尽时多一次失败调用，代价可忽略。
+      if (outcome === "fail" || outcome === "busy") {
+        // 只自动重试一次，间隔 2 秒：救回限流抖动/瞬断/流挂起。
+        // 每日额度耗尽（quota）不重试——重试也变不出额度，只会让访客多等。
         await new Promise((r) => setTimeout(r, 2000));
         outcome = await attempt();
       }
@@ -298,7 +301,7 @@ export function ChatBot({ isQuotaFull }: { isQuotaFull: boolean }) {
         setSessionBlocked(true);
         const errMsg: Message = { role: "assistant", content: t("sessionFull"), timestamp: new Date().toISOString() };
         setMessages([...newMessages, errMsg]);
-      } else if (outcome === "quota") {
+      } else if (outcome === "quota" || outcome === "busy") {
         const errMsg: Message = { role: "assistant", content: t("quotaError"), timestamp: new Date().toISOString() };
         setMessages([...newMessages, errMsg]);
       } else if (outcome === "fail") {
@@ -352,6 +355,17 @@ export function ChatBot({ isQuotaFull }: { isQuotaFull: boolean }) {
                       m.content
                     ) : m.content ? (
                       <ChatMarkdown content={m.content} />
+                    ) : isLoading && i === messages.length - 1 ? (
+                      // 等待态（2026-11-19 站长要求）：流已开始但正文未到（模型思考/查工具）
+                      // 时气泡不再是空盒子，显示「慕斯正在思考中」+ 跳动圆点。
+                      <span className="inline-flex items-center gap-2 text-stone-400 italic">
+                        {t("thinking")}
+                        <span className="inline-flex gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-current animate-bounce" />
+                          <span className="w-1.5 h-1.5 rounded-full bg-current animate-bounce" style={{ animationDelay: "150ms" }} />
+                          <span className="w-1.5 h-1.5 rounded-full bg-current animate-bounce" style={{ animationDelay: "300ms" }} />
+                        </span>
+                      </span>
                     ) : (
                       ""
                     )}

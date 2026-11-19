@@ -222,7 +222,7 @@
     "clear": "Clear chat",
     "copy": "Copy",
     "copied": "Copied",
-    "thinking": "Thinking…",
+    "thinking": "Mousse is thinking",
     "sessionFull": "This session has reached its message limit. Use “Clear chat” to start a new session.",
     "connectionError": "Connection failed. Please try again later.",
     "quotaError": "Today's free chat quota is used up — too many visitors! Please try again later or tomorrow.",
