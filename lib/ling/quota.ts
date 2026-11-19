@@ -103,9 +103,35 @@ export async function getGeminiStatus(): Promise<GeminiStatus | null> {
   }
 }
 
+const PROBE_KEY = "ling:quota:probe";
+
+// 最近一次手动探测的完成时间。无论探测成败都写——监控页显示它，站长点完
+// 按钮至少能看到时间变化，确认点击生效（2026-11-19 站长反馈按钮没反馈后加）。
+export async function getLastProbeAt(): Promise<string | null> {
+  try {
+    return (await redis.get<string>(PROBE_KEY)) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+async function recordProbeMark(): Promise<void> {
+  try {
+    await redis.set(PROBE_KEY, new Date().toISOString());
+  } catch {
+    // 同上
+  }
+}
+
 // 手动探测：给两家各发一次极小请求（输入几个词元、输出上限 1），刷新快照。
 // Groq 即使返回 429，响应头也带剩余量，照样能抄；Gemini 只记成功/失败类别。
+// 两家并行探测（原来串行最长约 16 秒，改并行后约 8 秒封顶）。
 export async function probeQuota(): Promise<void> {
+  await Promise.allSettled([probeGroq(), probeGemini()]);
+  await recordProbeMark();
+}
+
+async function probeGroq(): Promise<void> {
   try {
     const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
@@ -124,6 +150,9 @@ export async function probeQuota(): Promise<void> {
   } catch {
     // 探测失败保持旧快照
   }
+}
+
+async function probeGemini(): Promise<void> {
   try {
     const model = process.env.GEMINI_MODEL || "gemini-3.5-flash-lite";
     const res = await fetch(
