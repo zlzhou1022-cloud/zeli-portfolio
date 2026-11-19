@@ -187,7 +187,7 @@ export function ChatBot({ isQuotaFull }: { isQuotaFull: boolean }) {
     // 单次尝试：只做请求与流式读取，返回结果分类；失败重试与最终文案由外层统一处理
     // （2026-11-19）。背景：Groq 免费档会间歇性限流/抖动，今早出现过问一句先挂
     // 几分钟才报「连接失败」——一次瞬时失败不该直接判死刑。
-    const attempt = async (): Promise<"ok" | "quota" | "busy" | "session" | "fail" | "aborted"> => {
+    const attempt = async (provider: "groq" | "gemini"): Promise<"ok" | "quota" | "busy" | "session" | "fail" | "aborted"> => {
       const controller = new AbortController();
       abortRef.current = controller;
       // 无活动看门狗：流 45 秒没有任何数据就中止本次尝试，避免无限挂起。
@@ -214,6 +214,7 @@ export function ChatBot({ isQuotaFull }: { isQuotaFull: boolean }) {
             chatId: chatId,
             locale: locale,
             page: pageInfo.kind === "other" ? undefined : pageInfo,
+            provider: provider,
           }),
           signal: controller.signal,
         });
@@ -294,12 +295,23 @@ export function ChatBot({ isQuotaFull }: { isQuotaFull: boolean }) {
     };
 
     try {
-      let outcome = await attempt();
+      let outcome = await attempt("groq");
       if (outcome === "fail" || outcome === "busy") {
         // 只自动重试一次，间隔 2 秒：救回限流抖动/瞬断/流挂起。
         // 每日额度耗尽（quota）不重试——重试也变不出额度，只会让访客多等。
         await new Promise((r) => setTimeout(r, 2000));
-        outcome = await attempt();
+        outcome = await attempt("groq");
+      }
+      if (outcome === "quota" || outcome === "busy" || outcome === "fail") {
+        // Groq 顶不住（额度耗尽/持续限流/故障）→ 切 Gemini 兜底再试一次
+        // （2026-11-19 站长拍板：Groq 主力 + Gemini Flash-Lite 兜底的双保险）。
+        const g = await attempt("gemini");
+        if (g === "ok" || g === "aborted" || g === "session") {
+          outcome = g;
+        } else if (g === "quota" || g === "busy") {
+          outcome = "quota"; // 两家都被限流：最终显示额度文案
+        }
+        // g === "fail"：保留 Groq 侧的原分类（quota 优先于 fail 显示）
       }
       if (outcome === "session") {
         setSessionBlocked(true);
