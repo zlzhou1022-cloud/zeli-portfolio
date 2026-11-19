@@ -181,8 +181,7 @@
         "11": "Morioka Reimen at Seiroukaku, Morioka",
         "12": "A commemorative plaque for eating over 100 bowls of Wanko Soba"
       }
-    }
-  ,
+    },
     "kyushu-may-2026": {
       "title": "Kyushu in May: From the Kanmon Straits to Sakurajima",
       "photos": {
@@ -223,6 +222,9 @@
     "copy": "Copy",
     "copied": "Copied",
     "thinking": "Mousse is thinking",
+    "thinkingPhotos": "Searching the photo albums",
+    "thinkingLookup": "Looking it up",
+    "thinkingLong": "Still thinking, almost there",
     "sessionFull": "This session has reached its message limit. Use “Clear chat” to start a new session.",
     "connectionError": "Connection failed. Please try again later.",
     "quotaError": "Today's free chat quota is used up — too many visitors! Please try again later or tomorrow.",

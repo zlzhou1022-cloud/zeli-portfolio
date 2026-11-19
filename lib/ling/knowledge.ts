@@ -177,7 +177,11 @@ function buildKnowledgeInner(locale: LingLocale, captionLevel: CaptionLevel): st
 }
 
 export function buildKnowledge(locale: LingLocale): string {
-  for (const level of [0, 1, 2, 3] as CaptionLevel[]) {
+  // v2.6 瘦身（2026-11-19）：常驻说明默认从 2 张/辑起（原 0=全量）。理由：
+  // 全量 35 条说明约 1300 字 ≈ 800 词元，而游记细节类问题按 TOOLS_GUIDE 本来
+  // 就走 get_trip_detail / search_photos 现查同一批数据，常驻全量是双份付费；
+  // 每辑留 2 张保留「这辑大概拍了什么」的手感，细节精度由工具保证。
+  for (const level of [2, 3] as CaptionLevel[]) {
     const built = buildKnowledgeInner(locale, level);
     if (built.length <= MAX_KNOWLEDGE_CHARS) return built;
   }

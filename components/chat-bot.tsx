@@ -59,6 +59,22 @@ export function ChatBot({ isQuotaFull }: { isQuotaFull: boolean }) {
   const [chatId, setChatId] = useState<string | null>(null);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  // 等待阶段文案（v2.6）：记录正在跑的工具名与已等待秒数，气泡里分阶段说话。
+  const [activeTool, setActiveTool] = useState<string | null>(null);
+  const [waitSecs, setWaitSecs] = useState(0);
+  useEffect(() => {
+    if (!isLoading) {
+      setWaitSecs(0);
+      return;
+    }
+    const iv = setInterval(() => setWaitSecs((s) => s + 1), 1000);
+    return () => clearInterval(iv);
+  }, [isLoading]);
+  const thinkingLabel = activeTool
+    ? t(activeTool === "search_photos" ? "thinkingPhotos" : "thinkingLookup")
+    : waitSecs >= 12
+      ? t("thinkingLong")
+      : t("thinking");
   const [sessionBlocked, setSessionBlocked] = useState(false);
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -183,6 +199,7 @@ export function ChatBot({ isQuotaFull }: { isQuotaFull: boolean }) {
     setInput("");
     if (textareaRef.current) textareaRef.current.style.height = "auto";
     setIsLoading(true);
+    setActiveTool(null);
 
     // 单次尝试：只做请求与流式读取，返回结果分类；失败重试与最终文案由外层统一处理
     // （2026-11-19）。背景：Groq 免费档会间歇性限流/抖动，今早出现过问一句先挂
@@ -254,6 +271,9 @@ export function ChatBot({ isQuotaFull }: { isQuotaFull: boolean }) {
               const obj = JSON.parse(payload);
               if (obj.type === "text-delta" && typeof obj.delta === "string") {
                 acc += obj.delta;
+                if (obj.delta) setActiveTool(null);
+              } else if (obj.type === "tool-input-available" && typeof obj.toolName === "string") {
+                setActiveTool(obj.toolName);
               } else if (obj.type === "tool-output-available" && obj.output && typeof obj.output === "object") {
                 const out = obj.output as { path?: string };
                 if (typeof out.path === "string" && out.path.startsWith("/")) {
@@ -296,16 +316,21 @@ export function ChatBot({ isQuotaFull }: { isQuotaFull: boolean }) {
 
     try {
       let outcome = await attempt("groq");
-      if (outcome === "fail" || outcome === "busy") {
-        // 只自动重试一次，间隔 2 秒：救回限流抖动/瞬断/流挂起。
-        // 每日额度耗尽（quota）不重试——重试也变不出额度，只会让访客多等。
+      if (outcome === "fail") {
+        // v2.6 提速：只有网络/未知故障才重试 Groq（抖动可能自愈）；限流（busy）
+        // 两秒内不会恢复、每日额度（quota）更不会——直接切兜底，不再白等一轮。
         await new Promise((r) => setTimeout(r, 2000));
         outcome = await attempt("groq");
       }
       if (outcome === "quota" || outcome === "busy" || outcome === "fail") {
-        // Groq 顶不住（额度耗尽/持续限流/故障）→ 切 Gemini 兜底再试一次
+        // Groq 顶不住（额度耗尽/持续限流/故障）→ 切 Gemini 兜底
         // （2026-11-19 站长拍板：Groq 主力 + Gemini Flash-Lite 兜底的双保险）。
-        const g = await attempt("gemini");
+        let g = await attempt("gemini");
+        if (g === "fail" || g === "busy") {
+          // Gemini 的瞬时故障（503 高负载等）也给一次机会，间隔 2 秒。
+          await new Promise((r) => setTimeout(r, 2000));
+          g = await attempt("gemini");
+        }
         if (g === "ok" || g === "aborted" || g === "session") {
           outcome = g;
         } else if (g === "quota" || g === "busy") {
@@ -333,6 +358,7 @@ export function ChatBot({ isQuotaFull }: { isQuotaFull: boolean }) {
       // "ok"：内容已在流式过程中写入；"aborted"：访客点了停止，保留已生成部分。
     } finally {
       setIsLoading(false);
+      setActiveTool(null);
     }
   };
 
@@ -375,7 +401,7 @@ export function ChatBot({ isQuotaFull }: { isQuotaFull: boolean }) {
                       // 等待态（2026-11-19 站长要求）：流已开始但正文未到（模型思考/查工具）
                       // 时气泡不再是空盒子，显示「慕斯正在思考中」+ 跳动圆点。
                       <span className="inline-flex items-center gap-2 text-stone-400 italic">
-                        {t("thinking")}
+                        {thinkingLabel}
                         <span className="inline-flex gap-1">
                           <span className="w-1.5 h-1.5 rounded-full bg-current animate-bounce" />
                           <span className="w-1.5 h-1.5 rounded-full bg-current animate-bounce" style={{ animationDelay: "150ms" }} />
@@ -406,7 +432,7 @@ export function ChatBot({ isQuotaFull }: { isQuotaFull: boolean }) {
                 </div>
               );
             })}
-            {isLoading && messages[messages.length - 1]?.role !== "assistant" && <div className="text-xs text-stone-400 animate-pulse font-light italic">{t("thinking")}</div>}
+            {isLoading && messages[messages.length - 1]?.role !== "assistant" && <div className="text-xs text-stone-400 animate-pulse font-light italic">{thinkingLabel}</div>}
             <div ref={scrollRef} />
           </div>
 
