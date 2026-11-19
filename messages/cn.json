@@ -225,6 +225,7 @@
     "thinking": "思考中…",
     "sessionFull": "本次会话已达到消息上限。点「清空会话」可以开始新的会话。",
     "connectionError": "连接失败，请稍后再试。",
+    "quotaError": "今天的免费聊天额度用完啦，找我聊天的人太多。过一会儿或明天再来找我玩吧。",
     "openPage": "打开页面",
     "suggestions": [
       "他现在在哪工作？",

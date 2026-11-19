@@ -171,7 +171,19 @@ export async function POST(req: Request) {
       },
     });
 
-    return result.toUIMessageStreamResponse();
+    return result.toUIMessageStreamResponse({
+      // 流内错误给前端一个可区分的标记：额度/限流类错误回 "quota_exceeded"，
+      // 前端据此显示「额度用完」文案，而不是笼统的「连接失败」（2026-11-19 站长要求）。
+      // 其余错误回 "stream_error"，前端仍显示通用文案；原始报错只进服务端日志。
+      onError: (error) => {
+        const e = error as { statusCode?: number; message?: string } | null;
+        const msg = e?.message ?? String(error ?? "");
+        if (e?.statusCode === 429 || /rate.?limit|too many requests|tokens per day|tpd|quota/i.test(msg)) {
+          return "quota_exceeded";
+        }
+        return "stream_error";
+      },
+    });
 
   } catch (error) {
     console.error("❌ 聊天后端发生未知错误:", error);
