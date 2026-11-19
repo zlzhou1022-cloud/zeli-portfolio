@@ -35,6 +35,15 @@ const components: Components = {
   ),
 };
 
+// 模型偶尔把链接写成中文书名号式【标题】(路径)（Groq 实测，2026-11-19），
+// react-markdown 不认这种写法、会原样显示成点不动的文本。渲染前归一化成
+// 标准 Markdown 链接，方括号与圆括号的全角变体一并兜住。
+function normalizeLinks(text: string): string {
+  return text
+    .replace(/【([^】]+)】\(([^)\s]+)\)/g, "[$1]($2)")
+    .replace(/【([^】]+)】（([^）\s]+)）/g, "[$1]($2)");
+}
+
 export default function ChatMarkdown({ content }: { content: string }) {
-  return <ReactMarkdown components={components}>{content}</ReactMarkdown>;
+  return <ReactMarkdown components={components}>{normalizeLinks(content)}</ReactMarkdown>;
 }
