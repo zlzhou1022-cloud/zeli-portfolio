@@ -51,6 +51,14 @@ export default async function middleware(request: NextRequest, event: NextFetchE
     if (!success) {
       return new NextResponse('请求过于频繁，请稍后再试', { status: 429 });
     }
+
+    // 访客记录（2026-11-19 站长要求）：按 JST 日期把不同 IP 存进集合，
+    // 监控页据此显示近 7 天访客；集合 8 天过期，天然滚动、不用清理。
+    const clientIp = ip.split(",")[0].trim();
+    const todayJst = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Tokyo" }).format(new Date());
+    const visitKey = `visits:ips:${todayJst}`;
+    await redis.sadd(visitKey, clientIp);
+    await redis.expire(visitKey, 8 * 24 * 3600);
   } catch (err) {
     event.waitUntil(reportInfraFailure('middleware/redis', err));
   }

@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { AdminThemeToggle } from "../guestbook/admin-theme-toggle"; // 复用你的暗黑模式按钮
 import { getGroqQuota, getGeminiStatus, getLastProbeAt, probeQuota } from "@/lib/ling/quota";
+import { getRecentVisits } from "@/lib/visits";
 import { QuotaAutoRefresh } from "./quota-auto-refresh";
 import { ProbeButton } from "./probe-button";
 // 💡 1. 顶部引入 Redis
@@ -79,6 +80,9 @@ export default async function MonitorDashboardPage() {
     
     revalidatePath("/admin/monitor");
   }
+
+  // --- 近 7 天访客 IP（2026-11-19 站长要求：按不同 IP 统计，滚动 7 天）---
+  const visits = await getRecentVisits(7);
 
   // --- 聊天额度快照（2026-11-19 站长要求：管理员界面实时剩余额度）---
   const groqQuota = await getGroqQuota();
@@ -197,8 +201,47 @@ export default async function MonitorDashboardPage() {
           </div>
         </section>
 
+        {/* 近 7 天访客：按不同 IP 统计（middleware 按 JST 日期记录，8 天自动过期）。
+            位置为 IP 定位：国家 · 一级行政区（省/县/州）· 城市。本页每 30 秒自动刷新。 */}
+        <section className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 transition-colors">
+          <div className="flex flex-wrap items-baseline justify-between gap-2 mb-4">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">👥 近 7 天访客（按不同 IP）</h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              今日访客 <span className="font-bold text-slate-900 dark:text-slate-100">{visits.todayCount}</span> 个不同 IP
+              · 7 天去重共 <span className="font-bold text-slate-900 dark:text-slate-100">{visits.uniqueTotal}</span> 个
+            </p>
+          </div>
+          <div className="space-y-4">
+            {visits.days.map((day, i) => (
+              <div key={day.date} className="rounded-xl border border-slate-200 dark:border-slate-800 p-4">
+                <div className="flex items-baseline justify-between mb-2">
+                  <h3 className="font-semibold text-slate-900 dark:text-slate-100">
+                    {day.date.slice(5).replace("-", "/")}
+                    {i === 0 && <span className="ml-2 text-xs text-emerald-600 dark:text-emerald-400">今天</span>}
+                    {i === 1 && <span className="ml-2 text-xs text-slate-400">昨天</span>}
+                  </h3>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">{day.entries.length} 个不同 IP</span>
+                </div>
+                {day.entries.length === 0 ? (
+                  <p className="text-sm text-slate-400">暂无记录</p>
+                ) : (
+                  <ul className="flex flex-wrap gap-2">
+                    {day.entries.map((e) => (
+                      <li key={e.ip} className="px-2.5 py-1 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs">
+                        <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{e.ip}</span>
+                        <span className="ml-2 text-slate-500 dark:text-slate-400">{e.label}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            ))}
+          </div>
+          <p className="mt-3 text-xs text-slate-400">记录始于本功能上线时刻；位置来自 IP 定位（ipwho.is），城市级精度因运营商而异，VPN / 代理会显示出口所在地。</p>
+        </section>
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          
+
           {/* 左侧：操作面板 */}
           <div className="md:col-span-1 space-y-6">
             <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 transition-colors">
