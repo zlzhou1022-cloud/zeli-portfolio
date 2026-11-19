@@ -172,14 +172,19 @@ export async function POST(req: Request) {
     });
 
     return result.toUIMessageStreamResponse({
-      // 流内错误给前端一个可区分的标记：额度/限流类错误回 "quota_exceeded"，
-      // 前端据此显示「额度用完」文案，而不是笼统的「连接失败」（2026-11-19 站长要求）。
-      // 其余错误回 "stream_error"，前端仍显示通用文案；原始报错只进服务端日志。
+      // 流内错误给前端可区分的标记（2026-11-19 站长要求）：每日额度耗尽回
+      // "quota_exceeded"（前端直接显示额度文案、不重试），突发限流回 "rate_limited"
+      // （前端先自动重试一次），其余回 "stream_error"（通用文案）。原始报错只进服务端日志。
       onError: (error) => {
         const e = error as { statusCode?: number; message?: string } | null;
         const msg = e?.message ?? String(error ?? "");
-        if (e?.statusCode === 429 || /rate.?limit|too many requests|tokens per day|tpd|quota/i.test(msg)) {
+        // 每日词元额度（TPD）耗尽：重试也没用，前端直接显示额度文案。
+        if (/tokens per day|tpd|per day/i.test(msg)) {
           return "quota_exceeded";
+        }
+        // 其余限流（TPM/RPM 突发）：前端会先自动重试一次，两次都中才显示额度文案。
+        if (e?.statusCode === 429 || /rate.?limit|too many requests|quota/i.test(msg)) {
+          return "rate_limited";
         }
         return "stream_error";
       },
