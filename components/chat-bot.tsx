@@ -183,100 +183,125 @@ export function ChatBot({ isQuotaFull }: { isQuotaFull: boolean }) {
     if (textareaRef.current) textareaRef.current.style.height = "auto";
     setIsLoading(true);
 
-    const controller = new AbortController();
-    abortRef.current = controller;
-
-    try {
-      // 页面感知二期：带上访客当前页面（解析与桌宠共用 lib/page-guide），
-      // 服务端据此让慕斯知道「这张照片/这一页」指什么；other 页不发送。
-      const pageInfo = parsePage(window.location.pathname, window.location.search);
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        body: JSON.stringify({
-          messages: newMessages.map(({ role, content, timestamp }) => ({ role, content, timestamp })),
-          chatId: chatId,
-          locale: locale,
-          page: pageInfo.kind === "other" ? undefined : pageInfo,
-        }),
-        signal: controller.signal,
-      });
-
-      if (!res.ok || !res.body) {
-        const errorText = res.body ? await res.text() : "Connection failed";
-        if (errorText === "session_quota_full") {
-          setSessionBlocked(true);
-          const errMsg: Message = { role: "assistant", content: t("sessionFull"), timestamp: new Date().toISOString() };
-          setMessages([...newMessages, errMsg]);
-        } else if (errorText === "daily_quota_full") {
-          // 站点自设的每日新会话上限：与上游额度一样，都是「额度用完」，用专门文案。
-          const errMsg: Message = { role: "assistant", content: t("quotaError"), timestamp: new Date().toISOString() };
-          setMessages([...newMessages, errMsg]);
-        } else {
-          // 不把服务端原始报错（如限流英文详情）原样展示给访客，统一用本地化友好文案。
-          const errMsg: Message = { role: "assistant", content: t("connectionError"), timestamp: new Date().toISOString() };
-          setMessages([...newMessages, errMsg]);
+    // 单次尝试：只做请求与流式读取，返回结果分类；失败重试与最终文案由外层统一处理
+    // （2026-11-19）。背景：Groq 免费档会间歇性限流/抖动，今早出现过问一句先挂
+    // 几分钟才报「连接失败」——一次瞬时失败不该直接判死刑。
+    const attempt = async (): Promise<"ok" | "quota" | "session" | "fail" | "aborted"> => {
+      const controller = new AbortController();
+      abortRef.current = controller;
+      // 无活动看门狗：流 45 秒没有任何数据就中止本次尝试，避免无限挂起。
+      // 用户手动停止走同一个 controller，用 watchdogFired 与之区分。
+      let watchdogFired = false;
+      let lastActivity = Date.now();
+      const watchdog = setInterval(() => {
+        if (Date.now() - lastActivity > 45000) {
+          watchdogFired = true;
+          controller.abort();
         }
-        return;
-      }
+      }, 5000);
+      try {
+        // 页面感知二期：带上访客当前页面（解析与桌宠共用 lib/page-guide），
+        // 服务端据此让慕斯知道「这张照片/这一页」指什么；other 页不发送。
+        const pageInfo = parsePage(window.location.pathname, window.location.search);
+        const res = await fetch("/api/chat", {
+          method: "POST",
+          body: JSON.stringify({
+            messages: newMessages.map(({ role, content, timestamp }) => ({ role, content, timestamp })),
+            chatId: chatId,
+            locale: locale,
+            page: pageInfo.kind === "other" ? undefined : pageInfo,
+          }),
+          signal: controller.signal,
+        });
 
-      // 流式读取（AI SDK UI message stream）：逐行解析 data: JSON，
-      // 累积 text-delta；tool-output-available 里的 navigate_to 结果渲染为跳转卡片（PR-D）。
-      const aiMsg: Message = { role: "assistant", content: "", timestamp: new Date().toISOString() };
-      setMessages([...newMessages, aiMsg]);
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
-      let acc = "";
-      let navPath = "";
-      let streamError = "";
-      for (;;) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n");
-        buffer = lines.pop() ?? "";
-        for (const line of lines) {
-          const tline = line.trim();
-          if (!tline.startsWith("data:")) continue;
-          const payload = tline.slice(5).trim();
-          if (!payload || payload === "[DONE]") continue;
-          try {
-            const obj = JSON.parse(payload);
-            if (obj.type === "text-delta" && typeof obj.delta === "string") {
-              acc += obj.delta;
-            } else if (obj.type === "tool-output-available" && obj.output && typeof obj.output === "object") {
-              const out = obj.output as { path?: string };
-              if (typeof out.path === "string" && out.path.startsWith("/")) {
-                navPath = out.path;
+        if (!res.ok || !res.body) {
+          const errorText = res.body ? await res.text() : "Connection failed";
+          if (errorText === "session_quota_full") return "session";
+          // 站点自设的每日新会话上限：与上游额度一样，都归「额度用完」。
+          if (errorText === "daily_quota_full") return "quota";
+          // 不把服务端原始报错（如限流英文详情）原样展示给访客，只回分类。
+          return "fail";
+        }
+
+        // 流式读取（AI SDK UI message stream）：逐行解析 data: JSON，
+        // 累积 text-delta；tool-output-available 里的 navigate_to 结果渲染为跳转卡片（PR-D）。
+        const aiMsg: Message = { role: "assistant", content: "", timestamp: new Date().toISOString() };
+        setMessages([...newMessages, aiMsg]);
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+        let acc = "";
+        let navPath = "";
+        let streamError = "";
+        for (;;) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          lastActivity = Date.now();
+          buffer += decoder.decode(value, { stream: true });
+          const lines2 = buffer.split("\n");
+          buffer = lines2.pop() ?? "";
+          for (const line of lines2) {
+            const tline = line.trim();
+            if (!tline.startsWith("data:")) continue;
+            const payload = tline.slice(5).trim();
+            if (!payload || payload === "[DONE]") continue;
+            try {
+              const obj = JSON.parse(payload);
+              if (obj.type === "text-delta" && typeof obj.delta === "string") {
+                acc += obj.delta;
+              } else if (obj.type === "tool-output-available" && obj.output && typeof obj.output === "object") {
+                const out = obj.output as { path?: string };
+                if (typeof out.path === "string" && out.path.startsWith("/")) {
+                  navPath = out.path;
+                }
+              } else if (obj.type === "error") {
+                streamError = String(obj.errorText ?? "stream error");
+                continue;
+              } else {
+                continue;
               }
-            } else if (obj.type === "error") {
-              streamError = String(obj.errorText ?? "stream error");
-              continue;
-            } else {
-              continue;
+              const snapshot = acc;
+              const snapshotNav = navPath;
+              setMessages((prev) => {
+                const copy = [...prev];
+                copy[copy.length - 1] = { ...aiMsg, content: snapshot, navPath: snapshotNav || undefined };
+                return copy;
+              });
+            } catch {
+              /* 忽略无法解析的行 */
             }
-            const snapshot = acc;
-            const snapshotNav = navPath;
-            setMessages((prev) => {
-              const copy = [...prev];
-              copy[copy.length - 1] = { ...aiMsg, content: snapshot, navPath: snapshotNav || undefined };
-              return copy;
-            });
-          } catch {
-            /* 忽略无法解析的行 */
           }
         }
+        if (streamError && !acc) {
+          // 流内错误（如 Groq 限流）不外露原始报错：额度标记单独归类，其余算失败。
+          return streamError === "quota_exceeded" ? "quota" : "fail";
+        }
+        return "ok";
+      } catch (err) {
+        if ((err as Error)?.name === "AbortError" && !watchdogFired) return "aborted";
+        return "fail";
+      } finally {
+        clearInterval(watchdog);
+        abortRef.current = null;
       }
-      if (streamError && !acc) {
-        // 流内错误（如 Groq 限流）同样不外露原始报错，统一用本地化友好文案。
-        // 额度/限流（服务端标记 quota_exceeded）单独用「额度用完」文案，与真断线区分。
-        const errMsg: Message = { role: "assistant", content: streamError === "quota_exceeded" ? t("quotaError") : t("connectionError"), timestamp: new Date().toISOString() };
+    };
+
+    try {
+      let outcome = await attempt();
+      if (outcome === "fail" || outcome === "quota") {
+        // 只自动重试一次，间隔 2 秒：救回限流抖动/瞬断/流挂起；
+        // 真额度耗尽时多一次失败调用，代价可忽略。
+        await new Promise((r) => setTimeout(r, 2000));
+        outcome = await attempt();
+      }
+      if (outcome === "session") {
+        setSessionBlocked(true);
+        const errMsg: Message = { role: "assistant", content: t("sessionFull"), timestamp: new Date().toISOString() };
         setMessages([...newMessages, errMsg]);
-      }
-    } catch (err) {
-      if ((err as Error)?.name === "AbortError") {
-        // 访客点了停止：已生成的部分留在界面上（服务端不会落库这半条）
-      } else {
+      } else if (outcome === "quota") {
+        const errMsg: Message = { role: "assistant", content: t("quotaError"), timestamp: new Date().toISOString() };
+        setMessages([...newMessages, errMsg]);
+      } else if (outcome === "fail") {
         const errMsg: Message = { role: "assistant", content: t("connectionError"), timestamp: new Date().toISOString() };
         setMessages((prev) => {
           const last = prev[prev.length - 1];
@@ -286,8 +311,8 @@ export function ChatBot({ isQuotaFull }: { isQuotaFull: boolean }) {
           return [...prev, errMsg];
         });
       }
+      // "ok"：内容已在流式过程中写入；"aborted"：访客点了停止，保留已生成部分。
     } finally {
-      abortRef.current = null;
       setIsLoading(false);
     }
   };
