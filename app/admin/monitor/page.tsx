@@ -4,6 +4,8 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { AdminThemeToggle } from "../guestbook/admin-theme-toggle"; // 复用你的暗黑模式按钮
+import { getGroqQuota, getGeminiStatus, probeQuota } from "@/lib/ling/quota";
+import { QuotaAutoRefresh } from "./quota-auto-refresh";
 // 💡 1. 顶部引入 Redis
 import { Redis } from "@upstash/redis";
 import { reportInfraFailure } from "@/lib/alert";
@@ -77,6 +79,43 @@ export default async function MonitorDashboardPage() {
     revalidatePath("/admin/monitor");
   }
 
+  // --- 聊天额度快照（2026-11-19 站长要求：管理员界面实时剩余额度）---
+  const groqQuota = await getGroqQuota();
+  const geminiStatus = await getGeminiStatus();
+
+  // --- Server Action: 立即探测两家供应商，刷新额度快照 ---
+  async function probeQuotaAction() {
+    "use server";
+    await probeQuota();
+    revalidatePath("/admin/monitor");
+  }
+
+  const fmtTime = (iso: string | null | undefined) =>
+    iso
+      ? new Intl.DateTimeFormat("zh-CN", {
+          timeZone: "Asia/Tokyo",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: false,
+        }).format(new Date(iso))
+      : "—";
+  const ageText = (iso: string | null | undefined) => {
+    if (!iso) return "";
+    const mins = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
+    return mins <= 0 ? "刚刚" : `${mins} 分钟前`;
+  };
+  const groqPct =
+    groqQuota?.remainingTokens != null && groqQuota?.limitTokens
+      ? Math.max(0, Math.min(100, Math.round((groqQuota.remainingTokens / groqQuota.limitTokens) * 100)))
+      : null;
+  const groqBarColor = groqPct == null ? "bg-slate-300" : groqPct > 50 ? "bg-emerald-500" : groqPct >= 20 ? "bg-amber-500" : "bg-red-500";
+  const geminiDown =
+    geminiStatus?.lastErrorAt != null &&
+    (geminiStatus?.lastOkAt == null || geminiStatus.lastErrorAt > geminiStatus.lastOkAt);
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-10 px-6 transition-colors">
       <div className="max-w-6xl mx-auto space-y-6 animate-in fade-in duration-500">
@@ -96,6 +135,64 @@ export default async function MonitorDashboardPage() {
             </Link>
           </div>
         </header>
+
+        {/* 聊天额度（实时）：Groq 剩余量来自其响应头快照，聊天一次刷新一次；
+            Gemini 免费档无额度接口，只显示最近可用状态。每 30 秒自动刷新本页。 */}
+        <section className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 transition-colors">
+          <QuotaAutoRefresh seconds={30} />
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">💬 聊天额度（实时）</h2>
+            <form action={probeQuotaAction}>
+              <button type="submit" className="px-4 py-2 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 rounded-lg text-sm font-medium hover:opacity-85 transition-opacity shadow-sm">
+                立即探测
+              </button>
+            </form>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="rounded-xl border border-slate-200 dark:border-slate-800 p-4">
+              <div className="flex items-baseline justify-between">
+                <h3 className="font-semibold text-slate-900 dark:text-slate-100">Groq（主力 · gpt-oss-120b）</h3>
+                {groqPct != null && <span className="text-sm text-slate-500 dark:text-slate-400">剩余 {groqPct}%</span>}
+              </div>
+              {groqQuota ? (
+                <>
+                  <p className="mt-2 text-2xl font-bold text-slate-900 dark:text-slate-100">
+                    {groqQuota.remainingTokens?.toLocaleString() ?? "—"}
+                    <span className="text-sm font-normal text-slate-500 dark:text-slate-400"> / {groqQuota.limitTokens?.toLocaleString() ?? "—"} 词元（每日）</span>
+                  </p>
+                  <div className="mt-2 h-2.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                    <div className={`h-full ${groqBarColor}`} style={{ width: `${groqPct ?? 0}%` }} />
+                  </div>
+                  <dl className="mt-3 space-y-1 text-sm text-slate-600 dark:text-slate-300">
+                    <div className="flex justify-between"><dt>请求剩余（每日）</dt><dd>{groqQuota.remainingRequests?.toLocaleString() ?? "—"} / {groqQuota.limitRequests?.toLocaleString() ?? "—"}</dd></div>
+                    <div className="flex justify-between"><dt>词元窗口重置</dt><dd>{groqQuota.resetTokens ?? "—"}</dd></div>
+                    <div className="flex justify-between"><dt>数据时间</dt><dd>{fmtTime(groqQuota.capturedAt)}（{ageText(groqQuota.capturedAt)} · 来自{groqQuota.source === "probe" ? "手动探测" : "聊天请求"}）</dd></div>
+                  </dl>
+                </>
+              ) : (
+                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">暂无数据——等一次聊天请求，或点「立即探测」。</p>
+              )}
+            </div>
+            <div className="rounded-xl border border-slate-200 dark:border-slate-800 p-4">
+              <h3 className="font-semibold text-slate-900 dark:text-slate-100">Gemini（兜底 · Flash-Lite）</h3>
+              {geminiStatus ? (
+                <>
+                  <p className="mt-2 text-2xl font-bold">
+                    {geminiDown ? <span className="text-red-500">最近失败</span> : <span className="text-emerald-500">可用</span>}
+                  </p>
+                  <dl className="mt-3 space-y-1 text-sm text-slate-600 dark:text-slate-300">
+                    <div className="flex justify-between"><dt>最近成功</dt><dd>{fmtTime(geminiStatus.lastOkAt)}</dd></div>
+                    <div className="flex justify-between"><dt>最近失败</dt><dd>{geminiStatus.lastErrorAt ? `${fmtTime(geminiStatus.lastErrorAt)}（${geminiStatus.lastErrorKind ?? ""}）` : "—"}</dd></div>
+                    <div className="flex justify-between"><dt>数据时间</dt><dd>{fmtTime(geminiStatus.capturedAt)}（{ageText(geminiStatus.capturedAt)} · 来自{geminiStatus.source === "probe" ? "手动探测" : "聊天请求"}）</dd></div>
+                  </dl>
+                  <p className="mt-3 text-xs text-slate-400">免费档没有官方剩余额度接口，只能显示可用状态；已知参考线：约 15 次/分钟、25 万词元/分钟、500 次/天。</p>
+                </>
+              ) : (
+                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">暂无数据——等一次兜底调用，或点「立即探测」。</p>
+              )}
+            </div>
+          </div>
+        </section>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           
