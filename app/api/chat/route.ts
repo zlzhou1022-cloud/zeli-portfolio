@@ -7,6 +7,7 @@ import { Redis } from "@upstash/redis";
 import { headers } from "next/headers";
 import { streamText, stepCountIs } from "ai";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
+import { google } from "@ai-sdk/google";
 import { createLingTools, LING_TOOLS_ENABLED } from "@/lib/ling/tools";
 
 const redis = new Redis({
@@ -41,11 +42,12 @@ export async function POST(req: Request) {
     } catch {
       return new NextResponse("bad_request", { status: 400 });
     }
-    const { messages, chatId, locale, page } = (body ?? {}) as {
+    const { messages, chatId, locale, page, provider } = (body ?? {}) as {
       messages?: unknown;
       chatId?: string;
       locale?: string;
       page?: unknown;
+      provider?: string;
     };
     if (!Array.isArray(messages) || messages.length === 0) {
       return new NextResponse("bad_request", { status: 400 });
@@ -98,8 +100,19 @@ export async function POST(req: Request) {
       clientAborted = true;
     });
 
+    // 双保险选模型（2026-11-19 站长拍板）：默认 Groq 的 gpt-oss-120b 为主力
+    // （llama-3.3-70b-versatile 已于 2026-08-16 被 Groq 退役，官方替代为 gpt-oss-120b）；
+    // 前端在 Groq 额度耗尽/持续限流时带 provider:"gemini" 重发，改走 Gemini
+    // Flash-Lite 兜底（免费档每分钟词元 25 万、无每日词元总帽，专治 Groq 的
+    // 8K TPM / 200K TPD）。模型 ID 可用环境变量 GEMINI_MODEL 覆盖（Google 换代频繁）。
+    if (provider === "gemini" && !process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+      return new NextResponse("fallback_unavailable", { status: 503 });
+    }
     const result = streamText({
-      model: groq("openai/gpt-oss-120b"), // llama-3.3-70b-versatile 已于 2026-08-16 被 Groq 退役，官方替代为 gpt-oss-120b
+      model:
+        provider === "gemini"
+          ? google(process.env.GEMINI_MODEL || "gemini-3.5-flash-lite")
+          : groq("openai/gpt-oss-120b"),
       system: finalSystemContent,
       messages: messagesForLLM,
       // Phase 4 工具调用：步数上限 3 步防死循环；工具失败降级为纯文本回答。
@@ -191,7 +204,7 @@ export async function POST(req: Request) {
           return "quota_exceeded";
         }
         // 其余限流（TPM/RPM 突发）：前端会先自动重试一次，两次都中才显示额度文案。
-        if (e?.statusCode === 429 || /rate.?limit|too many requests|quota/i.test(msg)) {
+        if (e?.statusCode === 429 || /rate.?limit|too many requests|quota|resource_exhausted/i.test(msg)) {
           return "rate_limited";
         }
         return "stream_error";
