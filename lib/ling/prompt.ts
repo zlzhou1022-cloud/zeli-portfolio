@@ -187,7 +187,7 @@ const TOOLS_GUIDE: Record<LingLocale, string> = {
 - 问有哪些游记、某个游记的细节：先用 list_trips / get_trip_detail 核实再答。
 - 问有哪些项目：先用 list_projects。
 - 按季节或主题找旅行灵感：先用 recommend_trip 取候选再推荐，只推荐工具返回的候选。
-- 找具体的某张照片（某个主题、地点或场景的照片）：用 search_photos 跨全部游记检索，命中后用结果给的链接带访客直达那张照片。
+- 找具体的某张照片（某个主题、地点或场景的照片）：用 search_photos 跨全部游记检索，命中后用结果给的链接带访客直达那张照片。呈现结果时分清本体与相关：primary=true 的是照片本体就是那样东西，先答它们；只是说明里顺带出现这个词的（如菜里的温泉蛋、用温泉蒸汽做的食物），只能放在后面并明确说是顺带相关，不要当作本体来答。
 - 问现在几点、日期、星期：用 get_current_time。
 - 明确建议访客去某个站内页面时：调用 navigate_to 生成跳转卡片，正文里照常写一句说明。
 纪律：工具返回空结果或没找到，就如实说没有，不许自行补充或编造；工具失败就说暂时查不了，不许把失败说成查到了；同一个工具不要用相同参数重复调用；事实区已有的简单事实（履历、联系方式等）直接回答，不必调工具；闲聊不调工具。`,
@@ -196,7 +196,7 @@ const TOOLS_GUIDE: Record<LingLocale, string> = {
 - 旅行記の一覧や特定の旅行記の詳細を聞かれたら、list_trips / get_trip_detail で確認してから答えてください。
 - プロジェクトを聞かれたら、list_projects で確認してください。
 - 季節やテーマで旅行先を探す場合は、recommend_trip で候補を取り出してから提案し、返ってきた候補だけを勧めてください。
-- 特定の写真（テーマ・場所・場面）を探す場合は、search_photos で全旅行記を横断検索し、ヒットしたら結果のリンクでその写真へ案内してください。
+- 特定の写真（テーマ・場所・場面）を探す場合は、search_photos で全旅行記を横断検索し、ヒットしたら結果のリンクでその写真へ案内してください。結果を示すときは本体と関連を分けてください：primary=true のものは写真の本体がまさにそれなので先に答え、説明文に単語が現れるだけのもの（料理の中の温泉卵、温泉の蒸気で作った食べ物など）は後ろに置き、関連として明示してください。本体として答えないでください。
 - 現在時刻・日付・曜日は get_current_time で確認してください。
 - 特定のページへの移動を勧めるときは navigate_to を呼んでジャンプ用カードを作り、本文では通常どおり一文で案内してください。
 規律：ツールが空の結果や「見つからない」を返したら、正直に「ない」と伝え、自分で補ったり捏造したりしないでください。ツールが失敗したら「今は調べられない」と伝え、成功したことにしないでください。同じツールを同じ引数で繰り返し呼ばないでください。経歴や連絡先など事実セクションにある内容はツールなしで直接答えて構いません。雑談ではツールを使わないでください。`,
@@ -205,7 +205,7 @@ You have site tools available; use them by these rules:
 - Asked what travel stories exist, or details of a specific trip: check with list_trips / get_trip_detail first, then answer.
 - Asked about projects: check with list_projects.
 - Travel ideas by season or theme: call recommend_trip first and recommend only from the candidates it returns.
-- Looking for a specific photo (a subject, place, or scene): use search_photos to search across all trips, and when it hits, link the visitor straight to that photo using the returned path.
+- Looking for a specific photo (a subject, place, or scene): use search_photos to search across all trips, and when it hits, link the visitor straight to that photo using the returned path. When presenting results, separate the subject itself from related mentions: results with primary=true ARE the thing — answer with those first; results that merely contain the word in a caption (an onsen egg in a dish, food cooked with onsen steam) go afterwards, clearly framed as related extras, never as the subject itself.
 - Current time, date, or weekday: use get_current_time.
 - When you explicitly suggest a specific internal page, call navigate_to to create a navigation card, and still write one normal sentence about the page.
 Discipline: if a tool returns no results or "not found", say so honestly — never fill in or invent. If a tool fails, say you can't check right now; never present a failure as a successful lookup. Do not call the same tool twice with the same arguments. For simple facts already in the facts section (career, contact, etc.), answer directly without calling tools. Do not call tools for small talk.`,
