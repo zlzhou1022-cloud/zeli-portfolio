@@ -47,7 +47,14 @@ export async function recordGroqHeaders(
   try {
     const h: Record<string, string> = {};
     for (const [k, v] of Object.entries(headers)) h[k.toLowerCase()] = v;
-    if (h["x-ratelimit-remaining-tokens"] == null && h["x-ratelimit-limit-tokens"] == null) return;
+    if (h["x-ratelimit-remaining-tokens"] == null && h["x-ratelimit-limit-tokens"] == null) {
+      // 没抄到限流头也要留痕，否则下次又是「没数据」无从查起。
+      console.error(
+        "[quota] groq response without ratelimit headers; x- headers present:",
+        Object.keys(h).filter((k) => k.startsWith("x-")).join(", ") || "(none)",
+      );
+      return;
+    }
     const snap: GroqQuota = {
       limitTokens: num(h["x-ratelimit-limit-tokens"]),
       remainingTokens: num(h["x-ratelimit-remaining-tokens"]),
@@ -59,8 +66,9 @@ export async function recordGroqHeaders(
       source,
     };
     await redis.set(GROQ_KEY, JSON.stringify(snap));
-  } catch {
-    // 快照失败不影响聊天
+  } catch (err) {
+    // 快照失败不影响聊天，但要在服务端日志留痕
+    console.error("[quota] write groq snapshot failed:", err);
   }
 }
 
@@ -80,25 +88,41 @@ export async function recordGeminiStatus(
       source,
     };
     await redis.set(GEMINI_KEY, JSON.stringify(snap));
-  } catch {
-    // 同上
+  } catch (err) {
+    // 同上（不影响聊天，只留痕）
+    console.error("[quota] write gemini snapshot failed:", err);
   }
+}
+
+// @upstash/redis 默认自动反序列化：存进去的 JSON 字符串读出来已经是对象，
+// 再 JSON.parse(对象) 会抛错被吞成 null——2026-11-19「探测通了但没数据」的
+// 根因就是这里。读取必须字符串/对象两种形态都认。
+function parseSnap<T>(raw: unknown): T | null {
+  if (!raw) return null;
+  if (typeof raw === "string") {
+    try {
+      return JSON.parse(raw) as T;
+    } catch {
+      return null;
+    }
+  }
+  return raw as T;
 }
 
 export async function getGroqQuota(): Promise<GroqQuota | null> {
   try {
-    const raw = await redis.get<string>(GROQ_KEY);
-    return raw ? (JSON.parse(raw) as GroqQuota) : null;
-  } catch {
+    return parseSnap<GroqQuota>(await redis.get(GROQ_KEY));
+  } catch (err) {
+    console.error("[quota] read groq snapshot failed:", err);
     return null;
   }
 }
 
 export async function getGeminiStatus(): Promise<GeminiStatus | null> {
   try {
-    const raw = await redis.get<string>(GEMINI_KEY);
-    return raw ? (JSON.parse(raw) as GeminiStatus) : null;
-  } catch {
+    return parseSnap<GeminiStatus>(await redis.get(GEMINI_KEY));
+  } catch (err) {
+    console.error("[quota] read gemini snapshot failed:", err);
     return null;
   }
 }
