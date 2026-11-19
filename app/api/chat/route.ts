@@ -26,6 +26,11 @@ export async function POST(req: Request) {
   try {
     const headersList = await headers();
     const ip = headersList.get("x-forwarded-for") ?? "127.0.0.1";
+    // 站长模式（2026-11-19 站长要求）：站长开着站长模式测试时，跳过本站自设的两层
+    // 软上限（每日新会话数/单会话消息数），只受 Groq 官方限流（TPM/TPD）约束——
+    // 这样普通访客把本站软上限用满后，站长仍能在正式站自测。与 lib/owner.ts 的
+    // 既有定位一致：这是本机便利开关、不是安全边界；Groq 的硬限流对所有人仍然生效。
+    const isOwner = headersList.get("x-muse-owner") === "1";
 
     // 接收前端传来的完整聊天记录、唯一会话 ID 和当前语言（locale 可缺省）；
     // page 是访客当前页面描述（页面感知二期），只用于本次提示词，不落库。
@@ -62,10 +67,10 @@ export async function POST(req: Request) {
     } catch (err) {
       await reportInfraFailure('chat/redis-quota', err);
     }
-    if (globalQuota >= 50) {
+    if (!isOwner && globalQuota >= 50) {
       return new NextResponse("daily_quota_full", { status: 403 });
     }
-    if (sessionMsgCount >= 5000) {
+    if (!isOwner && sessionMsgCount >= 5000) {
       return new NextResponse("session_quota_full", { status: 403 });
     }
 
@@ -153,11 +158,14 @@ export async function POST(req: Request) {
           }
 
           // 5. 更新配额计数（容错：计数失败只告警，不能影响已完成的回复）
+          // 站长模式的测试流量不计入访客配额，免得站长自测吃掉访客的每日新会话数。
           try {
-            await redis.incr(sessionQuotaKey);
-            if (sessionMsgCount === 0) {
-              await redis.incr(globalQuotaKey);
-              await redis.expire(globalQuotaKey, 60 * 60 * 24);
+            if (!isOwner) {
+              await redis.incr(sessionQuotaKey);
+              if (sessionMsgCount === 0) {
+                await redis.incr(globalQuotaKey);
+                await redis.expire(globalQuotaKey, 60 * 60 * 24);
+              }
             }
           } catch (err) {
             await reportInfraFailure('chat/redis-counter', err);
