@@ -4,8 +4,9 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { AdminThemeToggle } from "../guestbook/admin-theme-toggle"; // 复用你的暗黑模式按钮
-import { getGroqQuota, getGeminiStatus, probeQuota } from "@/lib/ling/quota";
+import { getGroqQuota, getGeminiStatus, getLastProbeAt, probeQuota } from "@/lib/ling/quota";
 import { QuotaAutoRefresh } from "./quota-auto-refresh";
+import { ProbeButton } from "./probe-button";
 // 💡 1. 顶部引入 Redis
 import { Redis } from "@upstash/redis";
 import { reportInfraFailure } from "@/lib/alert";
@@ -82,6 +83,7 @@ export default async function MonitorDashboardPage() {
   // --- 聊天额度快照（2026-11-19 站长要求：管理员界面实时剩余额度）---
   const groqQuota = await getGroqQuota();
   const geminiStatus = await getGeminiStatus();
+  const lastProbeAt = await getLastProbeAt();
 
   // --- Server Action: 立即探测两家供应商，刷新额度快照 ---
   async function probeQuotaAction() {
@@ -142,11 +144,12 @@ export default async function MonitorDashboardPage() {
           <QuotaAutoRefresh seconds={30} />
           <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
             <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">💬 聊天额度（实时）</h2>
-            <form action={probeQuotaAction}>
-              <button type="submit" className="px-4 py-2 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 rounded-lg text-sm font-medium hover:opacity-85 transition-opacity shadow-sm">
-                立即探测
-              </button>
-            </form>
+            <div className="flex items-center gap-3">
+              {lastProbeAt && <span className="text-xs text-slate-400">上次探测 {fmtTime(lastProbeAt)}</span>}
+              <form action={probeQuotaAction}>
+                <ProbeButton />
+              </form>
+            </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="rounded-xl border border-slate-200 dark:border-slate-800 p-4">
