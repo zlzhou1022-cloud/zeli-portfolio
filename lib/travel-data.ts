@@ -95,6 +95,21 @@ const trips: Trip[] = [
       { src: getImageUrl("shikoku2026Jan/p10.jpg"), desc: "三色团子", prefecture: "ehime", place: { cn: "爱媛县松山市", jp: "愛媛県松山市", en: "Matsuyama, Ehime" } },
     ]
   },
+  {
+    id: "fukushima-jul-2026",
+    date: "2026-07-26",
+    title: "福岛的七月：传承馆与震灾遗构",
+    cover: getImageUrl("fukushima2026Jul/p01.jpg"),
+    photos: [
+      { src: getImageUrl("fukushima2026Jul/p01.jpg"), desc: "手绘鲤鱼旗", prefecture: "fukushima", place: { cn: "福岛县双叶町", jp: "福島県双葉町", en: "Futaba, Fukushima" } },
+      { src: getImageUrl("fukushima2026Jul/p02.jpg"), desc: "标语牌", prefecture: "fukushima", place: { cn: "福岛县双叶町", jp: "福島県双葉町", en: "Futaba, Fukushima" } },
+      { src: getImageUrl("fukushima2026Jul/p03.jpg"), desc: "线量显示屏", prefecture: "fukushima", place: { cn: "福岛县双叶町", jp: "福島県双葉町", en: "Futaba, Fukushima" } },
+      { src: getImageUrl("fukushima2026Jul/p04.jpg"), desc: "遗构教室", prefecture: "fukushima", place: { cn: "福岛县浪江町", jp: "福島県浪江町", en: "Namie, Fukushima" } },
+      { src: getImageUrl("fukushima2026Jul/p05.jpg"), desc: "路边花坛", prefecture: "fukushima", place: { cn: "福岛县", jp: "福島県", en: "Fukushima" } },
+      { src: getImageUrl("fukushima2026Jul/p06.jpg"), desc: "纯米吟酿爱姬", prefecture: "fukushima", place: { cn: "福岛县三春町", jp: "福島県三春町", en: "Miharu, Fukushima" } },
+      { src: getImageUrl("fukushima2026Jul/p07.jpg"), desc: "喜多方拉面", prefecture: "fukushima", place: { cn: "福岛县喜多方市", jp: "福島県喜多方市", en: "Kitakata, Fukushima" } },
+    ]
+  },
 ];
 
 export const getAllTrips = () => {
