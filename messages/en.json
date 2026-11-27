@@ -44,7 +44,7 @@
     "travel": {
       "conquered": "prefectures completed",
       "goldHint": "Gold = prefectures with photos — tap one to see its photos",
-      "showLatest": "Back to the latest trip",
+      "showLatest": "Back to random photos",
       "viewing": "Viewing: {name}",
       "prefNames": {
         "aomori": "Aomori",
@@ -56,7 +56,15 @@
         "saga": "Saga",
         "nagasaki": "Nagasaki",
         "miyazaki": "Miyazaki",
-        "kagoshima": "Kagoshima"
+        "kagoshima": "Kagoshima",
+        "yamagata": "Yamagata",
+        "kagawa": "Kagawa",
+        "kochi": "Kochi",
+        "tokushima": "Tokushima",
+        "ehime": "Ehime",
+        "fukushima": "Fukushima",
+        "kanagawa": "Kanagawa",
+        "tokyo": "Tokyo"
       }
     },
     "invite": {
