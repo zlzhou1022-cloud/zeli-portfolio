@@ -147,6 +147,24 @@ const trips: Trip[] = [
       { src: getImageUrl("kawagoe2026Oct/p05.jpg"), desc: "葫芦灯", prefecture: "saitama", place: { cn: "埼玉县川越市", jp: "埼玉県川越市", en: "Kawagoe, Saitama" } },
     ]
   },
+  {
+    id: "chugoku-jul-2025",
+    date: "2025-07-27",
+    title: "山阴・山阳之旅：宍道湖的兔子、出云大社与鸟取沙丘",
+    cover: getImageUrl("chugoku2025Jul/p01.jpg"),
+    photos: [
+      { src: getImageUrl("chugoku2025Jul/p01.jpg"), desc: "湖岸的兔子剪影", prefecture: "shimane", place: { cn: "岛根县松江市", jp: "島根県松江市", en: "Matsue, Shimane" } },
+      { src: getImageUrl("chugoku2025Jul/p02.jpg"), desc: "宍道湖畔的铜兔", prefecture: "shimane", place: { cn: "岛根县松江市", jp: "島根県松江市", en: "Matsue, Shimane" } },
+      { src: getImageUrl("chugoku2025Jul/p03.jpg"), desc: "出云大社的石兔", prefecture: "shimane", place: { cn: "岛根县出云市", jp: "島根県出雲市", en: "Izumo, Shimane" } },
+      { src: getImageUrl("chugoku2025Jul/p04.jpg"), desc: "大注连绳", prefecture: "shimane", place: { cn: "岛根县出云市", jp: "島根県出雲市", en: "Izumo, Shimane" } },
+      { src: getImageUrl("chugoku2025Jul/p05.jpg"), desc: "沙丘上遛狗", prefecture: "tottori", place: { cn: "鸟取县鸟取市", jp: "鳥取県鳥取市", en: "Tottori, Tottori" } },
+      { src: getImageUrl("chugoku2025Jul/p06.jpg"), desc: "沙丘日出", prefecture: "tottori", place: { cn: "鸟取县鸟取市", jp: "鳥取県鳥取市", en: "Tottori, Tottori" } },
+      { src: getImageUrl("chugoku2025Jul/p07.jpg"), desc: "八岐大蛇沙雕", prefecture: "tottori", place: { cn: "鸟取县鸟取市", jp: "鳥取県鳥取市", en: "Tottori, Tottori" } },
+      { src: getImageUrl("chugoku2025Jul/p08.jpg"), desc: "西瓜柯南", prefecture: "tottori", place: { cn: "鸟取县北荣町", jp: "鳥取県北栄町", en: "Hokuei, Tottori" } },
+      { src: getImageUrl("chugoku2025Jul/p09.jpg"), desc: "姬路城", prefecture: "hyogo", place: { cn: "兵库县姬路市", jp: "兵庫県姫路市", en: "Himeji, Hyogo" } },
+      { src: getImageUrl("chugoku2025Jul/p10.jpg"), desc: "仓敷川游船", prefecture: "okayama", place: { cn: "冈山县仓敷市", jp: "岡山県倉敷市", en: "Kurashiki, Okayama" } },
+    ]
+  },
 ];
 
 export const getAllTrips = () => {
