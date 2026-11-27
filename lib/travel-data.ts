@@ -32,6 +32,9 @@ const trips: Trip[] = [
       { src: getImageUrl("tohoku2026Feb/afactory.jpg"), desc: "A-factory", prefecture: "aomori", place: { cn: "青森县青森市", jp: "青森県青森市", en: "Aomori City, Aomori" } },
       { src: getImageUrl("tohoku2026Feb/nebuta.jpg"), desc: "睡魔面部", prefecture: "aomori", place: { cn: "青森县青森市", jp: "青森県青森市", en: "Aomori City, Aomori" } },
       { src: getImageUrl("tohoku2026Feb/stationstuff.jpg"), desc: "弘南铁道", prefecture: "aomori", place: { cn: "青森县弘前市", jp: "青森県弘前市", en: "Hirosaki, Aomori" } },
+      { src: getImageUrl("tohoku2026Feb/p13.jpg"), desc: "苹果JR标牌", prefecture: "aomori", place: { cn: "青森・弘前", jp: "青森・弘前", en: "Aomori · Hirosaki" } },
+      { src: getImageUrl("tohoku2026Feb/p14.jpg"), desc: "暖炉列车烤鱿鱼", prefecture: "aomori", place: { cn: "青森・津轻", jp: "青森・津軽", en: "Aomori · Tsugaru" } },
+      { src: getImageUrl("tohoku2026Feb/p16.jpg"), desc: "岩木山雾凇", prefecture: "aomori", place: { cn: "青森・岩木山", jp: "青森・岩木山", en: "Aomori · Mt. Iwaki" } },
       { src: getImageUrl("tohoku2026Feb/tazawako.jpg"), desc: "辰子像", prefecture: "akita", place: { cn: "秋田县仙北市", jp: "秋田県仙北市", en: "Semboku, Akita" } },
       { src: getImageUrl("tohoku2026Feb/namahageentry.jpg"), desc: "生剥鬼下山", prefecture: "akita", place: { cn: "秋田县男鹿市", jp: "秋田県男鹿市", en: "Oga, Akita" } },
       { src: getImageUrl("tohoku2026Feb/namahagebudai.jpg"), desc: "生剥鬼舞台", prefecture: "akita", place: { cn: "秋田县男鹿市", jp: "秋田県男鹿市", en: "Oga, Akita" } },
@@ -40,6 +43,7 @@ const trips: Trip[] = [
       { src: getImageUrl("tohoku2026Feb/moriokahachiman.jpg"), desc: "盛冈八幡宫", prefecture: "iwate", place: { cn: "岩手县盛冈市", jp: "岩手県盛岡市", en: "Morioka, Iwate" } },
       { src: getImageUrl("tohoku2026Feb/moriokareimen.jpg"), desc: "盛冈冷面", prefecture: "iwate", place: { cn: "岩手县盛冈市", jp: "岩手県盛岡市", en: "Morioka, Iwate" } },
       { src: getImageUrl("tohoku2026Feb/wanko.jpg"), desc: "100碗挑战", prefecture: "iwate", place: { cn: "岩手县盛冈市", jp: "岩手県盛岡市", en: "Morioka, Iwate" } },
+      { src: getImageUrl("tohoku2026Feb/p15.jpg"), desc: "山居仓库夜景", prefecture: "yamagata", place: { cn: "山形・酒田", jp: "山形・酒田", en: "Yamagata · Sakata" } },
     ]
   },
   {
