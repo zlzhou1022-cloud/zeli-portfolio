@@ -66,7 +66,11 @@
         "kanagawa": "Kanagawa",
         "tokyo": "Tokyo",
         "saitama": "Saitama",
-        "ibaraki": "Ibaraki"
+        "ibaraki": "Ibaraki",
+        "shimane": "Shimane",
+        "tottori": "Tottori",
+        "hyogo": "Hyogo",
+        "okayama": "Okayama"
       }
     },
     "invite": {
@@ -276,6 +280,27 @@
         "3": "Saitama · Kawagoe — a row of lanterns hangs along a corridor at Kawagoe Hikawa Shrine, each lit panel bearing a chrysanthemum crest.",
         "4": "Saitama · Kawagoe — on the Yamato Takeru float, a dancer in a white fox mask turns around beside the festival drums.",
         "5": "Saitama · Kawagoe — a gourd lamp glows by the street, carved with the silhouettes of three snowmen."
+      }
+    },
+    "chugoku-jul-2025":     {
+      "title": "San'in & San'yo: The Rabbits of Lake Shinji, Izumo Taisha, and the Tottori Dunes",
+      "photos": {
+        "1": "Shimane · Matsue — Lake Shinji seen through the art museum's glass, its rabbit silhouettes and lakeside-exit sign layered over the evening water.",
+        "2": "Shimane · Matsue — bronze rabbit statues stand on the grass by Lake Shinji, with Matsue's streets and a bridge across the water.",
+        "3": "Shimane · Izumo — two stone rabbits sit side by side at Izumo Taisha, pinecones gathered at their feet.",
+        "4": "Shimane · Izumo — the great shimenawa rope of Izumo Taisha's Kagura-den hangs from the beam, its thick strands and tassels filling the frame.",
+        "5": "Tottori · Tottori — on the morning Tottori Sand Dunes, a person walks a small dog along the ridge line.",
+        "6": "Tottori · Tottori — the sun rises between two hills, its rays spreading over the Tottori dunes and the sea.",
+        "7": "Tottori · Tottori — in the early morning, people walk a dog along the Tottori dunes' ridge, the calm sea behind them.",
+        "8": "Tottori · Tottori — a sand sculpture at the Sand Museum: Susanoo battling the eight-headed serpent Yamata no Orochi, its heads coiling in the foreground.",
+        "9": "Tottori · Hokuei — a Conan statue in Hokuei sits on a brick base hugging a slice of watermelon; its nameplate reads 'Watermelon Conan'.",
+        "10": "Tottori · Tottori — the Super Hakuto limited express for Tottori waits at the platform, wrapped in Detective Conan livery.",
+        "11": "Tottori · Tottori — a yakiniku platter of Tottori wagyu, marbled and lean cuts side by side.",
+        "12": "Hyogo · Himeji — Himeji Castle's white keep complex stands out against a blue sky, with neatly trimmed pines in front.",
+        "13": "Hyogo · Himeji — looking down the avenue from Himeji Station, the castle keep rises at the end of the street.",
+        "14": "Okayama · Kurashiki — on the Kurashiki River, a boatman poles a river boat with passengers, willows and white-walled old streets along both banks.",
+        "15": "Okayama · Okayama — from the pond at Korakuen, Okayama Castle's black keep rises above the trees.",
+        "16": "Okayama · Okayama — in Korakuen's pond, several turtles bask on a rock beneath a pine tree."
       }
     }
   },
