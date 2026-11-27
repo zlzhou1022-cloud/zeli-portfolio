@@ -64,7 +64,8 @@
         "ehime": "Ehime",
         "fukushima": "Fukushima",
         "kanagawa": "Kanagawa",
-        "tokyo": "Tokyo"
+        "tokyo": "Tokyo",
+        "saitama": "Saitama"
       }
     },
     "invite": {
@@ -261,6 +262,16 @@
         "7": "Tokyo · Tachikawa — maple leaves lit through by the setting sun, bright to their edges.",
         "8": "Tokyo · Tachikawa — a single ginkgo leaf hangs in mid-air, just fallen from the branch.",
         "9": "Tokyo · Tachikawa — Mt. Fuji floats in the pink evening sky, seen from Showa Kinen Park."
+      }
+    },
+    "kawagoe-oct-2026": {
+      "title": "Kawagoe Festival Night: Floats, Lanterns, and Fox Dancers",
+      "photos": {
+        "1": "Saitama · Kawagoe — on a Kawagoe Festival float, a dancer in a fox mask leans out to hand sweets to a child held up toward the float.",
+        "2": "Saitama · Kawagoe — two floats meet face to face in the night crowd, lanterns blazing and bands competing: the 'hikkawase,' the climax of the Kawagoe Festival.",
+        "3": "Saitama · Kawagoe — a row of lanterns hangs along a corridor at Kawagoe Hikawa Shrine, each lit panel bearing a chrysanthemum crest.",
+        "4": "Saitama · Kawagoe — on the Yamato Takeru float, a dancer in a white fox mask turns around beside the festival drums.",
+        "5": "Saitama · Kawagoe — a gourd lamp glows by the street, carved with the silhouettes of three snowmen."
       }
     }
   },
