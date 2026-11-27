@@ -65,7 +65,8 @@
         "fukushima": "Fukushima",
         "kanagawa": "Kanagawa",
         "tokyo": "Tokyo",
-        "saitama": "Saitama"
+        "saitama": "Saitama",
+        "ibaraki": "Ibaraki"
       }
     },
     "invite": {
@@ -251,7 +252,7 @@
       }
     },
     "autumn-dec-2025": {
-      "title": "Autumn Collection: Lake Ashi and Showa Kinen Park",
+      "title": "Autumn Collection: Lake Ashi, Showa Kinen Park, and Hitachi Seaside Park",
       "photos": {
         "1": "Kanagawa · Hakone — evening on Lake Ashi: swan pedal boats lined up on the water, a red torii gate at the shore, and a pink sky.",
         "2": "Kanagawa · Hakone — a small boat crosses Lake Ashi as a flock of waterbirds skims the surface.",
@@ -261,7 +262,10 @@
         "6": "Tokyo · Tachikawa — ginkgo trees turned fully yellow, packed tight against a blue sky.",
         "7": "Tokyo · Tachikawa — maple leaves lit through by the setting sun, bright to their edges.",
         "8": "Tokyo · Tachikawa — a single ginkgo leaf hangs in mid-air, just fallen from the branch.",
-        "9": "Tokyo · Tachikawa — Mt. Fuji floats in the pink evening sky, seen from Showa Kinen Park."
+        "9": "Tokyo · Tachikawa — Mt. Fuji floats in the pink evening sky, seen from Showa Kinen Park.",
+        "10": "Ibaraki · Hitachinaka — the Ferris wheel at Hitachi Seaside Park stands against a blue sky, with white pampas grass plumes in front.",
+        "11": "Ibaraki · Hitachinaka — red spider lilies in full bloom, their long stamens reaching out in every direction.",
+        "12": "Ibaraki · Hitachinaka — from the park's hill: reddening kochia and the little red train in front, the sea in the distance."
       }
     },
     "kawagoe-oct-2026": {
