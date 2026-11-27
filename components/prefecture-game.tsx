@@ -11,8 +11,11 @@ import { getCurrentOutfit, poseSrc, markQuizCorrect, notifyProgress } from "@/li
 import { mutateSave, claimQuizStar } from "@/lib/room";
 
 // 看图猜县 + 日本地图集章（2026-11-14，站长定方向、慕斯主持）：
-// - 猜县：从旅行相册的照片里随机出题（照片的拍摄县在 lib/travel-data.ts 里
+// - 猜县：从旅行相册的照片里出题（照片的拍摄县在 lib/travel-data.ts 里
 //   逐张标好），四选一，干扰项优先同地方的县；答对给该县盖章。
+// - 出题池（站长 2026-11-28 定）：开一轮时先只从「还没盖过章的县」的照片里
+//   随机抽；答错的县没盖章、下一轮还会出；全部有照片的县都盖过章之后，
+//   才回到全部照片随机抽。地图页指定某个县练手时不走这条过滤。
 // - 集章两层：①地图底色是站长的制霸图鉴（47 县全到访，lib/prefectures.ts）；
 //   ②访客自己的章存 localStorage（muse_stamps），答对一县亮一县。
 // - 地图用 @svg-maps/japan 的真实县界 SVG，location id 与主数据 slug 一一对应。
@@ -116,8 +119,15 @@ export function PrefectureGame() {
   const prefName = (p: Prefecture) => p[loc];
   const pickLine = (key: "correctLines" | "wrongLines") => randomFrom((t.raw(key) as string[]) ?? []);
 
-  const startRound = (photos: FlatPhoto[]) => {
-    const q = shuffle(photos);
+  const startRound = (photos: FlatPhoto[], stampsNow?: string[]) => {
+    // 全局开轮（传了 stampsNow）时优先未盖章的县：只抽还没答对过的县的照片；
+    // 全盖完才回落到传入的完整集合。指定县练手（quizPref）不传 stampsNow，不过滤。
+    let pool = photos;
+    if (stampsNow) {
+      const unstamped = photos.filter((ph) => !stampsNow.includes(ph.pref));
+      if (unstamped.length > 0) pool = unstamped;
+    }
+    const q = shuffle(pool);
     setQueue(q);
     setQi(0);
     setCorrect(0);
@@ -130,17 +140,21 @@ export function PrefectureGame() {
   // 洗牌只在客户端做，避免 SSR 与客户端渲染不一致）
   useEffect(() => {
     const id = setTimeout(() => {
+      let parsedStamps: string[] = [];
       try {
         const raw = localStorage.getItem(STAMPS_KEY);
         if (raw) {
           const parsed = JSON.parse(raw) as string[];
-          if (Array.isArray(parsed)) setStamps(parsed.filter((x) => typeof x === "string"));
+          if (Array.isArray(parsed)) {
+            parsedStamps = parsed.filter((x) => typeof x === "string");
+            setStamps(parsedStamps);
+          }
         }
       } catch {
         /* 读不到就从零开始集 */
       }
       stampsLoadedRef.current = true;
-      startRound(allPhotos);
+      startRound(allPhotos, parsedStamps);
       setReady(true);
     }, 0);
     return () => clearTimeout(id);
@@ -262,7 +276,7 @@ export function PrefectureGame() {
                 {correct} / {queue.length} · {stamps.length} / {PREFECTURES.length}
               </p>
               <button
-                onClick={() => startRound(allPhotos)}
+                onClick={() => startRound(allPhotos, stamps)}
                 className="bg-stone-900 dark:bg-stone-100 text-stone-50 dark:text-stone-900 px-5 py-2 text-sm font-medium cursor-pointer hover:bg-stone-700 dark:hover:bg-stone-300 transition-colors"
               >
                 {t("again")}
