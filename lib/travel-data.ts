@@ -13,7 +13,10 @@ export interface Photo {
 
 export interface Trip {
   id: string;
-  date: string; 
+  date: string;
+  // 排序专用日期（可选）：date 是显示字符串（如合集只显示到月 "2025-12"），
+  // 排序位置需要另定真值时填 sortDate（完整 YYYY-MM-DD）；不填则按 date 排。
+  sortDate?: string;
   title: string;
   cover: string;
   photos: Photo[];
@@ -110,10 +113,28 @@ const trips: Trip[] = [
       { src: getImageUrl("fukushima2026Jul/p07.jpg"), desc: "喜多方拉面", prefecture: "fukushima", place: { cn: "福岛县喜多方市", jp: "福島県喜多方市", en: "Kitakata, Fukushima" } },
     ]
   },
+  {
+    id: "autumn-dec-2025",
+    date: "2025-12",
+    sortDate: "2025-11-30",
+    title: "赏秋合集：芦之湖与昭和纪念公园",
+    cover: getImageUrl("autumn2025Dec/p07.jpg"),
+    photos: [
+      { src: getImageUrl("autumn2025Dec/p01.jpg"), desc: "芦之湖黄昏", prefecture: "kanagawa", place: { cn: "神奈川县箱根町", jp: "神奈川県箱根町", en: "Hakone, Kanagawa" } },
+      { src: getImageUrl("autumn2025Dec/p02.jpg"), desc: "芦之湖小艇", prefecture: "kanagawa", place: { cn: "神奈川县箱根町", jp: "神奈川県箱根町", en: "Hakone, Kanagawa" } },
+      { src: getImageUrl("autumn2025Dec/p03.jpg"), desc: "芦之湖海盗船", prefecture: "kanagawa", place: { cn: "神奈川县箱根町", jp: "神奈川県箱根町", en: "Hakone, Kanagawa" } },
+      { src: getImageUrl("autumn2025Dec/p04.jpg"), desc: "芒草原", prefecture: "tokyo", place: { cn: "东京都立川市", jp: "東京都立川市", en: "Tachikawa, Tokyo" } },
+      { src: getImageUrl("autumn2025Dec/p05.jpg"), desc: "芒草穗", prefecture: "tokyo", place: { cn: "东京都立川市", jp: "東京都立川市", en: "Tachikawa, Tokyo" } },
+      { src: getImageUrl("autumn2025Dec/p06.jpg"), desc: "银杏墙", prefecture: "tokyo", place: { cn: "东京都立川市", jp: "東京都立川市", en: "Tachikawa, Tokyo" } },
+      { src: getImageUrl("autumn2025Dec/p07.jpg"), desc: "透光红叶", prefecture: "tokyo", place: { cn: "东京都立川市", jp: "東京都立川市", en: "Tachikawa, Tokyo" } },
+      { src: getImageUrl("autumn2025Dec/p08.jpg"), desc: "飘落的银杏叶", prefecture: "tokyo", place: { cn: "东京都立川市", jp: "東京都立川市", en: "Tachikawa, Tokyo" } },
+      { src: getImageUrl("autumn2025Dec/p09.jpg"), desc: "远望富士山", prefecture: "tokyo", place: { cn: "东京都立川市", jp: "東京都立川市", en: "Tachikawa, Tokyo" } },
+    ]
+  },
 ];
 
 export const getAllTrips = () => {
-  return [...trips].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  return [...trips].sort((a, b) => new Date(b.sortDate ?? b.date).getTime() - new Date(a.sortDate ?? a.date).getTime());
 };
 
 export const getTripById = (id: string) => trips.find(t => t.id === id);
