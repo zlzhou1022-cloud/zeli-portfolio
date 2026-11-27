@@ -117,7 +117,7 @@ const trips: Trip[] = [
     id: "autumn-dec-2025",
     date: "2025-12",
     sortDate: "2025-11-30",
-    title: "赏秋合集：芦之湖与昭和纪念公园",
+    title: "赏秋合集：芦之湖、昭和纪念公园与日立海滨公园",
     cover: getImageUrl("autumn2025Dec/p07.jpg"),
     photos: [
       { src: getImageUrl("autumn2025Dec/p01.jpg"), desc: "芦之湖黄昏", prefecture: "kanagawa", place: { cn: "神奈川县箱根町", jp: "神奈川県箱根町", en: "Hakone, Kanagawa" } },
@@ -129,19 +129,9 @@ const trips: Trip[] = [
       { src: getImageUrl("autumn2025Dec/p07.jpg"), desc: "透光红叶", prefecture: "tokyo", place: { cn: "东京都立川市", jp: "東京都立川市", en: "Tachikawa, Tokyo" } },
       { src: getImageUrl("autumn2025Dec/p08.jpg"), desc: "飘落的银杏叶", prefecture: "tokyo", place: { cn: "东京都立川市", jp: "東京都立川市", en: "Tachikawa, Tokyo" } },
       { src: getImageUrl("autumn2025Dec/p09.jpg"), desc: "远望富士山", prefecture: "tokyo", place: { cn: "东京都立川市", jp: "東京都立川市", en: "Tachikawa, Tokyo" } },
-    ]
-  },
-  {
-    id: "kawagoe-oct-2026",
-    date: "2026-10-19",
-    title: "川越祭之夜：山车、灯笼与狐面舞者",
-    cover: getImageUrl("kawagoe2026Oct/p02.jpg"),
-    photos: [
-      { src: getImageUrl("kawagoe2026Oct/p01.jpg"), desc: "狐面舞者派糖", prefecture: "saitama", place: { cn: "埼玉县川越市", jp: "埼玉県川越市", en: "Kawagoe, Saitama" } },
-      { src: getImageUrl("kawagoe2026Oct/p02.jpg"), desc: "两台山车交会", prefecture: "saitama", place: { cn: "埼玉县川越市", jp: "埼玉県川越市", en: "Kawagoe, Saitama" } },
-      { src: getImageUrl("kawagoe2026Oct/p03.jpg"), desc: "冰川神社灯笼", prefecture: "saitama", place: { cn: "埼玉县川越市", jp: "埼玉県川越市", en: "Kawagoe, Saitama" } },
-      { src: getImageUrl("kawagoe2026Oct/p04.jpg"), desc: "日本武尊山车的白狐", prefecture: "saitama", place: { cn: "埼玉县川越市", jp: "埼玉県川越市", en: "Kawagoe, Saitama" } },
-      { src: getImageUrl("kawagoe2026Oct/p05.jpg"), desc: "葫芦灯", prefecture: "saitama", place: { cn: "埼玉县川越市", jp: "埼玉県川越市", en: "Kawagoe, Saitama" } },
+      { src: getImageUrl("autumn2025Dec/p10.jpg"), desc: "摩天轮与蒲苇", prefecture: "ibaraki", place: { cn: "茨城县常陆那珂市", jp: "茨城県ひたちなか市", en: "Hitachinaka, Ibaraki" } },
+      { src: getImageUrl("autumn2025Dec/p11.jpg"), desc: "彼岸花", prefecture: "ibaraki", place: { cn: "茨城县常陆那珂市", jp: "茨城県ひたちなか市", en: "Hitachinaka, Ibaraki" } },
+      { src: getImageUrl("autumn2025Dec/p12.jpg"), desc: "坡上望海", prefecture: "ibaraki", place: { cn: "茨城县常陆那珂市", jp: "茨城県ひたちなか市", en: "Hitachinaka, Ibaraki" } },
     ]
   },
 ];
