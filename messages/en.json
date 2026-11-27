@@ -398,7 +398,7 @@
   },
   "MiniGame": {
     "title": "Mousse Dash",
-    "howTo": "📖 Last night a data storm scattered ALL of this homepage's data! Mousse has 45 seconds to charge upward and gather it all back.\n🎮 Drag her (or use the arrow keys) to run anywhere in the field:\n• Golden motes are important data, +30 pts\n• Plain motes are ordinary data, +10 pts\n• Ink blobs are garbled data, −20 pts if you brush one\n• The purple spiky ones are viruses, −1 life on contact\n• The brick walls lying across are fallen firewalls: solid — hit one from below and it stops you and carries you down, so slip around the gaps at their ends or in the middle\n• Getting pushed off the screen also costs 1 life\n💪 3 lives. The farther you run and the more you gather, the higher the score. Charge — bring the homepage's data home!",
+    "howTo": "📖 A data storm scattered the homepage's data! Charge up with Mousse for 45 seconds and gather it all back.\n🎮 Drag her (or use the arrow keys) to move:\n• Golden motes +30 pts (important data)\n• Plain motes +10 pts\n• Ink blobs −20 pts — steer clear\n• Purple viruses: −1 life on contact\n• Brick walls are solid: hit one from below and it stops you and carries you down — slip through the gaps\n• Pushed off the screen: −1 life too\n💪 3 lives. The farther you run and the more you gather, the higher the score!",
     "start": "Start",
     "again": "Play again",
     "close": "Close",
@@ -412,15 +412,15 @@
     "finalScore": "Your score",
     "newRecord": "New record!",
     "labCardTitle": "Mousse Dash",
-    "labCardDesc": "A data storm scattered the homepage's data! Charge upward with Mousse for 45 seconds, slip around the fallen firewalls, and gather it all back.",
+    "labCardDesc": "A data storm scattered the homepage's data! Gather it back with Mousse in 45 seconds.",
     "labCardCta": "Play"
   },
   "PrefectureGame": {
     "pageTitle": "Guess the Prefecture · Japan Stamp Map",
-    "pageDesc": "Zeli has visited all 47 prefectures of Japan, and his album holds the photos to prove it. Look at a photo and guess which prefecture it was taken in — get it right and you stamp that prefecture on the map. Hosted by Mousse.",
+    "pageDesc": "Zeli has visited all 47 prefectures of Japan. Guess where each travel photo was taken — a right answer stamps that prefecture on the map. Hosted by Mousse.",
     "backLab": "Back to the Lab",
     "labCardTitle": "Guess the Prefecture · Japan Stamp Map",
-    "labCardDesc": "Look at photos from Zeli's travel album and guess the prefecture each was taken in. Every correct answer stamps the Japan map. Hosted by Mousse — 47 prefectures to collect.",
+    "labCardDesc": "Guess the prefecture in Zeli's travel photos. Right answers stamp the map — 47 to collect.",
     "labCardCta": "Start guessing",
     "tabQuiz": "Guess the Prefecture",
     "tabMap": "Stamp Map",
@@ -574,12 +574,12 @@
   },
   "GamesPage": {
     "title": "Mini Games",
-    "description": "A corner of games to play with Mousse: a 45-second dash, a guess-the-prefecture quiz over travel photos, and a little room where you earn stars to buy her furniture. She hosts them all.",
+    "description": "Games with Mousse: a 45-second dash, a photo prefecture quiz, and her little star-funded room. She hosts them all.",
     "backHome": "Back to home"
   },
   "Room": {
     "pageTitle": "Mousse's Room",
-    "pageDesc": "A little room where Mousse lives. Earn stars from the mini games and daily check-ins to buy her furniture — she'll wander over and use it herself. Come back often; she remembers you.",
+    "pageDesc": "Mousse's little room. Buy her furniture with stars and she'll walk over and use it herself. Come back often — she remembers you.",
     "backGames": "Back to Mini Games",
     "starsLabel": "Stars",
     "snackLabel": "Snacks",
@@ -755,16 +755,17 @@
     },
     "rulesTitle": "How it works",
     "rules": [
-      "Check in daily for +10 stars and a snack; keep the streak going.",
-      "Stars buy furniture. Buying places it in the room, and she'll walk over and use it herself.",
-      "Fullness, mood and energy drift down over time. Snacks, playing and rest bring them back — they never hit zero, she just gets a little needy.",
-      "Intimacy grows from check-ins, care and time spent in the room, and never decreases. The gardener outfit unlocks by harvesting 6 flowers in total in the indoor garden.",
-      "Tap her and she'll react — you can chat with her or change her outfit. Tap the floor and she'll run over to that spot.",
-      "Progress lives only in this browser on this device — clearing browser data resets it. Think of it as a tiny room in your pocket.",
-      "Each week she has one little wish. Help her with it slowly and you can claim a small gift — and if it does not happen, that is fine too; there is always next week."
+      "Check in daily: +10 stars and a snack, plus your streak count.",
+      "Stars buy furniture. It appears in the room and she'll walk over and use it herself.",
+      "Fullness, mood and energy drift down over time; snacks, play and rest refill them. They never hit zero — she just gets needy.",
+      "Intimacy grows with check-ins, care and time together, and never drops. Each level brings a new title and something new.",
+      "The gardener outfit unlocks in the indoor garden: 6 lifetime harvests.",
+      "Tap her to chat or change her outfit. Tap the floor and she'll run over.",
+      "One little wish each week: finish it together for a small gift (15 stars or a snack). No pressure if not.",
+      "Progress lives only in this browser on this device; clearing browser data resets it."
     ],
     "entryTitle": "Mousse's Room",
-    "entryDesc": "A little room of her own — earn stars, buy furniture, and watch her wander, read and sit on her rug. Visit often; she remembers you.",
+    "entryDesc": "A little room for Mousse — earn stars, buy furniture. Visit often; she remembers you.",
     "entryCta": "Visit her",
     "levelTitles": [
       "New Friend",
@@ -887,7 +888,7 @@
   },
   "Garden": {
     "pageTitle": "Mousse's Indoor Garden",
-    "pageDesc": "Step in from the flower stand by the window in Mousse's room. Buy a few seeds, plant them, and come by each day to water — watch them sprout, leaf out, bud, and bloom. A harvested bloom earns stars and a place in the album. Flowers never wilt, so just drop by whenever you remember.",
+    "pageDesc": "Her little garden, in from the flower stand. Plant seeds and water once a day: sprout, leaves, bud, bloom. Harvests earn stars and a spot in the album — and flowers never wilt, so visit whenever you remember.",
     "backRoom": "Back to the Room",
     "standLabel": "Indoor Garden",
     "starsLabel": "stars",
@@ -915,15 +916,15 @@
     "albumTitle": "Harvest Album",
     "albumEmpty": "Not harvested yet",
     "albumCount": "{count} harvested · first on {first}",
-    "potsProgress": "{have} pots (one more at 5 and 12 lifetime harvests — currently {count})",
+    "potsProgress": "{have} pots · +1 pot at 5 and 12 harvests ({count} harvested)",
     "giftLine": "Welcome to my little garden! Here are three seeds to start with — pick an empty pot and plant one.",
     "rulesTitle": "Garden rules",
     "rules": [
-      "Water a pot once a day and it grows one day: sprout (day 1), leaves (day 3), bud (day 6), bloom (day 10).",
-      "Forgot to water? No harm done — the flower simply waits for you and never wilts.",
-      "Once a flower blooms you can harvest it (+6 stars, added to the album) or leave it in the pot to enjoy; reaching 3 and 12 total harvests also earns milestone star bonuses.",
-      "At 5 and 12 lifetime harvests you gain an extra pot; at 6 you unlock the gardener outfit.",
-      "Progress is stored in this browser on this device; clearing site data erases it."
+      "Water a pot once a day and it grows one day: sprout day 1, leaves day 3, bud day 6, bloom day 10.",
+      "Forgot to water? The flower just waits — it never wilts.",
+      "Harvest a bloom for +6 stars and an album entry, or keep it to enjoy. Lifetime harvests of 3 and 12 earn bonus stars too.",
+      "At 5 and 12 lifetime harvests you gain a pot (max 5). At 6, the gardener outfit unlocks.",
+      "Progress lives in this browser on this device; clearing site data erases it."
     ],
     "speciesNames": {
       "tulip": "Tulip",
