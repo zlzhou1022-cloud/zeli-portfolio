@@ -77,6 +77,24 @@ const trips: Trip[] = [
       { src: getImageUrl("kyushu2026May/p22.jpg"), desc: "黑猪丼", prefecture: "kagoshima", place: { cn: "鹿儿岛县鹿儿岛市", jp: "鹿児島県鹿児島市", en: "Kagoshima City, Kagoshima" } },
     ]
   },
+  {
+    id: "shikoku-jan-2026",
+    date: "2026-01-12",
+    title: "四国的一月：从金刀比罗宫到道后温泉",
+    cover: getImageUrl("shikoku2026Jan/p02.jpg"),
+    photos: [
+      { src: getImageUrl("shikoku2026Jan/p01.jpg"), desc: "金刀比罗宫石灯笼", prefecture: "kagawa", place: { cn: "香川县琴平町", jp: "香川県琴平町", en: "Kotohira, Kagawa" } },
+      { src: getImageUrl("shikoku2026Jan/p02.jpg"), desc: "銭形砂絵", prefecture: "kagawa", place: { cn: "香川县观音寺市", jp: "香川県観音寺市", en: "Kan'onji, Kagawa" } },
+      { src: getImageUrl("shikoku2026Jan/p03.jpg"), desc: "呆呆兽井盖", prefecture: "kagawa", place: { cn: "香川县琴平町", jp: "香川県琴平町", en: "Kotohira, Kagawa" } },
+      { src: getImageUrl("shikoku2026Jan/p04.jpg"), desc: "桂滨小神社", prefecture: "kochi", place: { cn: "高知县高知市", jp: "高知県高知市", en: "Kochi City, Kochi" } },
+      { src: getImageUrl("shikoku2026Jan/p05.jpg"), desc: "大鸣门桥通道", prefecture: "tokushima", place: { cn: "德岛县鸣门市", jp: "徳島県鳴門市", en: "Naruto, Tokushima" } },
+      { src: getImageUrl("shikoku2026Jan/p06.jpg"), desc: "阿波舞照片", prefecture: "tokushima", place: { cn: "德岛县德岛市", jp: "徳島県徳島市", en: "Tokushima City, Tokushima" } },
+      { src: getImageUrl("shikoku2026Jan/p07.jpg"), desc: "梅津寺手帕", prefecture: "ehime", place: { cn: "爱媛县松山市", jp: "愛媛県松山市", en: "Matsuyama, Ehime" } },
+      { src: getImageUrl("shikoku2026Jan/p08.jpg"), desc: "柑橘汁试饮", prefecture: "ehime", place: { cn: "爱媛县松山市", jp: "愛媛県松山市", en: "Matsuyama, Ehime" } },
+      { src: getImageUrl("shikoku2026Jan/p09.jpg"), desc: "人力车吉祥物", prefecture: "ehime", place: { cn: "爱媛县松山市", jp: "愛媛県松山市", en: "Matsuyama, Ehime" } },
+      { src: getImageUrl("shikoku2026Jan/p10.jpg"), desc: "三色团子", prefecture: "ehime", place: { cn: "爱媛县松山市", jp: "愛媛県松山市", en: "Matsuyama, Ehime" } },
+    ]
+  },
 ];
 
 export const getAllTrips = () => {
