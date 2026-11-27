@@ -18,9 +18,10 @@ export interface HomePhoto {
 // 首页「光影与足迹」露出区（2026-11-18）：真实县界地图 + 旅程照片。
 // 地图入场时按从北到南逐县点亮（47 县制霸）。金色 = 有照片的县（站长 2026-11-19
 // 改定：不再绑定最近一趟旅程，凡相册里有照片的县都金色），由照片数据动态算。
-// 展示规则（站长 2026-11-19 夜定，手机端优先）：默认显示最新一趟旅程的前 4 张；
-// 点金色县 → 从该县照片里随机抽 4 张（不足 4 张就全显示）；再点一次或点
-// 「回到最新旅程」复位。
+// 展示规则（站长 2026-11-19 夜定，手机端优先）：点金色县 → 从该县照片里
+// 随机抽 4 张（不足 4 张就全显示）。默认展示 2026-11-28 改定：不再固定最新
+// 一趟的前 4 张，没选县时从全部照片里随机抽 4 张；再点一次选中的县或点
+// 「回到随机照片」会重新随机一组（首屏渲染仍用最新旅程兜底，挂载后即换成随机）。
 export function HomeTravel({ photos, latestTripId }: { photos: HomePhoto[]; latestTripId: string }) {
   const t = useTranslations("Home");
   const tt = useTranslations("Trips");
@@ -28,22 +29,30 @@ export function HomeTravel({ photos, latestTripId }: { photos: HomePhoto[]; late
   const [lit, setLit] = useState<Set<string>>(new Set());
   const [sel, setSel] = useState<string | null>(null);
   const [picked, setPicked] = useState<HomePhoto[] | null>(null);
+  const [randomSet, setRandomSet] = useState<HomePhoto[] | null>(null);
   const goldSet = new Set(photos.map((p) => p.pref));
-  const shown = picked ?? photos.filter((p) => p.tripId === latestTripId).slice(0, 4);
+  const pickRandom = (pool: HomePhoto[]) => [...pool].sort(() => Math.random() - 0.5).slice(0, 4);
+  const shown = picked ?? randomSet ?? photos.filter((p) => p.tripId === latestTripId).slice(0, 4);
   const choose = (id: string) => {
     if (sel === id) {
-      setSel(null);
-      setPicked(null);
+      reset();
       return;
     }
     setSel(id);
-    const pool = photos.filter((p) => p.pref === id);
-    setPicked([...pool].sort(() => Math.random() - 0.5).slice(0, 4));
+    setPicked(pickRandom(photos.filter((p) => p.pref === id)));
   };
   const reset = () => {
     setSel(null);
     setPicked(null);
+    setRandomSet(pickRandom(photos));
   };
+
+  // 挂载后把默认展示换成全部照片的随机一组（随机只在客户端做，避免 SSR 不一致）
+  useEffect(() => {
+    const id = setTimeout(() => setRandomSet(pickRandom(photos)), 0);
+    return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const svg = svgRef.current;

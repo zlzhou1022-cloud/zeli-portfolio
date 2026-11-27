@@ -44,7 +44,7 @@
     "travel": {
       "conquered": "都道府县已制霸",
       "goldHint": "金色 = 有照片的县，点一下看它的照片",
-      "showLatest": "回到最新旅程",
+      "showLatest": "回到随机照片",
       "viewing": "正在看：{name}",
       "prefNames": {
         "aomori": "青森县",
@@ -56,7 +56,15 @@
         "saga": "佐贺县",
         "nagasaki": "长崎县",
         "miyazaki": "宫崎县",
-        "kagoshima": "鹿儿岛县"
+        "kagoshima": "鹿儿岛县",
+        "yamagata": "山形县",
+        "kagawa": "香川县",
+        "kochi": "高知县",
+        "tokushima": "德岛县",
+        "ehime": "爱媛县",
+        "fukushima": "福岛县",
+        "kanagawa": "神奈川县",
+        "tokyo": "东京都"
       }
     },
     "invite": {
